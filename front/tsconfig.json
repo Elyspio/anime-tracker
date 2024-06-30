@@ -1,0 +1,12 @@
+{
+	"extends": "@elyspio/vite-eslint-config/tsconfig.json",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"noEmit": true
+	},
+	"include": [
+		"vite.config.ts",
+		".eslintrc.js",
+		"src"
+	]
+}

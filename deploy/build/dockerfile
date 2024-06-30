@@ -1,0 +1,70 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0-preview AS prepare-restore-files
+
+ENV PATH="${PATH}:/root/.dotnet/tools"
+RUN dotnet tool install --global --no-cache dotnet-subset --version 0.3.2
+
+ARG GITHUB_TOKEN
+ENV GITHUB_TOKEN ${GITHUB_TOKEN}
+
+ARG SLN_PATH
+ARG ROOT_FOLDER
+
+WORKDIR /source
+
+COPY ${ROOT_FOLDER} /source
+
+RUN dotnet subset restore /source/${SLN_PATH} --root-directory /source --output /output
+
+
+FROM mcr.microsoft.com/dotnet/sdk:9.0-preview AS builder-back
+
+
+ARG GITHUB_TOKEN
+ENV GITHUB_TOKEN ${GITHUB_TOKEN}
+
+ARG MAIN_CSPROJ_PATH
+ARG ROOT_FOLDER
+
+COPY --from=prepare-restore-files /output /project
+RUN dotnet restore /project/${MAIN_CSPROJ_PATH} --configfile /project/nuget.config
+
+COPY ${ROOT_FOLDER} /project
+RUN dotnet publish /project/${MAIN_CSPROJ_PATH} --no-restore -o /app/out
+
+# Building front
+FROM --platform=linux/amd64 node:20 as builder-front
+
+ARG GITHUB_TOKEN
+
+
+COPY front/package.json /front/
+COPY front/yarn.lock /front/
+COPY front/.npmrc /front/
+
+RUN sed -i "s|GITHUB_TOKEN|${GITHUB_TOKEN}|g" /front/.npmrc
+
+WORKDIR /front
+
+RUN yarn install --frozen-lockfile
+
+COPY front /front/
+RUN yarn build
+
+
+# Running
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-preview AS production
+
+ARG ENTRY_DLL
+ENV ENTRY_DLL ${ENTRY_DLL}
+
+WORKDIR /back
+COPY --from=builder-back /app/out .
+
+COPY --from=builder-front /front/dist /back/wwwroot
+ENV FRONT_PATH /back/wwwroot
+
+EXPOSE 4000
+ENV ASPNETCORE_URLS http://+:4000
+
+
+CMD dotnet ${ENTRY_DLL}
