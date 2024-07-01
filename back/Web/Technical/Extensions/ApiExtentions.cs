@@ -1,12 +1,12 @@
 ﻿using System.Text.Json.Serialization;
-using Example.Api.Abstractions.Common.Helpers.Json;
-using Example.Api.Web.Technical.Filters;
+using AnimeTracker.Api.Abstractions.Common.Helpers.Json;
+using AnimeTracker.Api.Web.Technical.Filters;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace Example.Api.Web.Technical.Extensions;
+namespace AnimeTracker.Api.Web.Technical.Extensions;
 
 /// <summary>
 ///     Api Extensions methods for <see cref="IServiceCollection" />

@@ -1,6 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 
-namespace Example.Api.Abstractions.Interfaces.Services;
+namespace AnimeTracker.Api.Abstractions.Interfaces.Services;
 
 public interface IAuthenticationService
 {

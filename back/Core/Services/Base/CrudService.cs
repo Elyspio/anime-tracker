@@ -1,14 +1,14 @@
-﻿using Example.Api.Abstractions.Common.Assemblers;
-using Example.Api.Abstractions.Common.Extensions;
-using Example.Api.Abstractions.Common.Helpers;
-using Example.Api.Abstractions.Common.Technical.Tracing;
-using Example.Api.Abstractions.Exceptions;
-using Example.Api.Abstractions.Interfaces.Business;
-using Example.Api.Abstractions.Interfaces.Repositories;
-using Example.Api.Abstractions.Interfaces.Services.Base;
+﻿using Elyspio.Utils.Telemetry.Technical.Helpers;
+using Elyspio.Utils.Telemetry.Tracing.Elements;
+using AnimeTracker.Api.Abstractions.Common.Assemblers;
+using AnimeTracker.Api.Abstractions.Common.Extensions;
+using AnimeTracker.Api.Abstractions.Exceptions;
+using AnimeTracker.Api.Abstractions.Interfaces.Business;
+using AnimeTracker.Api.Abstractions.Interfaces.Repositories;
+using AnimeTracker.Api.Abstractions.Interfaces.Services.Base;
 using Microsoft.Extensions.Logging;
 
-namespace Example.Api.Core.Services.Base;
+namespace AnimeTracker.Api.Core.Services.Base;
 
 internal abstract class CrudService<TData, TBase, TEntity>(ILogger logger, ICrudRepository<TEntity, TBase> repository, IBaseAssembler<TData, TEntity> baseAssembler)
 	: TracingService(logger), ICrudService<TData, TBase>

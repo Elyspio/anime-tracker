@@ -1,16 +1,16 @@
-﻿using Example.Api.Abstractions.Common.Extensions;
-using Example.Api.Abstractions.Common.Helpers;
-using Example.Api.Abstractions.Interfaces.Repositories;
-using Example.Api.Abstractions.Models.Base;
-using Example.Api.Abstractions.Models.Entities;
-using Example.Api.Adapters.Mongo.Repositories.Base;
+﻿using AnimeTracker.Api.Adapters.Mongo.Repositories.Base;
+using Elyspio.Utils.Telemetry.Technical.Helpers;
+using AnimeTracker.Api.Abstractions.Common.Extensions;
+using AnimeTracker.Api.Abstractions.Interfaces.Repositories;
+using AnimeTracker.Api.Abstractions.Models.Base;
+using AnimeTracker.Api.Abstractions.Models.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
-namespace Example.Api.Adapters.Mongo.Repositories;
+namespace AnimeTracker.Api.Adapters.Mongo.Repositories;
 
 internal class TodoRepository(IConfiguration configuration, ILogger<BaseRepository<TodoEntity>> logger) : CrudRepository<TodoEntity, TodoBase>(configuration, logger),
 	ITodoRepository

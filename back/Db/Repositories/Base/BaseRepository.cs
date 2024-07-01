@@ -1,10 +1,10 @@
-﻿using Example.Api.Abstractions.Common.Technical.Tracing;
-using Example.Api.Adapters.Mongo.Technical;
+﻿using AnimeTracker.Api.Adapters.Mongo.Technical;
+using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
-namespace Example.Api.Adapters.Mongo.Repositories.Base;
+namespace AnimeTracker.Api.Adapters.Mongo.Repositories.Base;
 
 /// <summary>
 ///     Manage entity in MongoDB
@@ -59,8 +59,8 @@ public abstract class BaseRepository<T> : TracingAdapter
 
 		if (foundIndex) return;
 
-		Logger.LogWarning($"Property {_collectionName}.{indexName} is not indexed, creating one");
+		_logger.LogWarning($"Property {_collectionName}.{indexName} is not indexed, creating one");
 		EntityCollection.Indexes.CreateOne(indexModel);
-		Logger.LogWarning($"Property {_collectionName}.{indexName} is now indexed");
+		_logger.LogWarning($"Property {_collectionName}.{indexName} is now indexed");
 	}
 }

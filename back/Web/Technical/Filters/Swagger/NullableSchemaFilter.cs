@@ -1,10 +1,10 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
-using Example.Api.Web.Technical.Helpers;
+using AnimeTracker.Api.Web.Technical.Helpers;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Example.Api.Web.Technical.Filters.Swagger;
+namespace AnimeTracker.Api.Web.Technical.Filters.Swagger;
 
 /// <summary>
 ///     Permet que les propriétés des objets de retour soient affichées en tant que required ssi elles ne sont pas nullable

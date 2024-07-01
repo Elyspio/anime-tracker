@@ -1,10 +1,10 @@
-﻿using Example.Api.Abstractions.Interfaces.Injections;
-using Example.Api.Adapters.Mongo.Injections;
-using Example.Api.Adapters.Rest.Injections;
-using Example.Api.Core.Injections;
-using Example.Api.Web.Technical.Extensions;
+﻿using AnimeTracker.Api.Abstractions.Interfaces.Injections;
+using AnimeTracker.Api.Adapters.Mongo.Injections;
+using AnimeTracker.Api.Adapters.Rest.Injections;
+using AnimeTracker.Api.Core.Injections;
+using AnimeTracker.Api.Web.Technical.Extensions;
 
-namespace Example.Api.Web.Start;
+namespace AnimeTracker.Api.Web.Start;
 
 /// <summary>
 ///     Application builder

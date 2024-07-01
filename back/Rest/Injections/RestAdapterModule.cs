@@ -1,11 +1,12 @@
-﻿using Example.Api.Abstractions.Interfaces.Injections;
-using Example.Api.Adapters.Rest.Adapters;
+﻿using AnimeTracker.Api.Abstractions.Interfaces.Injections;
+using AnimeTracker.Api.Adapters.Rest.Adapters;
+using AnimeTracker.Api.Adapters.Rest.Assemblers;
+using AnimeTracker.Api.Adapters.Rest.Configs;
 using Example.Api.Adapters.Rest.AuthenticationApi;
-using Example.Api.Adapters.Rest.Configs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Example.Api.Adapters.Rest.Injections;
+namespace AnimeTracker.Api.Adapters.Rest.Injections;
 
 public class RestAdapterModule : IDotnetModule
 {
@@ -16,9 +17,15 @@ public class RestAdapterModule : IDotnetModule
 
 		services.AddHttpClient<IJwtClient, JwtClient>(client => { client.BaseAddress = new Uri(conf.Authentication); });
 
+
 		services.Scan(s => s.FromAssemblyOf<RestAdapterModule>()
 			.AddClasses(c => c.InNamespaceOf<JwtAdapter>())
 			.AsImplementedInterfaces()
+			.WithSingletonLifetime()
+		);
+		services.Scan(s => s.FromAssemblyOf<RestAdapterModule>()
+			.AddClasses(c => c.InNamespaceOf<AnimeAssembler>())
+			.AsSelf()
 			.WithSingletonLifetime()
 		);
 

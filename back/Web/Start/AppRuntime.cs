@@ -1,6 +1,6 @@
-﻿using Example.Api.Web.Technical.Extensions;
+﻿using AnimeTracker.Api.Web.Technical.Extensions;
 
-namespace Example.Api.Web.Start;
+namespace AnimeTracker.Api.Web.Start;
 
 /// <summary>
 ///     Application Initializer

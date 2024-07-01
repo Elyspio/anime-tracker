@@ -1,8 +1,8 @@
-﻿using Example.Api.Abstractions.Interfaces.Injections;
+﻿using AnimeTracker.Api.Abstractions.Interfaces.Injections;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Example.Api.Adapters.Mongo.Injections;
+namespace AnimeTracker.Api.Adapters.Mongo.Injections;
 
 public class MongoAdapterModule : IDotnetModule
 {

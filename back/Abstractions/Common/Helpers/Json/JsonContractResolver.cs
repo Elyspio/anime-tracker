@@ -2,7 +2,7 @@ using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace Example.Api.Abstractions.Common.Helpers.Json;
+namespace AnimeTracker.Api.Abstractions.Common.Helpers.Json;
 
 /// <summary>
 ///     Custom JSON contract resolver for the application.

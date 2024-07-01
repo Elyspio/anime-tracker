@@ -1,4 +1,4 @@
-﻿namespace Example.Api.Adapters.Mongo.Configs;
+﻿namespace AnimeTracker.Api.Adapters.Mongo.Configs;
 
 public class DbConfig
 {

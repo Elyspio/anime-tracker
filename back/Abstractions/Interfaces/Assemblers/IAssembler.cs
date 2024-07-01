@@ -1,4 +1,4 @@
-﻿namespace Example.Api.Abstractions.Interfaces.Assemblers;
+﻿namespace AnimeTracker.Api.Abstractions.Interfaces.Assemblers;
 
 public interface IAssembler<TA, TB>
 {

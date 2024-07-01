@@ -1,13 +1,13 @@
-﻿using Example.Api.Abstractions.Common.Helpers;
-using Example.Api.Abstractions.Interfaces.Business;
-using Example.Api.Abstractions.Interfaces.Repositories;
+﻿using Elyspio.Utils.Telemetry.Technical.Helpers;
+using AnimeTracker.Api.Abstractions.Interfaces.Business;
+using AnimeTracker.Api.Abstractions.Interfaces.Repositories;
 using Mapster;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace Example.Api.Adapters.Mongo.Repositories.Base;
+namespace AnimeTracker.Api.Adapters.Mongo.Repositories.Base;
 
 /// <inheritdoc cref="ICrudRepository{TEntity,TBase}" />
 internal abstract class CrudRepository<TEntity, TBase>(IConfiguration configuration, ILogger logger) : BaseRepository<TEntity>(configuration, logger),

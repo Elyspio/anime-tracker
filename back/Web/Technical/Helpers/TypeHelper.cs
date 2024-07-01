@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Serialization;
 
-namespace Example.Api.Web.Technical.Helpers;
+namespace AnimeTracker.Api.Web.Technical.Helpers;
 
 /// <summary>
 /// </summary>
@@ -48,8 +48,9 @@ public static class TypeHelper
 		if (jsonPropertyNameAttribute != default) return jsonPropertyNameAttribute.ConstructorArguments[0].Value!.ToString()!;
 
 		var fromQueryAttribute = attributes.FirstOrDefault(attr => attr.AttributeType == typeof(FromQueryAttribute));
-		if (fromQueryAttribute == default) return null;
-		var arg = fromQueryAttribute.NamedArguments.FirstOrDefault(arg => arg.MemberName == "Name");
-		return arg != default ? arg.TypedValue.Value!.ToString()! : null;
+
+		var arg = fromQueryAttribute?.NamedArguments?.FirstOrDefault(arg => arg.MemberName == "Name");
+
+		return arg?.TypedValue != null ? arg.Value.TypedValue.Value!.ToString()! : null;
 	}
 }

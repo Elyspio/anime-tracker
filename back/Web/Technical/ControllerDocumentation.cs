@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
-namespace Example.Api.Web.Technical;
+namespace AnimeTracker.Api.Web.Technical;
 
 /// <inheritdoc />
 public sealed class ControllerDocumentationConvention : IControllerModelConvention

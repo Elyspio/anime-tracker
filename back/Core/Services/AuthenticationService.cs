@@ -1,10 +1,10 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
-using Example.Api.Abstractions.Common.Technical.Tracing;
-using Example.Api.Abstractions.Interfaces.Adapters;
-using Example.Api.Abstractions.Interfaces.Services;
+using Elyspio.Utils.Telemetry.Tracing.Elements;
+using AnimeTracker.Api.Abstractions.Interfaces.Adapters;
+using AnimeTracker.Api.Abstractions.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 
-namespace Example.Api.Core.Services;
+namespace AnimeTracker.Api.Core.Services;
 
 internal class AuthenticationService : TracingService, IAuthenticationService
 {

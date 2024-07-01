@@ -1,12 +1,12 @@
-﻿using Example.Api.Abstractions.Common.Helpers;
-using Example.Api.Abstractions.Common.Technical.Tracing;
-using Example.Api.Abstractions.Interfaces.Services;
-using Example.Api.Abstractions.Models.Transports;
+﻿using Elyspio.Utils.Telemetry.Technical.Helpers;
+using Elyspio.Utils.Telemetry.Tracing.Elements;
+using AnimeTracker.Api.Abstractions.Interfaces.Services;
+using AnimeTracker.Api.Abstractions.Models.Transports;
+using AnimeTracker.Api.Web.Technical.Filters;
 using Example.Api.Adapters.Rest.AuthenticationApi;
-using Example.Api.Web.Technical.Filters;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Example.Api.Web.Controllers;
+namespace AnimeTracker.Api.Web.Controllers;
 
 [Route("api/todo")]
 [ApiController]

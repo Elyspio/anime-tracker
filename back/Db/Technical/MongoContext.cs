@@ -4,7 +4,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 
-namespace Example.Api.Adapters.Mongo.Technical;
+namespace AnimeTracker.Api.Adapters.Mongo.Technical;
 
 /// <summary>
 ///     Manage app mongo connection

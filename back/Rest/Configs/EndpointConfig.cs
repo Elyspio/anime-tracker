@@ -1,4 +1,4 @@
-﻿namespace Example.Api.Adapters.Rest.Configs;
+﻿namespace AnimeTracker.Api.Adapters.Rest.Configs;
 
 public class EndpointConfig
 {

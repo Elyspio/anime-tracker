@@ -1,6 +1,6 @@
-﻿using Example.Api.Abstractions.Models.Transports;
+﻿using AnimeTracker.Api.Abstractions.Models.Transports;
 
-namespace Example.Api.Abstractions.Interfaces.Services;
+namespace AnimeTracker.Api.Abstractions.Interfaces.Services;
 
 public interface ITodoService
 {

@@ -1,13 +1,13 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
-using Example.Api.Abstractions.Common.Technical.Tracing;
-using Example.Api.Abstractions.Interfaces.Adapters;
+using AnimeTracker.Api.Abstractions.Interfaces.Adapters;
+using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Example.Api.Adapters.Rest.AuthenticationApi;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Example.Api.Adapters.Rest.Adapters;
+namespace AnimeTracker.Api.Adapters.Rest.Adapters;
 
 public class JwtAdapter: TracingAdapter, IJwtAdapter
 {

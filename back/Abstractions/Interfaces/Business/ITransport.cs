@@ -1,4 +1,4 @@
-﻿namespace Example.Api.Abstractions.Interfaces.Business;
+﻿namespace AnimeTracker.Api.Abstractions.Interfaces.Business;
 
 /// <summary>
 ///     ITransport interface that represents a transport entity with a unique identifier.

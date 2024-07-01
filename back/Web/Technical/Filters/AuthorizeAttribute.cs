@@ -1,14 +1,14 @@
 ﻿using System.Diagnostics;
-using Example.Api.Abstractions.Common.Helpers;
-using Example.Api.Abstractions.Common.Technical.Tracing;
-using Example.Api.Abstractions.Interfaces.Services;
+using Elyspio.Utils.Telemetry.Technical.Helpers;
+using Elyspio.Utils.Telemetry.Tracing.Elements;
+using AnimeTracker.Api.Abstractions.Interfaces.Services;
 using Example.Api.Adapters.Rest.AuthenticationApi;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
 
-namespace Example.Api.Web.Technical.Filters;
+namespace AnimeTracker.Api.Web.Technical.Filters;
 
 /// <summary>
 ///     Add an authorization filter on <see cref="AuthenticationRoles" />

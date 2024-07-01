@@ -1,9 +1,9 @@
-﻿using Example.Api.Abstractions.Interfaces.Business;
-using Example.Api.Abstractions.Models.Base;
+﻿using AnimeTracker.Api.Abstractions.Interfaces.Business;
+using AnimeTracker.Api.Abstractions.Models.Base;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace Example.Api.Abstractions.Models.Entities;
+namespace AnimeTracker.Api.Abstractions.Models.Entities;
 
 public class TodoEntity : TodoBase, IEntity
 {

@@ -3,17 +3,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32120.378
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Example.Api.Abstractions", "Abstractions\Example.Api.Abstractions.csproj", "{04D70810-6D52-4BCA-94E0-E5138C3923BE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnimeTracker.Api.Abstractions", "Abstractions\AnimeTracker.Api.Abstractions.csproj", "{04D70810-6D52-4BCA-94E0-E5138C3923BE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Example.Api.Adapters.Rest", "Rest\Example.Api.Adapters.Rest.csproj", "{FB92BB0B-2A3F-4A6D-8547-7993BF9DA5D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnimeTracker.Api.Adapters.Rest", "Rest\AnimeTracker.Api.Adapters.Rest.csproj", "{FB92BB0B-2A3F-4A6D-8547-7993BF9DA5D2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Example.Api.Core", "Core\Example.Api.Core.csproj", "{388A04AE-1081-445B-8DDC-B837AA5D0F3D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnimeTracker.Api.Core", "Core\AnimeTracker.Api.Core.csproj", "{388A04AE-1081-445B-8DDC-B837AA5D0F3D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Example.Api.Adapters.Mongo", "Db\Example.Api.Adapters.Mongo.csproj", "{658D04DC-7D4E-46E2-9F49-4000CFD77C79}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnimeTracker.Api.Adapters.Mongo", "Db\AnimeTracker.Api.Adapters.Mongo.csproj", "{658D04DC-7D4E-46E2-9F49-4000CFD77C79}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Example.Api.Web", "Web\Example.Api.Web.csproj", "{0FF2058F-F09A-41DE-A77C-EAB037F2742D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnimeTracker.Api.Web", "Web\AnimeTracker.Api.Web.csproj", "{0FF2058F-F09A-41DE-A77C-EAB037F2742D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Adapters", "Adapters", "{3B1E2027-625B-44A2-ACA5-535E10E19F22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnimeTracker.Api.Tests.Rest", "AnimeTracker.Api.Tests.Rest\AnimeTracker.Api.Tests.Rest.csproj", "{51F5F257-C1A4-48B6-B8B8-65029011DF0D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{5CB1120D-A48B-435B-87E5-2DEC8139BBB6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +45,10 @@ Global
 		{0FF2058F-F09A-41DE-A77C-EAB037F2742D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0FF2058F-F09A-41DE-A77C-EAB037F2742D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0FF2058F-F09A-41DE-A77C-EAB037F2742D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51F5F257-C1A4-48B6-B8B8-65029011DF0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51F5F257-C1A4-48B6-B8B8-65029011DF0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51F5F257-C1A4-48B6-B8B8-65029011DF0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51F5F257-C1A4-48B6-B8B8-65029011DF0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -51,5 +59,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{FB92BB0B-2A3F-4A6D-8547-7993BF9DA5D2} = {3B1E2027-625B-44A2-ACA5-535E10E19F22}
 		{658D04DC-7D4E-46E2-9F49-4000CFD77C79} = {3B1E2027-625B-44A2-ACA5-535E10E19F22}
+		{51F5F257-C1A4-48B6-B8B8-65029011DF0D} = {5CB1120D-A48B-435B-87E5-2DEC8139BBB6}
 	EndGlobalSection
 EndGlobal

@@ -1,6 +1,6 @@
-﻿using Example.Api.Web.Technical.Filters.Swagger;
+﻿using AnimeTracker.Api.Web.Technical.Filters.Swagger;
 
-namespace Example.Api.Web.Technical.Extensions;
+namespace AnimeTracker.Api.Web.Technical.Extensions;
 
 /// <summary>
 ///     Swagger Extensions methods for <see cref="IServiceCollection" />

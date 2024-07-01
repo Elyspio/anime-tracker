@@ -1,9 +1,9 @@
-﻿using Example.Api.Abstractions.Common.Assemblers;
-using Example.Api.Abstractions.Common.Extensions;
-using Example.Api.Abstractions.Models.Entities;
-using Example.Api.Abstractions.Models.Transports;
+﻿using AnimeTracker.Api.Abstractions.Common.Assemblers;
+using AnimeTracker.Api.Abstractions.Common.Extensions;
+using AnimeTracker.Api.Abstractions.Models.Entities;
+using AnimeTracker.Api.Abstractions.Models.Transports;
 
-namespace Example.Api.Core.Assemblers;
+namespace AnimeTracker.Api.Core.Assemblers;
 
 public class TodoAssembler : BaseAssembler<Todo, TodoEntity>
 {

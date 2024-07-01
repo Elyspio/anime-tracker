@@ -1,4 +1,4 @@
-﻿namespace Example.Api.Abstractions.Common.Assemblers;
+﻿namespace AnimeTracker.Api.Abstractions.Common.Assemblers;
 
 /// <summary>
 ///     Assembling interface

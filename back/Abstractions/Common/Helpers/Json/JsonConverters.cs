@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Serialization;
 
-namespace Example.Api.Abstractions.Common.Helpers.Json;
+namespace AnimeTracker.Api.Abstractions.Common.Helpers.Json;
 
 /// <summary>
 ///     Contains custom JSON converters for specific serialization and deserialization behaviours.

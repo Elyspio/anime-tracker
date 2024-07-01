@@ -6,6 +6,7 @@
 		<UserSecretsId>f60c5c41-cfe1-4a57-ae16-b1f4a799afdd</UserSecretsId>
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 		<EnablePreviewFeatures>True</EnablePreviewFeatures>
+		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -21,10 +22,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Abstractions\Example.Api.Abstractions.csproj"/>
-		<ProjectReference Include="..\Rest\Example.Api.Adapters.Rest.csproj"/>
-		<ProjectReference Include="..\Core\Example.Api.Core.csproj"/>
-		<ProjectReference Include="..\Db\Example.Api.Adapters.Mongo.csproj"/>
+		<ProjectReference Include="..\Abstractions\AnimeTracker.Api.Abstractions.csproj" />
+		<ProjectReference Include="..\Rest\AnimeTracker.Api.Adapters.Rest.csproj" />
+		<ProjectReference Include="..\Core\AnimeTracker.Api.Core.csproj" />
+		<ProjectReference Include="..\Db\AnimeTracker.Api.Adapters.Mongo.csproj" />
 	</ItemGroup>
 
 

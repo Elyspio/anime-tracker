@@ -1,12 +1,12 @@
-﻿using Example.Api.Abstractions.Common.Helpers;
-using Example.Api.Abstractions.Common.Technical.Tracing;
-using Example.Api.Abstractions.Interfaces.Repositories;
-using Example.Api.Abstractions.Interfaces.Services;
-using Example.Api.Abstractions.Models.Transports;
-using Example.Api.Core.Assemblers;
+﻿using Elyspio.Utils.Telemetry.Technical.Helpers;
+using Elyspio.Utils.Telemetry.Tracing.Elements;
+using AnimeTracker.Api.Abstractions.Interfaces.Repositories;
+using AnimeTracker.Api.Abstractions.Interfaces.Services;
+using AnimeTracker.Api.Abstractions.Models.Transports;
+using AnimeTracker.Api.Core.Assemblers;
 using Microsoft.Extensions.Logging;
 
-namespace Example.Api.Core.Services;
+namespace AnimeTracker.Api.Core.Services;
 
 public class TodoService(ITodoRepository todoRepository, ILogger<TodoService> logger) : TracingService(logger), ITodoService
 {

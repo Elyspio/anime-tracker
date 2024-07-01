@@ -1,4 +1,4 @@
-﻿namespace Example.Api.Abstractions.Models.Base;
+﻿namespace AnimeTracker.Api.Abstractions.Models.Base;
 
 public class TodoBase
 {

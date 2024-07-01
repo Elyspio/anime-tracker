@@ -1,27 +1,29 @@
-﻿using Example.Api.Abstractions.Common.Helpers;
-using Example.Api.Abstractions.Common.Technical.Tracing;
-using Example.Api.Abstractions.Interfaces.Services;
-using Example.Api.Abstractions.Models.Transports;
+﻿using System.Net;
+using AnimeTracker.Api.Abstractions.Exceptions;
+using AnimeTracker.Api.Abstractions.Interfaces.Services;
+using AnimeTracker.Api.Abstractions.Models.Transports;
+using AnimeTracker.Api.Web.Technical.Extensions;
+using AnimeTracker.Api.Web.Technical.Filters;
+using Elyspio.Utils.Telemetry.Technical.Helpers;
+using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Example.Api.Adapters.Rest.AuthenticationApi;
-using Example.Api.Web.Technical.Extensions;
-using Example.Api.Web.Technical.Filters;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Example.Api.Web.Controllers;
+namespace AnimeTracker.Api.Web.Controllers;
 
 [Route("api/todo/user")]
 [ApiController]
 [Authorize(AuthenticationRoles.User)]
 public class TodoUserController(ITodoService todoService, ILogger<TodoUserController> logger) : TracingController(logger)
 {
-	private string Username => Request.GetUsername();
-
+	private string Username => Request.GetUsername() ?? throw new HttpException(HttpStatusCode.Unauthorized, "No username found");
 
 	[HttpDelete("{id:guid}")]
 	[ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
 	public async Task<IActionResult> DeleteForUser(Guid id)
 	{
 		using var _ = LogController($"{Log.F(id)} {Log.F(Username)}");
+
 		await todoService.DeleteForUser(id, Username);
 		return NoContent();
 	}

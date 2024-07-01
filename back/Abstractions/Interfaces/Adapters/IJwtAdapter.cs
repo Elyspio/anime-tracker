@@ -1,6 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 
-namespace Example.Api.Abstractions.Interfaces.Adapters;
+namespace AnimeTracker.Api.Abstractions.Interfaces.Adapters;
 
 public interface IJwtAdapter
 {
