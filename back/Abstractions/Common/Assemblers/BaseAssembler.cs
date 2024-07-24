@@ -23,7 +23,7 @@ public abstract class BaseAssembler<Ta, Tb> : IBaseAssembler<Ta, Tb>
 	/// </summary>
 	public IEnumerable<Tb> Convert(IEnumerable<Ta> objs)
 	{
-		return objs.Select(Convert).ToList();
+		return objs.Select(Convert);
 	}
 
 	/// <summary>
@@ -31,7 +31,14 @@ public abstract class BaseAssembler<Ta, Tb> : IBaseAssembler<Ta, Tb>
 	/// </summary>
 	public IEnumerable<Ta> Convert(IEnumerable<Tb> objs)
 	{
-		return objs.Select(Convert).ToList();
+		return objs.Select(Convert);
+	}
+	/// <summary>
+	///     Convert a enumerable of <typeparamref name="Tb" />  to a enumerable  of <typeparamref name="Ta" />
+	/// </summary>
+	public IReadOnlyCollection<Ta> Convert(IReadOnlyCollection<Tb> objs)
+	{
+		return objs.Select(Convert).ToArray();
 	}
 
 	/// <summary>

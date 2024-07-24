@@ -10,7 +10,7 @@ namespace AnimeTracker.Api.Adapters.Mongo.Repositories.Base;
 ///     Manage entity in MongoDB
 /// </summary>
 /// <typeparam name="T">Entity implementation</typeparam>
-public abstract class BaseRepository<T> : TracingAdapter
+public abstract class BaseRepository<T> : TracingRepository
 {
 	private readonly string _collectionName;
 	private readonly MongoContext _context;

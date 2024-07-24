@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnimeTracker.Api.Tests.Rest
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{5CB1120D-A48B-435B-87E5-2DEC8139BBB6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnimeTracker.Api.Adapters.Hangfire", "AnimeTracker.Api.Adapters.Hangfire\AnimeTracker.Api.Adapters.Hangfire.csproj", "{35260E02-5687-48FC-B372-722EB2924418}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnimeTracker.Api.Adapters.MassTransit", "AnimeTracker.Api.Adapters.MassTransit\AnimeTracker.Api.Adapters.MassTransit.csproj", "{0AE9B4ED-7F4C-4AB2-8A12-B67E31DFF3A1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +53,14 @@ Global
 		{51F5F257-C1A4-48B6-B8B8-65029011DF0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51F5F257-C1A4-48B6-B8B8-65029011DF0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{51F5F257-C1A4-48B6-B8B8-65029011DF0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35260E02-5687-48FC-B372-722EB2924418}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35260E02-5687-48FC-B372-722EB2924418}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35260E02-5687-48FC-B372-722EB2924418}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35260E02-5687-48FC-B372-722EB2924418}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AE9B4ED-7F4C-4AB2-8A12-B67E31DFF3A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AE9B4ED-7F4C-4AB2-8A12-B67E31DFF3A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AE9B4ED-7F4C-4AB2-8A12-B67E31DFF3A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AE9B4ED-7F4C-4AB2-8A12-B67E31DFF3A1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -60,5 +72,7 @@ Global
 		{FB92BB0B-2A3F-4A6D-8547-7993BF9DA5D2} = {3B1E2027-625B-44A2-ACA5-535E10E19F22}
 		{658D04DC-7D4E-46E2-9F49-4000CFD77C79} = {3B1E2027-625B-44A2-ACA5-535E10E19F22}
 		{51F5F257-C1A4-48B6-B8B8-65029011DF0D} = {5CB1120D-A48B-435B-87E5-2DEC8139BBB6}
+		{35260E02-5687-48FC-B372-722EB2924418} = {3B1E2027-625B-44A2-ACA5-535E10E19F22}
+		{0AE9B4ED-7F4C-4AB2-8A12-B67E31DFF3A1} = {3B1E2027-625B-44A2-ACA5-535E10E19F22}
 	EndGlobalSection
 EndGlobal

@@ -4,5 +4,6 @@ namespace AnimeTracker.Api.Abstractions.Interfaces.Adapters;
 
 public interface INautijonAdapter
 {
-	Task<IReadOnlyCollection<Anime>> GetAnimes(AnimeDate date);
+	Task<AnimeBase[]> GetAnimes(AnimeDate date);
+	Task<Episode[]> GetAnimeEpisodes(string animeUrl);
 }

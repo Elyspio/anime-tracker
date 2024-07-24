@@ -1,7 +1,9 @@
 ﻿using AnimeTracker.Api.Abstractions.Interfaces.Injections;
+using AnimeTracker.Api.Adapters.Hangfire;
+using AnimeTracker.Api.Adapters.MassTransit;
 using AnimeTracker.Api.Adapters.Mongo.Injections;
 using AnimeTracker.Api.Adapters.Rest.Injections;
-using AnimeTracker.Api.Core.Injections;
+using AnimeTracker.Api.Core;
 using AnimeTracker.Api.Web.Technical.Extensions;
 
 namespace AnimeTracker.Api.Web.Start;
@@ -25,6 +27,8 @@ public sealed class AppBuilder
 
 		builder.Services.AddModule<MongoAdapterModule>(builder.Configuration);
 		builder.Services.AddModule<RestAdapterModule>(builder.Configuration);
+		builder.Services.AddModule<HangfireAdapterModule>(builder.Configuration);
+		builder.Services.AddModule<MassTransitAdapterModule>(builder.Configuration);
 
 		builder.Host.AddLogging();
 

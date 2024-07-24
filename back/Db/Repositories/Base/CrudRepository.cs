@@ -1,6 +1,7 @@
 ﻿using Elyspio.Utils.Telemetry.Technical.Helpers;
 using AnimeTracker.Api.Abstractions.Interfaces.Business;
 using AnimeTracker.Api.Abstractions.Interfaces.Repositories;
+using AnimeTracker.Api.Abstractions.Models.Base.Anime;
 using Mapster;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -16,22 +17,22 @@ internal abstract class CrudRepository<TEntity, TBase>(IConfiguration configurat
 	protected FilterDefinitionBuilder<TEntity> Filter = Builders<TEntity>.Filter;
 	protected UpdateDefinitionBuilder<TEntity> Update = Builders<TEntity>.Update;
 
-	public async Task<TEntity> Add(TBase @base)
+	public async Task<TEntity[]> Add(IReadOnlyCollection<TBase> bases)
 	{
-		using var logger = LogAdapter($"{Log.F(@base)}", autoExit: false);
+		using var logger = LogRepository($"{Log.F(bases)}", autoExit: false);
 
-		var entity = @base!.Adapt<TEntity>();
+		var entities = bases!.Adapt<TEntity[]>();
 
-		await EntityCollection.InsertOneAsync(entity);
+		await EntityCollection.InsertManyAsync(entities, new InsertManyOptions { IsOrdered = false });
 
-		logger.Exit($"{entity.Id}");
+		logger.Exit($"Ids={entities.Select(e => e.Id)}");
 
-		return entity;
+		return entities;
 	}
 
 	public async Task<TEntity> Replace(ObjectId id, TBase @base)
 	{
-		using var logger = LogAdapter($"{Log.F(id)} {Log.F(@base)}", autoExit: false);
+		using var logger = LogRepository($"{Log.F(id)} {Log.F(@base)}", autoExit: false);
 
 		var entity = @base!.Adapt<TEntity>();
 
@@ -46,7 +47,7 @@ internal abstract class CrudRepository<TEntity, TBase>(IConfiguration configurat
 
 	public async Task<List<TEntity>> GetAll()
 	{
-		using var logger = LogAdapter(autoExit: false);
+		using var logger = LogRepository(autoExit: false);
 
 		var entities = await EntityCollection.AsQueryable().ToListAsync();
 
@@ -57,7 +58,7 @@ internal abstract class CrudRepository<TEntity, TBase>(IConfiguration configurat
 
 	public async Task Delete(ObjectId id)
 	{
-		using var logger = LogAdapter(autoExit: false);
+		using var logger = LogRepository(autoExit: false);
 
 		var filter = Filter.Eq(e => e.Id, id);
 
@@ -68,7 +69,7 @@ internal abstract class CrudRepository<TEntity, TBase>(IConfiguration configurat
 
 	public async Task<TEntity?> GetById(ObjectId id)
 	{
-		using var logger = LogAdapter(autoExit: false);
+		using var logger = LogRepository(autoExit: false);
 
 		var filter = Filter.Eq(e => e.Id, id);
 

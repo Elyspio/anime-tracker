@@ -2,7 +2,8 @@
 
 public sealed record Episode
 {
-	public int Number { get; set; }
+	public double Number { get; set; }
 	public required string Title { get; set; }
-	public required string Url { get; set; }
+	public required string? Url { get; set; }
+	public required DateOnly? ReleaseDate { get; set; }
 }

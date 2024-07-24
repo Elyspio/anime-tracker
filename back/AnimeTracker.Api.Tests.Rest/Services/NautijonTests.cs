@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using AnimeTracker.Api.Abstractions.Interfaces.Adapters;
 using AnimeTracker.Api.Abstractions.Models.Base.Anime;
 using AnimeTracker.Api.Tests.Rest.Fixtures;
@@ -7,9 +6,9 @@ using Xunit.Microsoft.DependencyInjection.Abstracts;
 
 namespace AnimeTracker.Api.Tests.Rest.Services;
 
-public class NautijonTests:  TestBed<CoreFixture>
+public class NautijonTests:  TestBed<RestAdapterFixture>
 {
-	public NautijonTests(ITestOutputHelper testOutputHelper, CoreFixture fixture) : base(testOutputHelper, fixture)
+	public NautijonTests(ITestOutputHelper testOutputHelper, RestAdapterFixture fixture) : base(testOutputHelper, fixture)
 	{
 	}
 
@@ -20,8 +19,20 @@ public class NautijonTests:  TestBed<CoreFixture>
 
 		Assert.NotNull(nautijonAdapter);
 
-		var token = await nautijonAdapter.GetAnimes(new AnimeDate(2024, AnimeSeason.Winter));
-		Assert.NotEmpty(token);
+		var animes = await nautijonAdapter.GetAnimes(new AnimeDate(2024, AnimeSeason.Winter));
+		Assert.NotEmpty(animes);
+	}
+
+	[Fact]
+	public async Task GetAnimeEpisodes()
+	{
+		var nautijonAdapter = _fixture.GetScopedService<INautijonAdapter>(_testOutputHelper);
+
+		Assert.NotNull(nautijonAdapter);
+
+		var episodes = await nautijonAdapter.GetAnimeEpisodes("https://www.nautiljon.com/animes/86.html");
+		Assert.NotEmpty(episodes);
+		Assert.Equal(11, episodes.Length);
 	}
 
 

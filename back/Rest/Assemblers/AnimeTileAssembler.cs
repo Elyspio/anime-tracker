@@ -3,9 +3,12 @@ using HtmlAgilityPack;
 
 namespace AnimeTracker.Api.Adapters.Rest.Assemblers;
 
-public class AnimeAssembler
+/// <summary>
+/// Converts the HTML document from the anime list page into an AnimeBase object.
+/// </summary>
+public class AnimeTileAssembler
 {
-	public Anime Convert(AnimeDate date, HtmlDocument doc)
+	public AnimeBase Convert(AnimeDate date, HtmlDocument doc)
 	{
 		var node = doc.DocumentNode;
 
@@ -39,7 +42,7 @@ public class AnimeAssembler
 
 		var animePath = ((HtmlNodeNavigator?)header.SelectSingleNode("//h2/a"))?.CurrentNode.Attributes["href"].Value ?? "";
 
-		return new Anime
+		return new AnimeBase
 		{
 			Date = date,
 			Title = title,

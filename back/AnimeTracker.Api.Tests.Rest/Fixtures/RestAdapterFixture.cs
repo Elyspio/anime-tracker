@@ -7,7 +7,7 @@ using Xunit.Microsoft.DependencyInjection.Abstracts;
 
 namespace AnimeTracker.Api.Tests.Rest.Fixtures;
 
-public class CoreFixture: TestBedFixture
+public class RestAdapterFixture: TestBedFixture
 {
 	protected override void AddServices(IServiceCollection services, IConfiguration? configuration)
 	{

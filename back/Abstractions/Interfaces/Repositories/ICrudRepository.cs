@@ -1,4 +1,5 @@
 ﻿using AnimeTracker.Api.Abstractions.Interfaces.Business;
+using AnimeTracker.Api.Abstractions.Models.Base.Anime;
 using MongoDB.Bson;
 
 namespace AnimeTracker.Api.Abstractions.Interfaces.Repositories;
@@ -13,9 +14,9 @@ public interface ICrudRepository<TEntity, in TBase> where TEntity : IEntity
 	/// <summary>
 	///     Adds a new entity to the repository.
 	/// </summary>
-	/// <param name="base"></param>
+	/// <param name="bases"></param>
 	/// <returns>The TEntity that was added.</returns>
-	public Task<TEntity> Add(TBase @base);
+	public Task<TEntity[]> Add(IReadOnlyCollection<TBase> bases);
 
 	/// <summary>
 	///     Replace a single entity in the repository.

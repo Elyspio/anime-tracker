@@ -1,4 +1,5 @@
-﻿using Elyspio.Utils.Telemetry.MongoDB.Extensions;
+﻿using Elyspio.Utils.Telemetry.MassTransit.Extensions;
+using Elyspio.Utils.Telemetry.MongoDB.Extensions;
 using Elyspio.Utils.Telemetry.Technical.Extensions;
 using Elyspio.Utils.Telemetry.Tracing.Builder;
 
@@ -21,7 +22,8 @@ public static class OpenTelemetryExtentions
 
 		var telemetryBuilder = new AppOpenTelemetryBuilder<Program>(telemetryConf!)
 		{
-			Tracing = tracing => tracing.AddAppMongoInstrumentation()
+			Tracing = tracing => tracing.AddAppMongoInstrumentation().AddAppMassTransitInstrumentation(),
+			Meter = meter => meter.AddAppMassTransitInstrumentation()
 		};
 
 		telemetryBuilder.Build(services);

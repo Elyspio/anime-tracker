@@ -1,4 +1,5 @@
 ﻿using AnimeTracker.Api.Web.Technical.Extensions;
+using Hangfire;
 
 namespace AnimeTracker.Api.Web.Start;
 
@@ -26,11 +27,19 @@ public static class AppRuntime
 		// Setup Controllers
 		app.MapControllers();
 
-		if (!app.Environment.IsProduction()) return app;
+		app.UseHangfireDashboard("/hangfire", new DashboardOptions
+		{
 
-		// Start SPA serving
+		});
+
+		if (app.Environment.IsProduction()) UseAppStaticFiles(app);
+
+		return app;
+	}
+
+	private static void UseAppStaticFiles(WebApplication app)
+	{
 		app.UseRouting();
-
 		app.UseStaticFiles();
 
 		app.MapWhen(ctx => !ctx.Request.Path.StartsWithSegments("/api"), appBuilder =>
@@ -39,6 +48,5 @@ public static class AppRuntime
 			appBuilder.UseEndpoints(ep => { ep.MapFallbackToFile("index.html"); });
 		});
 
-		return app;
 	}
 }

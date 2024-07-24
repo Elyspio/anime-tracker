@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
@@ -8,12 +8,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.14" />
 		<PackageReference Include="MongoDB.Driver" Version="2.27.0" />
+		<PackageReference Include="Hangfire.Mongo" Version="1.10.7" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Elyspio.Utils.Telemetry.MongoDB" Version="1.0.1" />
-		<ProjectReference Include="..\Abstractions\AnimeTracker.Api.Abstractions.csproj" />
+	  <ProjectReference Include="..\Abstractions\AnimeTracker.Api.Abstractions.csproj" />
 	</ItemGroup>
+
 
 </Project>

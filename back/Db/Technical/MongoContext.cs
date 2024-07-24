@@ -33,7 +33,11 @@ public sealed class MongoContext
 
 		var (client, url) = MongoClientFactory.Create(connectionString);
 
-		Console.WriteLine($"Connecting to Database '{url.Server.Host}:{url.Server.Port}/{url.DatabaseName}'");
+		foreach (var server in url.Servers)
+		{
+			Console.WriteLine($"Connecting to Database '{server.Host}:{server.Port}/{url.DatabaseName}'");
+		}
+
 
 		MongoDatabase = client.GetDatabase(url.DatabaseName);
 	}
