@@ -48,7 +48,7 @@ public class NautijonAdapter : TracingAdapter, INautijonAdapter
 		var dom = new HtmlDocument();
 		dom.LoadHtml(html);
 
-		var nodes = dom.DocumentNode.SelectNodes("//div[@class='elt']");
+		var nodes = dom.DocumentNode.SelectNodes("//div[@class='elt' and not(ancestor::div[@id='saison_continue'])]");
 
 		var animes =  nodes.Select(a =>
 		{

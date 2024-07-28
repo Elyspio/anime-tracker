@@ -60,7 +60,7 @@ public class MassTransitAdapterModule : IDotnetModule
 				});
 
 				cfg.UseKillSwitch(options => options
-					.SetActivationThreshold(2)
+					.SetActivationThreshold(1)
 					.SetTripThreshold(0.15)
 					.SetRestartTimeout(m: 1));
 

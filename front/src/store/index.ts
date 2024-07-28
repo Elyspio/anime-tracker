@@ -3,13 +3,13 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { themeReducer } from "./module/theme/theme.reducer";
 import { authenticationReducer } from "./module/authentication/authentication.reducer";
 import { container } from "@/core/di";
-import { todoReducer } from "./module/todo/todo.reducer";
+import { animesReducer } from "@store/module/animes/animes.reducer";
 
 const store = configureStore({
 	reducer: {
 		theme: themeReducer,
 		authentication: authenticationReducer,
-		todo: todoReducer,
+		animes: animesReducer,
 	},
 	devTools: process.env.NODE_ENV !== "production",
 	middleware: (getDefaultMiddleware) => getDefaultMiddleware({ thunk: { extraArgument: { container } as ExtraArgument } }),

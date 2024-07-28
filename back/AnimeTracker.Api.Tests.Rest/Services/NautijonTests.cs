@@ -20,6 +20,7 @@ public class NautijonTests:  TestBed<RestAdapterFixture>
 		Assert.NotNull(nautijonAdapter);
 
 		var animes = await nautijonAdapter.GetAnimes(new AnimeDate(2024, AnimeSeason.Winter));
+
 		Assert.NotEmpty(animes);
 	}
 
@@ -32,6 +33,7 @@ public class NautijonTests:  TestBed<RestAdapterFixture>
 
 		var episodes = await nautijonAdapter.GetAnimeEpisodes("https://www.nautiljon.com/animes/86.html");
 		Assert.NotEmpty(episodes);
+
 		Assert.Equal(11, episodes.Length);
 	}
 

@@ -1,20 +1,17 @@
 import { inject, injectable } from "inversify";
 import { AuthenticationApiClient } from "@apis/authentication";
 import { EventManager } from "@/core/utils/event";
-import { BaseService } from "../technical/base.service";
 import { User } from "@apis/authentication/generated";
 import { LocalStorageService } from "../localStorage.service";
 import { openPage } from "@/core/utils/web";
 import { DiKeysService } from "@/core/di/services/di.keys.service";
 
 @injectable()
-export class AuthenticationService extends BaseService {
+export class AuthenticationService {
 	constructor(
 		@inject(DiKeysService.localStorage.jwt) private localStorage: LocalStorageService,
-		@inject(AuthenticationApiClient) private authenticationApi: AuthenticationApiClient
-	) {
-		super();
-	}
+		@inject(AuthenticationApiClient) private authenticationApi: AuthenticationApiClient,
+	) {}
 
 	public openLoginPage() {
 		return openPage(`${window.config.endpoints.authentication}/login`);

@@ -12,11 +12,11 @@ public class AnimeController(IAnimeService animeService, ILogger<AnimeController
 {
 
 	[HttpGet]
-	public Task<IReadOnlyCollection<Anime>> GetAnimes()
+	public async Task<IReadOnlyCollection<Anime>> GetAnimes()
 	{
 		using var _ = LogController();
 
-		return animeService.GetAll();
+		return await animeService.GetAll();
 	}
 
 

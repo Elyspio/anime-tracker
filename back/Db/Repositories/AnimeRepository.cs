@@ -32,13 +32,13 @@ internal class AnimeRepository(IConfiguration configuration, ILogger<BaseReposit
 
 		var existingAnimes = (await EntityCollection.AsQueryable().Where(anime => anime.Date.Season == date.Season && anime.Date.Year == date.Year).ToListAsync()).ToDictionary(anime => anime.Url);
 
-		var operations =  animes.Select(anime =>
+		var operations =  animes.Select(WriteModel<AnimeEntity> (anime) =>
 		{
 			var animeEntity = anime.Adapt<AnimeEntity>();
 
 			if (!existingAnimes.TryGetValue(anime.Url, out var existingAnime))
 			{
-				return (WriteModel<AnimeEntity>)new InsertOneModel<AnimeEntity>(animeEntity);
+				return new InsertOneModel<AnimeEntity>(animeEntity);
 			}
 
 			animeEntity.Id = existingAnime.Id;
