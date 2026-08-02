@@ -125,10 +125,16 @@ as `admin` and triggers a refresh — that button is the bootstrap path.
 ## Testing expectations
 
 - Prediction or cadence changes: extend `AnimeTracker.Core.Tests`.
-- Nautiljon parsing changes: extend `AnimeTracker.Adapters.Tests`. The current tests pin the parsing
-  rules against markup shaped like the real pages; **recorded fixtures of live pages are still
-  missing** and are the only thing that would catch a markup change upstream. `AnimeTileAssembler`
-  is untested for that reason — its XPaths depend on the exact whitespace of the real document.
+- Nautiljon parsing changes: extend `AnimeTracker.Adapters.Tests`. Two layers matter and both must
+  stay: unit tests over hand-written markup pin the parsing *rules*, and the recorded pages under
+  `Fixtures/` pin the *markup* — they are the only thing that catches a layout change upstream.
+  Re-record a fixture by fetching the page through FlareSolverr rather than editing it by hand.
+- Match selectors on a single class token (`contains(concat(' ', normalize-space(@class), ' '), ' x ')`),
+  never on the whole `@class`. The site appends presentational classes without notice; an exact
+  match on `genres tagsList` is what a `genres_scrollable` suffix turned into a crash on every scrape.
+- Nautiljon dates are `dd/MM/yyyy` and its numbers sit next to private-use icon glyphs. Parse dates
+  with an explicit format list, and reduce a number to its digits before parsing — never rely on the
+  ambient culture, which is the invariant one inside a container.
 - Countdown formatting or filtering changes: extend `front/src/core/binge.test.ts`.
 - The `Season` and `BingeStatus` names are a contract between `JsonStringEnumConverter` and the
   hand-written TypeScript unions in `front/src/core/api/types.ts`. Both sides have tests; keep them.

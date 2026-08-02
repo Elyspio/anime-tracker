@@ -1,94 +1,117 @@
-﻿using System.Globalization;
+using System.Globalization;
+using System.Text.RegularExpressions;
+using System.Web;
 using AnimeTracker.Abstractions.Models.Base.Anime;
 using HtmlAgilityPack;
 
 namespace AnimeTracker.Adapters.Nautijon.Assemblers;
 
 /// <summary>
-/// Converts the HTML document from the anime list page into an AnimeBase object.
+///     Converts one tile of the season listing into an <see cref="AnimeBase" />.
+///     Selectors match on a single class token rather than the whole attribute: the site adds
+///     presentational classes (genres_scrollable and friends) without warning, and an exact match
+///     turns that into a crash on every scrape.
 /// </summary>
-public class AnimeTileAssembler
+public partial class AnimeTileAssembler
 {
 	public AnimeBase Convert(AnimeDate date, HtmlDocument doc)
 	{
 		var node = doc.DocumentNode;
 
-		var traveler = doc.CreateNavigator()!;
-
-		var header = (HtmlNodeNavigator)traveler.SelectSingleNode("//div[@class='title']")!;
-
-		var infos = (HtmlNodeNavigator)traveler.SelectSingleNode("//div[@class='infos']")!;
-
-		var tags = ((HtmlNodeNavigator)traveler.SelectSingleNode("//div[@class='genres tagsList']")!).CurrentNode.ChildNodes
-			.Select(n => new AnimeTag(n.InnerText, n.Attributes["href"].Value))
-			.ToArray();
-
-		var title = node.SelectSingleNode("//h2/a").InnerText;
-
-		var imgLink = GetImgLink(node);
-
-		var epCount = GetEpisodesCount(infos);
-
-		var animePath = ((HtmlNodeNavigator?)header.SelectSingleNode("//h2/a"))?.CurrentNode.Attributes["href"].Value ?? "";
-
-
+		var infos = node.SelectSingleNode("//div[contains(concat(' ', normalize-space(@class), ' '), ' infos ')]");
+		var titleLink = node.SelectSingleNode("//h2/a");
 
 		return new AnimeBase
 		{
 			Date = date,
-			Title = title,
-			Studio = infos.CurrentNode.Descendants("a").FirstOrDefault()?.InnerText ?? "",
-			Description = ((HtmlNodeNavigator?)traveler.SelectSingleNode("texte"))?.CurrentNode.InnerText ?? "",
-			ImageUrl = imgLink,
-			Url = $"https://nautiljon.com{animePath}",
-			EpisodesCount = epCount,
+			Title = Decode(titleLink?.InnerText),
+			Studio = Decode(infos?.Descendants("a").FirstOrDefault()?.InnerText),
+			Description = Decode(node.SelectSingleNode("//div[contains(concat(' ', normalize-space(@class), ' '), ' texte ')]")?.InnerText),
+			ImageUrl = GetImageUrl(node),
+			Url = $"https://nautiljon.com{titleLink?.Attributes["href"]?.Value ?? ""}",
+			EpisodesCount = GetEpisodesCount(infos),
 			Episodes = [],
-			Tags = tags ?? [],
+			Tags = GetTags(node),
 			Score = GetScore(node),
 			Popularity = GetPopularity(node)
 		};
 	}
 
+	private static string Decode(string? value)
+	{
+		return HttpUtility.HtmlDecode(value ?? "").Trim();
+	}
+
+	private static AnimeTag[] GetTags(HtmlNode node)
+	{
+		var container = node.SelectSingleNode("//div[contains(concat(' ', normalize-space(@class), ' '), ' tagsList ')]");
+
+		return container?.Elements("a")
+			.Select(link => new AnimeTag(Decode(link.InnerText), link.Attributes["href"]?.Value ?? ""))
+			.Where(tag => tag.Name.Length > 0)
+			.ToArray() ?? [];
+	}
+
+	/// <summary>
+	///     The rating and member count sit in spans that also carry an icon glyph from a private-use
+	///     font, so the text has to be reduced to its number rather than parsed whole.
+	/// </summary>
 	private static double? GetScore(HtmlNode node)
 	{
-		double? score = null;
-		var scoreStr = node.SelectSingleNode("//div[@class='infos2']")?.ChildNodes[1].InnerText.Trim();
-		if (scoreStr is not null)
-		{
-			try
-			{
-				score = double.Parse(scoreStr.Split('/')[0], CultureInfo.InvariantCulture);
-			}
-			catch (Exception)
-			{
-				// ignored
-			}
-		}
+		var text = Infos2Span(node, 1);
+		if (text is null) return null;
 
-		return score;
+		var match = DecimalNumber().Match(text.Replace(',', '.'));
+
+		return match.Success && double.TryParse(match.Value, CultureInfo.InvariantCulture, out var score) ? score : null;
 	}
 
 	private static int GetPopularity(HtmlNode node)
 	{
-		var popularityStr = node.SelectSingleNode("//div[@class='infos2']")?.ChildNodes[2].InnerText.Trim();
+		var text = Infos2Span(node, 2);
+		if (text is null) return 0;
 
-		return int.Parse(popularityStr?.Split('/')[0] ?? "-1");
+		var digits = IntegerNumber().Match(text.Replace(" ", "").Replace(" ", ""));
+
+		return digits.Success && int.TryParse(digits.Value, out var popularity) ? popularity : 0;
 	}
-	private static int? GetEpisodesCount(HtmlNodeNavigator infos)
+
+	private static string? Infos2Span(HtmlNode node, int index)
 	{
-		var epCountStr = infos.CurrentNode.SelectNodes("//span").FirstOrDefault(s => s.InnerText.Contains("eps"))?.InnerText;
+		var spans = node
+			.SelectSingleNode("//div[contains(concat(' ', normalize-space(@class), ' '), ' infos2 ')]")
+			?.Elements("span")
+			.ToArray();
 
-		return epCountStr is not null && int.TryParse(epCountStr.Split(' ')[0], out var epCount) ? epCount : null;
+		return spans is not null && spans.Length > index ? spans[index].InnerText : null;
 	}
 
-	private static string GetImgLink(HtmlNode node)
+	private static int? GetEpisodesCount(HtmlNode? infos)
 	{
-		var imgStyle = node.SelectSingleNode("//div[@class='image relative']").Attributes["style"].Value;
+		var text = infos?.Elements("span").FirstOrDefault(span => span.InnerText.Contains("eps"))?.InnerText;
+		if (text is null) return null;
 
-		const string startMarker = "https";
-		const string endMarker = ")";
+		var match = IntegerNumber().Match(text);
 
-		var indexOf = imgStyle.IndexOf(startMarker, StringComparison.Ordinal);
-		return imgStyle[indexOf..imgStyle.LastIndexOf(endMarker, StringComparison.Ordinal)];
+		return match.Success && int.TryParse(match.Value, out var count) ? count : null;
 	}
+
+	/// <summary>Pulls the cover out of the inline <c>background-image:url(...)</c> declaration.</summary>
+	private static string GetImageUrl(HtmlNode node)
+	{
+		var style = node
+			.SelectSingleNode("//div[contains(concat(' ', normalize-space(@class), ' '), ' image ')]")
+			?.Attributes["style"]?.Value;
+
+		return style is null ? "" : BackgroundImageUrl().Match(style) is { Success: true } match ? match.Groups[1].Value : "";
+	}
+
+	[GeneratedRegex(@"\d+(\.\d+)?")]
+	private static partial Regex DecimalNumber();
+
+	[GeneratedRegex(@"\d+")]
+	private static partial Regex IntegerNumber();
+
+	[GeneratedRegex(@"url\(\s*['""]?(https?://[^'""\)]+)")]
+	private static partial Regex BackgroundImageUrl();
 }
