@@ -30,7 +30,12 @@ public static class HangfireModule
 					BackupStrategy = new CollectionMongoBackupStrategy()
 				},
 				Prefix = "hangfire",
-				CheckConnection = true
+				CheckConnection = true,
+				// Hangfire.Mongo watches a change stream by default, which only exists on a replica
+				// set. This app runs a standalone MongoDB, so it tails the capped notifications
+				// collection instead — without this, picking up a queued job falls back to a slow
+				// poll and the log fills with $changeStream failures.
+				CheckQueuedJobsStrategy = CheckQueuedJobsStrategy.TailNotificationsCollection
 			}));
 
 		// The season refresh walks Nautiljon one page at a time behind a single Cloudflare solver.

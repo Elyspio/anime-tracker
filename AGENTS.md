@@ -73,6 +73,12 @@ These are the properties the design rests on. Changing them is a product decisio
   listing page does not carry them, and they are fetched anime by anime afterwards.
 - Tests never reach the network or a solver. Drive the adapter through `FakeHttpMessageHandler`.
 
+### Scheduling
+
+- MongoDB runs standalone, not as a replica set, so there are no change streams. Hangfire.Mongo is
+  configured with `CheckQueuedJobsStrategy.TailNotificationsCollection`; its default watches a
+  change stream and degrades to a slow poll with a stack trace on every attempt.
+
 ### Layering
 
 - Controllers talk to services only (`IAnimeService`). A controller never injects a repository or
