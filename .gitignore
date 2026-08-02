@@ -1,22 +1,18 @@
+bin
+obj
 .idea
-
-# TypeScript (front)
-*/node_modules
-*/build
-*.map
-
-# Deploy dev
-deploy/environments/local/data
-!deploy/build/
-
-# C# (back)
 .vs
-back/*/bin
-back/*/obj
-
-# Production configuration
-deploy/environments/prod/.env
-deploy/environments/prod/config/front/conf.js
-deploy/environments/prod/config/back/appsettings.docker.json
-front/dist
+*.user
 .angularjs-lsp
+
+# Backend local configuration and secrets
+back/**/appsettings.Local.json
+back/**/appsettings.docker.json
+
+# Frontend
+node_modules
+front/dist
+front/.vite
+
+# Deployment artefacts
+deploy/build/out

@@ -1,6 +1,8 @@
-OuvertureWifi.App/**/bin
-OuvertureWifi.App/**/obj
-Deployment
-.idea
+**/bin
+**/obj
+**/node_modules
+front/dist
 .git
+.idea
 .vs
+deploy/build/out

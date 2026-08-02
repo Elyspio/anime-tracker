@@ -1,24 +1,51 @@
-# External front
+# Anime Tracker
 
-Express / ReactJS in Typescript
+Quand pourrai-je binger cet animé ?
 
-## Description
+L'application récupère la liste des animés d'une saison depuis
+[Nautiljon](https://www.nautiljon.com), suit la sortie de leurs épisodes, et affiche pour chacun la
+date à laquelle le dernier épisode sera sorti — le moment où la série devient **bingeable**.
 
-A tiny project that bootstrap a web interface and a NodeJS backend
+La saison est triée par ordre de disponibilité : ce qui est regardable maintenant en premier, puis
+« dans 3 semaines », « dans 7 semaines », et enfin les séries dont le nombre d'épisodes n'est pas
+annoncé, pour lesquelles aucune date n'est estimée.
 
-- Web interface: Create-react-app with typescript template and theme support provided by @material-ui
-- NodeJS backend: Express with Ts.ED decorators
+## Fonctionnement du calcul
 
-## Docker support
+La date bingeable est extrapolée à partir de la **cadence réellement observée** : l'intervalle
+médian entre les sorties déjà passées, appliqué aux épisodes restants.
 
-This project comes with a dockerfile to handle the creation of a docker image.
+- Médiane et non moyenne : une semaine de pause ne décale pas toute l'estimation.
+- Dates distinctes : un double épisode diffusé le même jour ne fait pas croire à une cadence nulle.
+- Nombre total d'épisodes non annoncé : aucune date n'est affichée, seulement « Fin inconnue ».
 
-### Images
+Le calcul est refait à chaque lecture, jamais stocké.
 
-- node for the building steps
-- node:alpine as the deployed container
+## Stack
 
-### Platform supported
+| | |
+|---|---|
+| Backend | .NET 10, ASP.NET Core, MongoDB, Hangfire, Aspire 13 |
+| Frontend | React 19, TypeScript, MUI 9, TanStack Query, Vite+ |
+| Auth | Keycloak (OIDC) — lecture anonyme, rafraîchissement réservé au rôle `anime-tracker-admin` |
+| Scraping | Nautiljon via FlareSolverr (contournement Cloudflare) |
 
-- ARM64 (RaspberryPI 3-4)
-- AMD64 (PC, Mac)
+## Développement
+
+```bash
+aspire run
+```
+
+Démarre MongoDB, Keycloak, FlareSolverr, l'API et le serveur Vite. Comptes locaux : `admin`/`admin`
+(peut rafraîchir), `user`/`user` (ne peut pas).
+
+La base est vide au premier lancement : connectez-vous en `admin` et lancez un rafraîchissement pour
+récupérer la saison courante.
+
+```bash
+dotnet test back/AnimeTracker.slnx
+cd front && pnpm test
+```
+
+Les conventions de contribution sont dans [AGENTS.md](AGENTS.md), le vocabulaire du domaine dans
+[CONTEXT.md](CONTEXT.md).
