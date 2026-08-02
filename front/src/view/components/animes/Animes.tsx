@@ -13,7 +13,7 @@ export const Animes = () => {
 	return (
 		<Grid container spacing={2} height={"100%"} overflow={"auto"}>
 			{animes.map((anime) => (
-				<Grid key={anime.id} md={3} xl={2}>
+				<Grid key={anime.id} md={2} xl={1.5}>
 					<AnimeCard data={anime} />
 				</Grid>
 			))}

@@ -19,3 +19,4 @@ deploy/environments/prod/.env
 deploy/environments/prod/config/front/conf.js
 deploy/environments/prod/config/back/appsettings.docker.json
 front/dist
+.angularjs-lsp

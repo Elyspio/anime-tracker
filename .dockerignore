@@ -1,8 +1,6 @@
-back/**/bin
-back/**/obj
-deploy
+OuvertureWifi.App/**/bin
+OuvertureWifi.App/**/obj
+Deployment
 .idea
 .git
-front/dist
-front/node_modules
-back/.vs
+.vs
