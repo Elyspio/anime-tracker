@@ -73,11 +73,21 @@ These are the properties the design rests on. Changing them is a product decisio
   listing page does not carry them, and they are fetched anime by anime afterwards.
 - Tests never reach the network or a solver. Drive the adapter through `FakeHttpMessageHandler`.
 
-### Scheduling
+### Scheduling and storage
 
-- MongoDB runs standalone, not as a replica set, so there are no change streams. Hangfire.Mongo is
-  configured with `CheckQueuedJobsStrategy.TailNotificationsCollection`; its default watches a
-  change stream and degrades to a slow poll with a stack trace on every attempt.
+- Development runs MongoDB as a **one-member replica set**, built from
+  `AnimeTracker.AppHost/mongo/Dockerfile`, so change streams and transactions behave as they do in
+  a real deployment. The image bakes the internal-auth keyfile mongod demands of any replica set
+  running with authentication, and the entrypoint initiates the set once the server is up — the
+  stock entrypoint strips `--replSet` for its own bootstrap, so it cannot do this itself.
+- Development credentials are fixed at `aspire`/`aspire` and committed on purpose. That is a
+  loopback container holding scraped public listings; deployments supply their own connection
+  string and never read these.
+- The Mongo host port is pinned to 27017 because the set advertises itself as `localhost:27017`.
+  On a random host port the driver would discover that address and dial a port nothing serves.
+- Hangfire nonetheless uses `CheckQueuedJobsStrategy.TailNotificationsCollection` rather than its
+  default change-stream watcher. Both are instant; this one costs the app no dependency on the
+  deployment's topology, so pointing it at a standalone MongoDB stays a supported configuration.
 
 ### Layering
 

@@ -8,7 +8,19 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 builder.Services.AddLogging(x => x.AddSimpleConsole(l => l.SingleLine = true));
 
-var mongo = builder.AddMongoDB("mongo").WithImage("mongo:8.0.4").WithDataVolume();
+// Fixed development credentials. They are deliberately boring and deliberately committed: this
+// MongoDB is a loopback container holding scraped public listings, and a generated password would
+// only make `mongosh` harder to reach for. Deployments supply their own connection string.
+var mongoUser = builder.AddParameter("mongo-username", "aspire");
+var mongoPassword = builder.AddParameter("mongo-password", "aspire", secret: true);
+
+// Port pinned to 27017 so the host reaches the server at the same address the replica set
+// advertises for itself. On a random host port the driver would discover "localhost:27017" from
+// the set configuration and dial a port nothing is published on.
+var mongo = builder.AddMongoDB("mongo", 27017, mongoUser, mongoPassword)
+	.WithDockerfile("mongo")
+	.WithDataVolume();
+
 var mongodb = mongo.AddDatabase("anime-tracker");
 
 // Keycloak on a pinned port so the issuer URL is identical for the browser and the API.

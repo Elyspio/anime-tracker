@@ -36,8 +36,9 @@ Le calcul est refait à chaque lecture, jamais stocké.
 aspire run
 ```
 
-Démarre MongoDB, Keycloak, FlareSolverr, l'API et le serveur Vite. Comptes locaux : `admin`/`admin`
-(peut rafraîchir), `user`/`user` (ne peut pas).
+Démarre MongoDB (replica set à un nœud, identifiants `aspire`/`aspire`), Keycloak, FlareSolverr,
+l'API et le serveur Vite. Comptes Keycloak locaux : `admin`/`admin` (peut rafraîchir),
+`user`/`user` (ne peut pas).
 
 La base est vide au premier lancement : connectez-vous en `admin` et lancez un rafraîchissement pour
 récupérer la saison courante.

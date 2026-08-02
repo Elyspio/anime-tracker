@@ -32,9 +32,9 @@ public static class HangfireModule
 				Prefix = "hangfire",
 				CheckConnection = true,
 				// Hangfire.Mongo watches a change stream by default, which only exists on a replica
-				// set. This app runs a standalone MongoDB, so it tails the capped notifications
-				// collection instead — without this, picking up a queued job falls back to a slow
-				// poll and the log fills with $changeStream failures.
+				// set. Tailing the capped notifications collection is just as immediate and works
+				// on a standalone server too, so where this is deployed stays an operational choice
+				// rather than something the scheduler dictates.
 				CheckQueuedJobsStrategy = CheckQueuedJobsStrategy.TailNotificationsCollection
 			}));
 
