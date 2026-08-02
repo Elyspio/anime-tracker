@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson;
 
-namespace AnimeTracker.Api.Abstractions.Interfaces.Business;
+namespace AnimeTracker.Abstractions.Interfaces.Business;
 
 /// <summary>
 ///     IEntity interface that represents an entity with a unique identifier.

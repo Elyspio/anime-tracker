@@ -1,10 +1,10 @@
-﻿using AnimeTracker.Api.Abstractions.Interfaces.Adapters;
-using AnimeTracker.Api.Abstractions.Interfaces.Repositories;
+﻿using AnimeTracker.Abstractions.Interfaces.Adapters;
+using AnimeTracker.Abstractions.Interfaces.Repositories;
 using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace AnimeTracker.Api.Core.Hosted;
+namespace AnimeTracker.Core.Hosted;
 
 public class AnimeHostedService: TracingService, IHostedService
 {

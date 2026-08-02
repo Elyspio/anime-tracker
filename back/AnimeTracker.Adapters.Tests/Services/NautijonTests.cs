@@ -1,10 +1,10 @@
-using AnimeTracker.Api.Abstractions.Interfaces.Adapters;
-using AnimeTracker.Api.Abstractions.Models.Base.Anime;
-using AnimeTracker.Api.Tests.Rest.Fixtures;
+using AnimeTracker.Abstractions.Interfaces.Adapters;
+using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Tests.Rest.Fixtures;
 using Xunit.Abstractions;
 using Xunit.Microsoft.DependencyInjection.Abstracts;
 
-namespace AnimeTracker.Api.Tests.Rest.Services;
+namespace AnimeTracker.Tests.Rest.Services;
 
 public class NautijonTests:  TestBed<RestAdapterFixture>
 {

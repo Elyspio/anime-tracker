@@ -1,10 +1,10 @@
 ﻿using Elyspio.Utils.Telemetry.Tracing.Elements;
-using AnimeTracker.Api.Abstractions.Interfaces.Services;
-using AnimeTracker.Api.Abstractions.Models.Base.Anime;
-using AnimeTracker.Api.Abstractions.Models.Transports;
+using AnimeTracker.Abstractions.Interfaces.Services;
+using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Transports;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AnimeTracker.Api.Web.Controllers;
+namespace AnimeTracker.Web.Controllers;
 
 [Route("api/animes")]
 [ApiController]

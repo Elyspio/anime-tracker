@@ -1,11 +1,11 @@
-﻿using AnimeTracker.Api.Abstractions.Interfaces.Injections;
-using AnimeTracker.Api.Adapters.Rest.Injections;
+﻿using AnimeTracker.Abstractions.Interfaces.Injections;
+using AnimeTracker.Adapters.Nautijon.Injections;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Microsoft.DependencyInjection;
 using Xunit.Microsoft.DependencyInjection.Abstracts;
 
-namespace AnimeTracker.Api.Tests.Rest.Fixtures;
+namespace AnimeTracker.Tests.Rest.Fixtures;
 
 public class RestAdapterFixture: TestBedFixture
 {

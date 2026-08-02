@@ -1,8 +1,8 @@
-﻿using AnimeTracker.Api.Abstractions.Interfaces.Business;
-using AnimeTracker.Api.Abstractions.Models.Base.Anime;
+﻿using AnimeTracker.Abstractions.Interfaces.Business;
+using AnimeTracker.Abstractions.Models.Base.Anime;
 using MongoDB.Bson;
 
-namespace AnimeTracker.Api.Abstractions.Interfaces.Repositories;
+namespace AnimeTracker.Abstractions.Interfaces.Repositories;
 
 /// <summary>
 ///     Defines a generic CRUD repository for entities that implement IEntity interface.

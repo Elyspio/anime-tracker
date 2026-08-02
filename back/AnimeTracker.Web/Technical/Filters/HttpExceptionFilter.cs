@@ -1,8 +1,8 @@
-﻿using AnimeTracker.Api.Abstractions.Exceptions;
+﻿using AnimeTracker.Abstractions.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace AnimeTracker.Api.Web.Technical.Filters;
+namespace AnimeTracker.Web.Technical.Filters;
 
 /// <inheritdoc />
 /// , Intercepts

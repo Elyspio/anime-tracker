@@ -1,7 +1,7 @@
-﻿using AnimeTracker.Api.Web.Technical.Extensions;
+﻿using AnimeTracker.Web.Technical.Extensions;
 using Hangfire;
 
-namespace AnimeTracker.Api.Web.Start;
+namespace AnimeTracker.Web.Start;
 
 /// <summary>
 ///     Application Initializer

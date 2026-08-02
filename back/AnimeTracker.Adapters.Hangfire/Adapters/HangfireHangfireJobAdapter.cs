@@ -1,11 +1,11 @@
 ﻿using System.Linq.Expressions;
-using AnimeTracker.Api.Abstractions.Interfaces.Adapters;
+using AnimeTracker.Abstractions.Interfaces.Adapters;
 using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Hangfire;
 using Hangfire.Annotations;
 using Microsoft.Extensions.Logging;
 
-namespace AnimeTracker.Api.Adapters.Hangfire.Adapters;
+namespace AnimeTracker.Adapters.Hangfire.Adapters;
 
 public class HangfireHangfireJobAdapter : TracingAdapter, IHangfireJobAdapter
 {

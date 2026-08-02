@@ -1,12 +1,12 @@
-﻿using AnimeTracker.Api.Abstractions.Interfaces.Injections;
-using AnimeTracker.Api.Adapters.Hangfire;
-using AnimeTracker.Api.Adapters.MassTransit;
-using AnimeTracker.Api.Adapters.Mongo.Injections;
-using AnimeTracker.Api.Adapters.Rest.Injections;
-using AnimeTracker.Api.Core;
-using AnimeTracker.Api.Web.Technical.Extensions;
+﻿using AnimeTracker.Abstractions.Interfaces.Injections;
+using AnimeTracker.Adapters.Hangfire;
+using AnimeTracker.Adapters.MassTransit;
+using AnimeTracker.Adapters.MongoDB.Injections;
+using AnimeTracker.Adapters.Nautijon.Injections;
+using AnimeTracker.Core;
+using AnimeTracker.Web.Technical.Extensions;
 
-namespace AnimeTracker.Api.Web.Start;
+namespace AnimeTracker.Web.Start;
 
 /// <summary>
 ///     Application builder

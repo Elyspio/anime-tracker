@@ -1,7 +1,7 @@
-﻿using AnimeTracker.Api.Abstractions.Models.Base.Anime;
-using AnimeTracker.Api.Abstractions.Models.Transports;
+﻿using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Transports;
 
-namespace AnimeTracker.Api.Abstractions.Interfaces.Services;
+namespace AnimeTracker.Abstractions.Interfaces.Services;
 
 public interface IAnimeService
 {

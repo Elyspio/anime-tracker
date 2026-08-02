@@ -1,7 +1,7 @@
-﻿using AnimeTracker.Api.Abstractions.Models.Base.Anime;
-using AnimeTracker.Api.Abstractions.Models.Entities;
+﻿using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Entities;
 
-namespace AnimeTracker.Api.Abstractions.Interfaces.Repositories;
+namespace AnimeTracker.Abstractions.Interfaces.Repositories;
 
 public interface IAnimeRepository : ICrudRepository<AnimeEntity, AnimeBase>
 {

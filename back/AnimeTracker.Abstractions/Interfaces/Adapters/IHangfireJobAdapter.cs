@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
-namespace AnimeTracker.Api.Abstractions.Interfaces.Adapters;
+namespace AnimeTracker.Abstractions.Interfaces.Adapters;
 
 public interface IHangfireJobAdapter
 {

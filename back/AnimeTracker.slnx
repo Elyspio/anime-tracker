@@ -1,0 +1,13 @@
+<Solution>
+	<Folder Name="/Adapters/">
+		<Project Path="AnimeTracker.Adapters.MongoDB/AnimeTracker.Adapters.MongoDB.csproj"/>
+		<Project Path="AnimeTracker.Adapters.Nautijon/AnimeTracker.Adapters.Nautijon.csproj"/>
+		<Project Path="AnimeTracker.Adapters.Hangfire/AnimeTracker.Adapters.Hangfire.csproj"/>
+	</Folder>
+	<Folder Name="/Tests/">
+		<Project Path="AnimeTracker.Adapters.Tests/AnimeTracker.Adapters.Tests.csproj"/>
+	</Folder>
+	<Project Path="AnimeTracker.Abstractions/AnimeTracker.Abstractions.csproj"/>
+	<Project Path="AnimeTracker.Core/AnimeTracker.Core.csproj"/>
+	<Project Path="AnimeTracker.Web/AnimeTracker.Web.csproj"/>
+</Solution>

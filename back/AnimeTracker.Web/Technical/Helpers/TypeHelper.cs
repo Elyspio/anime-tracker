@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Serialization;
 
-namespace AnimeTracker.Api.Web.Technical.Helpers;
+namespace AnimeTracker.Web.Technical.Helpers;
 
 /// <summary>
 /// </summary>

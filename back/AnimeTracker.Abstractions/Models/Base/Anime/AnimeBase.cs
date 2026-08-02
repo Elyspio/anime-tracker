@@ -1,4 +1,4 @@
-﻿namespace AnimeTracker.Api.Abstractions.Models.Base.Anime;
+﻿namespace AnimeTracker.Abstractions.Models.Base.Anime;
 
 public class AnimeBase : AnimeLight
 {

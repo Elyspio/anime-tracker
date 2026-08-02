@@ -1,21 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net9.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<EnablePreviewFeatures>True</EnablePreviewFeatures>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.14" />
-		<PackageReference Include="MongoDB.Driver" Version="2.27.0" />
-		<PackageReference Include="Hangfire.Mongo" Version="1.10.7" />
+		<ProjectReference Include="..\AnimeTracker.Abstractions\AnimeTracker.Abstractions.csproj"/>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Abstractions\AnimeTracker.Api.Abstractions.csproj" />
+		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.21"/>
+		<PackageReference Include="Hangfire.Mongo" Version="1.11.6"/>
+		<PackageReference Include="MongoDB.Driver" Version="3.10.0"/>
 	</ItemGroup>
-
 
 </Project>

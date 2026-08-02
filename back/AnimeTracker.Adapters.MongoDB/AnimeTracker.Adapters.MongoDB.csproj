@@ -1,19 +1,20 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net9.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<EnablePreviewFeatures>True</EnablePreviewFeatures>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MongoDB.Driver" Version="2.27.0" />
+		<ProjectReference Include="..\AnimeTracker.Abstractions\AnimeTracker.Abstractions.csproj"/>
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Elyspio.Utils.Telemetry.MongoDB" Version="1.0.1" />
-		<ProjectReference Include="..\Abstractions\AnimeTracker.Api.Abstractions.csproj" />
+		<PackageReference Include="Mapster" Version="7.4.0"/>
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.10"/>
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10"/>
+		<PackageReference Include="MongoDB.Driver" Version="3.10.0"/>
 	</ItemGroup>
 
 </Project>

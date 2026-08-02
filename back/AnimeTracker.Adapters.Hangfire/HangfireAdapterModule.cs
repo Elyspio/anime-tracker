@@ -1,5 +1,5 @@
-﻿using AnimeTracker.Api.Abstractions.Interfaces.Injections;
-using AnimeTracker.Api.Adapters.Hangfire.Adapters;
+﻿using AnimeTracker.Abstractions.Interfaces.Injections;
+using AnimeTracker.Adapters.Hangfire.Adapters;
 using Hangfire;
 using Hangfire.Mongo;
 using Hangfire.Mongo.Migration.Strategies;
@@ -8,7 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 
-namespace AnimeTracker.Api.Adapters.Hangfire;
+namespace AnimeTracker.Adapters.Hangfire;
 
 public class HangfireAdapterModule: IDotnetModule
 {

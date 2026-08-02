@@ -1,4 +1,4 @@
-﻿namespace AnimeTracker.Api.Adapters.Rest.Utils.Extensions;
+﻿namespace AnimeTracker.Adapters.Nautijon.Utils.Extensions;
 
 public static class EnumerableExtensions
 {

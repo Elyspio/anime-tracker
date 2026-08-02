@@ -1,4 +1,4 @@
-﻿namespace AnimeTracker.Api.Abstractions.Interfaces.Business;
+﻿namespace AnimeTracker.Abstractions.Interfaces.Business;
 
 public interface IRetryPolicy
 {

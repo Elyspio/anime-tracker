@@ -1,6 +1,6 @@
 ﻿using Serilog;
 
-namespace AnimeTracker.Api.Web.Technical.Extensions;
+namespace AnimeTracker.Web.Technical.Extensions;
 
 /// <summary>
 ///     Logging Extensions methods for <see cref="IServiceCollection" />

@@ -1,4 +1,4 @@
-﻿namespace AnimeTracker.Api.Adapters.Rest.Configs;
+﻿namespace AnimeTracker.Adapters.Nautijon.Configs;
 
 public class EndpointConfig
 {

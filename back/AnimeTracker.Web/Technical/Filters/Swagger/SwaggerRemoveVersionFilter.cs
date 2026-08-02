@@ -1,7 +1,7 @@
 ﻿using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace AnimeTracker.Api.Web.Technical.Filters.Swagger;
+namespace AnimeTracker.Web.Technical.Filters.Swagger;
 
 /// <summary>
 ///     Supprime le paramètre "api-version" qui est automatiquement ajouter par le framework

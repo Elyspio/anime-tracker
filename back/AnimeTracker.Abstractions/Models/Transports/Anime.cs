@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using AnimeTracker.Api.Abstractions.Interfaces.Business;
-using AnimeTracker.Api.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Interfaces.Business;
+using AnimeTracker.Abstractions.Models.Base.Anime;
 
-namespace AnimeTracker.Api.Abstractions.Models.Transports;
+namespace AnimeTracker.Abstractions.Models.Transports;
 
 public class Anime : AnimeBase, ITransport
 {

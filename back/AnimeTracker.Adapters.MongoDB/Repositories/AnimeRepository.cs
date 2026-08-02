@@ -1,7 +1,7 @@
-﻿using AnimeTracker.Api.Abstractions.Interfaces.Repositories;
-using AnimeTracker.Api.Adapters.Mongo.Repositories.Base;
-using AnimeTracker.Api.Abstractions.Models.Base.Anime;
-using AnimeTracker.Api.Abstractions.Models.Entities;
+﻿using AnimeTracker.Abstractions.Interfaces.Repositories;
+using AnimeTracker.Adapters.MongoDB.Repositories.Base;
+using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Entities;
 using Elyspio.Utils.Telemetry.Technical.Helpers;
 using Mapster;
 using Microsoft.Extensions.Configuration;
@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
-namespace AnimeTracker.Api.Adapters.Mongo.Repositories;
+namespace AnimeTracker.Adapters.MongoDB.Repositories;
 
 internal class AnimeRepository(IConfiguration configuration, ILogger<BaseRepository<AnimeEntity>> logger) : CrudRepository<AnimeEntity, AnimeBase>(configuration, logger),	IAnimeRepository
 {

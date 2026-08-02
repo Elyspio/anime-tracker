@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using Elyspio.Utils.Telemetry.Technical.Helpers;
 
-namespace AnimeTracker.Api.Abstractions.Exceptions;
+namespace AnimeTracker.Abstractions.Exceptions;
 
 /// <summary>
 ///     Defines a specialized exception type for HTTP errors.

@@ -2,7 +2,7 @@
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 
-namespace AnimeTracker.Api.Adapters.Mongo.Technical;
+namespace AnimeTracker.Adapters.MongoDB.Technical;
 
 /// <inheritdoc />
 public sealed class EnumAsStringSerializationProvider : BsonSerializationProviderBase

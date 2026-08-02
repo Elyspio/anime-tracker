@@ -1,3 +1,3 @@
-﻿namespace AnimeTracker.Api.Abstractions.Models.Base.Anime;
+﻿namespace AnimeTracker.Abstractions.Models.Base.Anime;
 
 public record AnimeTag(string Name, string Url);

@@ -1,9 +1,9 @@
 ﻿using System.Globalization;
 using System.Web;
-using AnimeTracker.Api.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Base.Anime;
 using HtmlAgilityPack;
 
-namespace AnimeTracker.Api.Adapters.Rest.Assemblers;
+namespace AnimeTracker.Adapters.Nautijon.Assemblers;
 
 public class AnimeEpisodesAssembler
 {

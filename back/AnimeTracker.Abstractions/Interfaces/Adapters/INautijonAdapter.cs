@@ -1,6 +1,6 @@
-﻿using AnimeTracker.Api.Abstractions.Models.Base.Anime;
+﻿using AnimeTracker.Abstractions.Models.Base.Anime;
 
-namespace AnimeTracker.Api.Abstractions.Interfaces.Adapters;
+namespace AnimeTracker.Abstractions.Interfaces.Adapters;
 
 public interface INautijonAdapter
 {

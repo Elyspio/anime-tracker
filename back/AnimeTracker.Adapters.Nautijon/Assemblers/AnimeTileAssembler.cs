@@ -1,8 +1,8 @@
 ﻿using System.Globalization;
-using AnimeTracker.Api.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Base.Anime;
 using HtmlAgilityPack;
 
-namespace AnimeTracker.Api.Adapters.Rest.Assemblers;
+namespace AnimeTracker.Adapters.Nautijon.Assemblers;
 
 /// <summary>
 /// Converts the HTML document from the anime list page into an AnimeBase object.

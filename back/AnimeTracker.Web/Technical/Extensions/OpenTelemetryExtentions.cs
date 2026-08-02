@@ -3,7 +3,7 @@ using Elyspio.Utils.Telemetry.MongoDB.Extensions;
 using Elyspio.Utils.Telemetry.Technical.Extensions;
 using Elyspio.Utils.Telemetry.Tracing.Builder;
 
-namespace AnimeTracker.Api.Web.Technical.Extensions;
+namespace AnimeTracker.Web.Technical.Extensions;
 
 /// <summary>
 ///     OpenTelemetry Extensions methods for <see cref="IServiceCollection" />

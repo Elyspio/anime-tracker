@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AnimeTracker.Api.Abstractions.Interfaces.Injections;
+namespace AnimeTracker.Abstractions.Interfaces.Injections;
 
 public interface IDotnetModule
 {

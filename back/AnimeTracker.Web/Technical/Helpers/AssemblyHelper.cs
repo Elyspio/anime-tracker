@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace AnimeTracker.Api.Web.Technical.Helpers;
+namespace AnimeTracker.Web.Technical.Helpers;
 
 /// <summary>
 ///     AssemblyHelper is a static helper class that provides methods for retrieving classes which  implement a specific

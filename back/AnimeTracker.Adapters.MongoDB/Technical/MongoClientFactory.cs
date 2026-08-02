@@ -1,7 +1,7 @@
 ﻿using Elyspio.Utils.Telemetry.MongoDB.Business;
 using MongoDB.Driver;
 
-namespace AnimeTracker.Api.Adapters.Mongo.Technical;
+namespace AnimeTracker.Adapters.MongoDB.Technical;
 
 /// <summary>
 ///     Manage mongo client

@@ -1,10 +1,10 @@
-﻿using AnimeTracker.Api.Adapters.Mongo.Technical;
+﻿using AnimeTracker.Adapters.MongoDB.Technical;
 using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
-namespace AnimeTracker.Api.Adapters.Mongo.Repositories.Base;
+namespace AnimeTracker.Adapters.MongoDB.Repositories.Base;
 
 /// <summary>
 ///     Manage entity in MongoDB

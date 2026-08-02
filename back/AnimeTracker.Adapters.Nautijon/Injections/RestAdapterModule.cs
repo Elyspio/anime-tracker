@@ -1,13 +1,13 @@
-﻿using AnimeTracker.Api.Abstractions.Interfaces.Injections;
-using AnimeTracker.Api.Adapters.Rest.Adapters;
-using AnimeTracker.Api.Adapters.Rest.Assemblers;
-using AnimeTracker.Api.Adapters.Rest.Configs;
+﻿using AnimeTracker.Abstractions.Interfaces.Injections;
+using AnimeTracker.Adapters.Nautijon.Adapters;
+using AnimeTracker.Adapters.Nautijon.Assemblers;
+using AnimeTracker.Adapters.Nautijon.Configs;
 using Example.Api.Adapters.Rest.AuthenticationApi;
 using FlareSolverrSharp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AnimeTracker.Api.Adapters.Rest.Injections;
+namespace AnimeTracker.Adapters.Nautijon.Injections;
 
 public class RestAdapterModule : IDotnetModule
 {

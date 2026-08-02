@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace AnimeTracker.Api.Abstractions.Common.Extensions;
+namespace AnimeTracker.Abstractions.Common.Extensions;
 
 /// <summary>
 ///     Provides extension methods for working with list data types.

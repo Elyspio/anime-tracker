@@ -1,6 +1,6 @@
-﻿using AnimeTracker.Api.Abstractions.Interfaces.Business;
+﻿using AnimeTracker.Abstractions.Interfaces.Business;
 
-namespace AnimeTracker.Api.Abstractions.Interfaces.Services.Base;
+namespace AnimeTracker.Abstractions.Interfaces.Services.Base;
 
 /// <summary>
 ///     Defines a generic CRUD repository for entities that implement IEntity interface.

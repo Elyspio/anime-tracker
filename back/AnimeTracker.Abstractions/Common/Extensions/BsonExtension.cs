@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson;
 
-namespace AnimeTracker.Api.Abstractions.Common.Extensions;
+namespace AnimeTracker.Abstractions.Common.Extensions;
 
 /// <summary>
 ///     BsonExtension is a static class that provides extension methods for ObjectId and Guid types.

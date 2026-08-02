@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace AnimeTracker.Api.Adapters.Rest.Utils.Clients;
+namespace AnimeTracker.Adapters.Nautijon.Utils.Clients;
 
 public sealed class ClientSideRateLimitedHandler: DelegatingHandler
 {

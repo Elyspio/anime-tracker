@@ -1,15 +1,15 @@
-﻿using AnimeTracker.Api.Abstractions.Interfaces.Adapters;
+﻿using AnimeTracker.Abstractions.Interfaces.Adapters;
 using Elyspio.Utils.Telemetry.Tracing.Elements;
-using AnimeTracker.Api.Abstractions.Interfaces.Repositories;
-using AnimeTracker.Api.Abstractions.Interfaces.Services;
-using AnimeTracker.Api.Abstractions.Models.Base.Anime;
-using AnimeTracker.Api.Abstractions.Models.Entities;
-using AnimeTracker.Api.Abstractions.Models.Transports;
-using AnimeTracker.Api.Core.Assemblers;
+using AnimeTracker.Abstractions.Interfaces.Repositories;
+using AnimeTracker.Abstractions.Interfaces.Services;
+using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Entities;
+using AnimeTracker.Abstractions.Models.Transports;
+using AnimeTracker.Core.Assemblers;
 using Elyspio.Utils.Telemetry.Technical.Helpers;
 using Microsoft.Extensions.Logging;
 
-namespace AnimeTracker.Api.Core.Services;
+namespace AnimeTracker.Core.Services;
 
 public class AnimeService : TracingService, IAnimeService
 {

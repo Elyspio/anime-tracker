@@ -1,13 +1,13 @@
-﻿using AnimeTracker.Api.Abstractions.Interfaces.Adapters;
-using AnimeTracker.Api.Abstractions.Models.Base.Anime;
-using AnimeTracker.Api.Adapters.Rest.Assemblers;
+﻿using AnimeTracker.Abstractions.Interfaces.Adapters;
+using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Adapters.Nautijon.Assemblers;
 using Elyspio.Utils.Telemetry.Technical.Helpers;
 using Elyspio.Utils.Telemetry.Tracing.Elements;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
-using AnimeTracker.Api.Adapters.Rest.Utils.Extensions;
+using AnimeTracker.Adapters.Nautijon.Utils.Extensions;
 
-namespace AnimeTracker.Api.Adapters.Rest.Adapters;
+namespace AnimeTracker.Adapters.Nautijon.Adapters;
 
 public class NautijonAdapter : TracingAdapter, INautijonAdapter
 {

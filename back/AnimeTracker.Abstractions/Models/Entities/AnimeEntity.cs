@@ -1,9 +1,9 @@
-﻿using AnimeTracker.Api.Abstractions.Interfaces.Business;
-using AnimeTracker.Api.Abstractions.Models.Base.Anime;
+﻿using AnimeTracker.Abstractions.Interfaces.Business;
+using AnimeTracker.Abstractions.Models.Base.Anime;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace AnimeTracker.Api.Abstractions.Models.Entities;
+namespace AnimeTracker.Abstractions.Models.Entities;
 
 public class AnimeEntity : AnimeBase, IEntity
 {

@@ -1,9 +1,9 @@
-﻿using AnimeTracker.Api.Abstractions.Common.Assemblers;
-using AnimeTracker.Api.Abstractions.Models.Entities;
-using AnimeTracker.Api.Abstractions.Models.Transports;
+﻿using AnimeTracker.Abstractions.Common.Assemblers;
+using AnimeTracker.Abstractions.Models.Entities;
+using AnimeTracker.Abstractions.Models.Transports;
 using Mapster;
 
-namespace AnimeTracker.Api.Core.Assemblers;
+namespace AnimeTracker.Core.Assemblers;
 
 public class AnimeAssembler : BaseAssembler<Anime, AnimeEntity>
 {
