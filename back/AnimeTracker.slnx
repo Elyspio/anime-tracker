@@ -4,6 +4,9 @@
 		<Project Path="AnimeTracker.Adapters.Nautijon/AnimeTracker.Adapters.Nautijon.csproj"/>
 		<Project Path="AnimeTracker.Adapters.Hangfire/AnimeTracker.Adapters.Hangfire.csproj"/>
 	</Folder>
+	<Folder Name="/Aspire/">
+		<Project Path="AnimeTracker.AppHost/AnimeTracker.AppHost.csproj"/>
+	</Folder>
 	<Folder Name="/Tests/">
 		<Project Path="AnimeTracker.Adapters.Tests/AnimeTracker.Adapters.Tests.csproj"/>
 		<Project Path="AnimeTracker.Core.Tests/AnimeTracker.Core.Tests.csproj"/>
