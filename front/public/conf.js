@@ -1,7 +1,7 @@
-window.config = {
-	endpoints: {
-		core: "http://localhost",
-		authentication: "http://localhost/authentication",
+// Overwritten at deploy time. Empty values fall back to the Aspire-injected VITE_* variables.
+window.animeTracker = {
+	config: {
+		endpoints: { core: "" },
+		oauth: {},
 	},
-	loginPageUrl: "http://localhost/authentication",
 };
