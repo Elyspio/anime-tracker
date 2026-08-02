@@ -6,6 +6,7 @@
 	</Folder>
 	<Folder Name="/Tests/">
 		<Project Path="AnimeTracker.Adapters.Tests/AnimeTracker.Adapters.Tests.csproj"/>
+		<Project Path="AnimeTracker.Core.Tests/AnimeTracker.Core.Tests.csproj"/>
 	</Folder>
 	<Project Path="AnimeTracker.Abstractions/AnimeTracker.Abstractions.csproj"/>
 	<Project Path="AnimeTracker.Core/AnimeTracker.Core.csproj"/>
