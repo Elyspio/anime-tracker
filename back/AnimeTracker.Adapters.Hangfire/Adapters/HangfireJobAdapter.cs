@@ -18,6 +18,13 @@ public class HangfireJobAdapter(ILogger<HangfireJobAdapter> logger) : TracingAda
 		return Task.CompletedTask;
 	}
 
+	public string Enqueue<T>(Expression<Func<T, Task>> methodCall) where T : notnull
+	{
+		using var trace = LogAdapter($"{Log.F(typeof(T).Name)}");
+
+		return BackgroundJob.Enqueue(methodCall);
+	}
+
 	public void Clear(string id)
 	{
 		using var trace = LogAdapter($"{Log.F(id)}");

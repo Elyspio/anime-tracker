@@ -13,6 +13,7 @@ namespace AnimeTracker.Core.Services;
 public class AnimeService(
 	IAnimeRepository animeRepository,
 	INautijonAdapter nautijonAdapter,
+	IHangfireJobAdapter hangfireJobAdapter,
 	TimeProvider timeProvider,
 	ILogger<AnimeService> logger
 ) : TracingService(logger), IAnimeService
@@ -38,6 +39,13 @@ public class AnimeService(
 			.OrderBy(anime => anime.Binge.BingeableAt ?? DateOnly.MaxValue)
 			.ThenByDescending(anime => anime.Popularity)
 			.ToArray();
+	}
+
+	public string QueueRefresh(AnimeDate date)
+	{
+		using var _ = LogService($"{Log.F(date)}");
+
+		return hangfireJobAdapter.Enqueue<AnimeRefreshJob>(job => job.RefreshSeason(date.Year, date.Season));
 	}
 
 	public async Task RefreshAll(AnimeDate date, CancellationToken cancellationToken = default)

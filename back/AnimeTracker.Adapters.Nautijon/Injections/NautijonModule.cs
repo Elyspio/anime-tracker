@@ -32,11 +32,18 @@ public static class NautijonModule
 
 		services.AddHttpClient(NautijonAdapter.ClientName, client =>
 			{
+				// Must outlast the solver itself, otherwise the challenge is abandoned just before
+				// it would have succeeded.
+				client.Timeout = TimeSpan.FromMilliseconds(options.SolverTimeoutMs) + TimeSpan.FromSeconds(30);
+
 				// Nautiljon serves a different page to clients it does not recognise as a browser.
 				client.DefaultRequestHeaders.Add("User-Agent",
 					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36");
 			})
 			.ConfigurePrimaryHttpMessageHandler<ClearanceHandler>()
+			// Deliberately no resilience pipeline: its 30s attempt timeout is shorter than a
+			// Cloudflare challenge takes to solve, and its retries would hammer the site this
+			// scraper depends on. Back-off is owned by ClientSideRateLimitedHandler.
 			.AddHttpMessageHandler<ClientSideRateLimitedHandler>();
 
 		services.AddSingleton<AnimeTileAssembler>();

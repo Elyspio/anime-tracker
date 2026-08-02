@@ -24,14 +24,20 @@ public class AnimeController(IAnimeService animeService, TimeProvider timeProvid
 		return await animeService.GetBySeason(Resolve(year, season), cancellationToken);
 	}
 
-	/// <summary>Re-scrapes a season. Slow by design — it walks Nautiljon one page at a time.</summary>
+	/// <summary>
+	///     Queues a season re-scrape and returns straight away. The walk itself takes tens of
+	///     minutes at the pace Nautiljon is polled, so it runs on the scheduler, not in the request.
+	/// </summary>
 	[HttpPost("refresh")]
 	[Authorize(AuthModule.AdminPolicy)]
-	public async Task RefreshAll([FromQuery] int? year, [FromQuery] AnimeSeason? season, CancellationToken cancellationToken)
+	[ProducesResponseType(StatusCodes.Status202Accepted)]
+	public IActionResult RefreshAll([FromQuery] int? year, [FromQuery] AnimeSeason? season)
 	{
 		using var trace = LogController($"{Log.F(year)} {Log.F(season)}");
 
-		await animeService.RefreshAll(Resolve(year, season), cancellationToken);
+		var date = Resolve(year, season);
+
+		return Accepted(new RefreshQueued(animeService.QueueRefresh(date), date));
 	}
 
 	private AnimeDate Resolve(int? year, AnimeSeason? season)

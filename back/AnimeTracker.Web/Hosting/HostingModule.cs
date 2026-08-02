@@ -19,11 +19,11 @@ public static class HostingModule
 
 		builder.Services.AddServiceDiscovery();
 
-		builder.Services.ConfigureHttpClientDefaults(http =>
-		{
-			http.AddStandardResilienceHandler();
-			http.AddServiceDiscovery();
-		});
+		// Service discovery is a safe default; the standard resilience pipeline is not. Its 30s
+		// attempt timeout and automatic retries are wrong for the one outbound client this app
+		// has: a Cloudflare challenge takes longer than that to solve, and a retried scrape is
+		// extra load on a site that tolerates us. Clients that want resilience opt in.
+		builder.Services.ConfigureHttpClientDefaults(http => http.AddServiceDiscovery());
 
 		return builder;
 	}

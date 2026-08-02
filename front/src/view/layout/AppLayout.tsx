@@ -19,7 +19,15 @@ export function AppLayout() {
 
 	const runRefresh = () =>
 		refresh.mutate(selected, {
-			onSuccess: () => enqueueSnackbar("Saison rafraîchie", { variant: "success" }),
+			// 202: the scrape has been queued, not finished. Saying otherwise would have the user
+			// reload an unchanged grid and conclude the refresh is broken.
+			onSuccess: () =>
+				enqueueSnackbar(
+					"Rafraîchissement lancé — la saison se remplira au fil du scraping",
+					{
+						variant: "info",
+					},
+				),
 			// The API is the authority on who may refresh: render its refusal rather than
 			// deciding from the token what to show.
 			onError: (error) =>

@@ -63,6 +63,12 @@ These are the properties the design rests on. Changing them is a product decisio
 - A season refresh is a **sequential** walk with a delay between animes, and the Hangfire server
   runs a single worker. Parallelising it would multiply the request rate against a site that is
   being scraped on sufferance, and would not finish sooner behind a single-threaded solver.
+- Consequently a refresh takes tens of minutes. `POST /api/animes/refresh` queues the job and
+  answers 202; it never scrapes inline. Any caller that waits for completion is a bug.
+- The Nautijon client carries **no resilience pipeline**, and `AddHostingDefaults` deliberately
+  does not put one on every client. A 30s attempt timeout is shorter than a Cloudflare challenge
+  takes to solve, and an automatic retry doubles the load on the site. Back-off belongs to
+  `ClientSideRateLimitedHandler`, which reacts to 429 specifically.
 - `AnimeRepository.Refresh` preserves the episodes already stored when replacing a season: the
   listing page does not carry them, and they are fetched anime by anime afterwards.
 - Tests never reach the network or a solver. Drive the adapter through `FakeHttpMessageHandler`.

@@ -33,6 +33,11 @@ export interface BingePrediction {
 	totalEpisodes: number | null;
 }
 
+export interface RefreshQueued {
+	jobId: string;
+	date: AnimeDate;
+}
+
 export interface Anime {
 	id: string;
 	date: AnimeDate;
