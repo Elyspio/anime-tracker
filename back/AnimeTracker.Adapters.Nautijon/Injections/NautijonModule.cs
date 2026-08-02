@@ -2,8 +2,7 @@ using AnimeTracker.Abstractions.Interfaces.Adapters;
 using AnimeTracker.Adapters.Nautijon.Adapters;
 using AnimeTracker.Adapters.Nautijon.Assemblers;
 using AnimeTracker.Adapters.Nautijon.Configs;
-using AnimeTracker.Adapters.Nautijon.Utils.Clients;
-using FlareSolverrSharp;
+using AnimeTracker.Adapters.Nautijon.FlareSolverr;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -23,31 +22,23 @@ public static class NautijonModule
 		var options = new NautijonOptions();
 		config.GetSection(NautijonOptions.SectionName).Bind(options);
 
-		services.AddTransient(_ => new ClearanceHandler(options.FlareSolverrUrl)
+		services.AddHttpClient(FlareSolverrClient.ClientName, client =>
 		{
-			MaxTimeout = options.SolverTimeoutMs
+			// Trailing slash: the request path is relative, and BaseAddress drops the last segment
+			// without one.
+			client.BaseAddress = new Uri(options.FlareSolverrUrl.TrimEnd('/') + "/");
+
+			// Must outlast the solver's own budget, otherwise a challenge is abandoned moments
+			// before it would have been solved.
+			client.Timeout = TimeSpan.FromMilliseconds(options.SolverTimeoutMs) + TimeSpan.FromSeconds(30);
 		});
-
-		services.AddTransient<ClientSideRateLimitedHandler>();
-
-		services.AddHttpClient(NautijonAdapter.ClientName, client =>
-			{
-				// Must outlast the solver itself, otherwise the challenge is abandoned just before
-				// it would have succeeded.
-				client.Timeout = TimeSpan.FromMilliseconds(options.SolverTimeoutMs) + TimeSpan.FromSeconds(30);
-
-				// Nautiljon serves a different page to clients it does not recognise as a browser.
-				client.DefaultRequestHeaders.Add("User-Agent",
-					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36");
-			})
-			.ConfigurePrimaryHttpMessageHandler<ClearanceHandler>()
-			// Deliberately no resilience pipeline: its 30s attempt timeout is shorter than a
-			// Cloudflare challenge takes to solve, and its retries would hammer the site this
-			// scraper depends on. Back-off is owned by ClientSideRateLimitedHandler.
-			.AddHttpMessageHandler<ClientSideRateLimitedHandler>();
+		// Deliberately no resilience pipeline: its 30s attempt timeout is shorter than a Cloudflare
+		// challenge takes to solve, and its retries would hammer the site this scraper depends on.
+		// Rate limiting is handled inside FlareSolverrClient, which can see the page's own status.
 
 		services.AddSingleton<AnimeTileAssembler>();
 		services.AddSingleton<AnimeEpisodesAssembler>();
+		services.AddSingleton<FlareSolverrClient>();
 		services.AddSingleton<INautijonAdapter, NautijonAdapter>();
 
 		return services;

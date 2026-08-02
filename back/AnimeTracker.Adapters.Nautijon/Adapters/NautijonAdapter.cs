@@ -1,6 +1,7 @@
 using AnimeTracker.Abstractions.Interfaces.Adapters;
 using AnimeTracker.Abstractions.Models.Base.Anime;
 using AnimeTracker.Adapters.Nautijon.Assemblers;
+using AnimeTracker.Adapters.Nautijon.FlareSolverr;
 using Elyspio.Utils.Telemetry.Technical.Helpers;
 using Elyspio.Utils.Telemetry.Tracing.Elements;
 using HtmlAgilityPack;
@@ -9,22 +10,17 @@ using Microsoft.Extensions.Logging;
 namespace AnimeTracker.Adapters.Nautijon.Adapters;
 
 public class NautijonAdapter(
-	IHttpClientFactory httpClientFactory,
+	FlareSolverrClient flareSolverr,
 	AnimeTileAssembler animeTileAssembler,
 	AnimeEpisodesAssembler episodesAssembler,
 	ILogger<NautijonAdapter> logger
 ) : TracingAdapter(logger), INautijonAdapter
 {
-	public const string ClientName = "Nautijon";
-
 	public async Task<AnimeBase[]> GetAnimes(AnimeDate date, CancellationToken cancellationToken = default)
 	{
-		using var _ = LogAdapter($"{Log.F(date)}");
+		using var trace = LogAdapter($"{Log.F(date)}");
 
-		var html = await GetHtml(GetSeasonUrl(date), cancellationToken);
-
-		var dom = new HtmlDocument();
-		dom.LoadHtml(html);
+		var dom = await Load(GetSeasonUrl(date), cancellationToken);
 
 		// Shows carried over from the previous season live in their own block; they are not this
 		// season's releases and would pollute the countdown list.
@@ -34,22 +30,17 @@ public class NautijonAdapter(
 
 		return nodes.Select(node =>
 		{
-			var doc = new HtmlDocument();
-			doc.LoadHtml(node.InnerHtml);
-			return animeTileAssembler.Convert(date, doc);
+			var tile = new HtmlDocument();
+			tile.LoadHtml(node.InnerHtml);
+			return animeTileAssembler.Convert(date, tile);
 		}).ToArray();
 	}
 
 	public async Task<Episode[]> GetAnimeEpisodes(string animeUrl, CancellationToken cancellationToken = default)
 	{
-		using var _ = LogAdapter($"{Log.F(animeUrl)}");
+		using var trace = LogAdapter($"{Log.F(animeUrl)}");
 
-		var html = await GetHtml(animeUrl, cancellationToken);
-
-		var dom = new HtmlDocument();
-		dom.LoadHtml(html);
-
-		return episodesAssembler.Convert(dom);
+		return episodesAssembler.Convert(await Load(animeUrl, cancellationToken));
 	}
 
 	internal static string GetSeasonUrl(AnimeDate date)
@@ -66,14 +57,11 @@ public class NautijonAdapter(
 		return $"https://www.nautiljon.com/animes/{season}-{date.Year}.html?format=1&y=0&tri=p&public_averti=1&simulcast=";
 	}
 
-	private async Task<string> GetHtml(string url, CancellationToken cancellationToken)
+	private async Task<HtmlDocument> Load(string url, CancellationToken cancellationToken)
 	{
-		using var client = httpClientFactory.CreateClient(ClientName);
+		var dom = new HtmlDocument();
+		dom.LoadHtml(await flareSolverr.GetHtml(url, cancellationToken));
 
-		var response = await client.GetAsync(url, cancellationToken);
-
-		response.EnsureSuccessStatusCode();
-
-		return await response.Content.ReadAsStringAsync(cancellationToken);
+		return dom;
 	}
 }
