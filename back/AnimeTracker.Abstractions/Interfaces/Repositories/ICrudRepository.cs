@@ -1,48 +1,20 @@
-﻿using AnimeTracker.Abstractions.Interfaces.Business;
-using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Interfaces.Business;
 using MongoDB.Bson;
 
 namespace AnimeTracker.Abstractions.Interfaces.Repositories;
 
-/// <summary>
-///     Defines a generic CRUD repository for entities that implement IEntity interface.
-/// </summary>
-/// <typeparam name="TEntity"></typeparam>
-/// <typeparam name="TBase">type that is used for creating or updating TEntity</typeparam>
+/// <summary>Generic CRUD repository for entities implementing <see cref="IEntity" />.</summary>
+/// <typeparam name="TEntity">Stored entity.</typeparam>
+/// <typeparam name="TBase">Type used to create or update <typeparamref name="TEntity" />.</typeparam>
 public interface ICrudRepository<TEntity, in TBase> where TEntity : IEntity
 {
-	/// <summary>
-	///     Adds a new entity to the repository.
-	/// </summary>
-	/// <param name="bases"></param>
-	/// <returns>The TEntity that was added.</returns>
-	public Task<TEntity[]> Add(IReadOnlyCollection<TBase> bases);
+	Task<TEntity[]> Add(IReadOnlyCollection<TBase> bases, CancellationToken cancellationToken = default);
 
-	/// <summary>
-	///     Replace a single entity in the repository.
-	/// </summary>
-	/// <param name="id"></param>
-	/// <param name="base"></param>
-	/// <returns>The TEntity that was added.</returns>
-	public Task<TEntity> Replace(ObjectId id, TBase @base);
+	Task<TEntity> Replace(ObjectId id, TBase @base, CancellationToken cancellationToken = default);
 
-	/// <summary>
-	///     Fetches all entity in the repository.
-	/// </summary>
-	/// <returns>A List of all TEntity objects.</returns>
-	public Task<List<TEntity>> GetAll();
+	Task<List<TEntity>> GetAll(CancellationToken cancellationToken = default);
 
-	/// <summary>
-	///     Deletes a entity from the repository.
-	/// </summary>
-	/// <param name="id">The identifier of the connection.</param>
-	/// <returns>A Task representing the asynchronous operation.</returns>
-	public Task Delete(ObjectId id);
+	Task Delete(ObjectId id, CancellationToken cancellationToken = default);
 
-	/// <summary>
-	///     Fetches a specific entity by id.
-	/// </summary>
-	/// <param name="id">The identifier of the connection.</param>
-	/// <returns>The TEntity with the specified id.</returns>
-	public Task<TEntity?> GetById(ObjectId id);
+	Task<TEntity?> GetById(ObjectId id, CancellationToken cancellationToken = default);
 }

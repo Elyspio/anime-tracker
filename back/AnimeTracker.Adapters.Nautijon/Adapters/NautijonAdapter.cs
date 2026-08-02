@@ -1,31 +1,58 @@
-﻿using AnimeTracker.Abstractions.Interfaces.Adapters;
+using AnimeTracker.Abstractions.Interfaces.Adapters;
 using AnimeTracker.Abstractions.Models.Base.Anime;
 using AnimeTracker.Adapters.Nautijon.Assemblers;
 using Elyspio.Utils.Telemetry.Technical.Helpers;
 using Elyspio.Utils.Telemetry.Tracing.Elements;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
-using AnimeTracker.Adapters.Nautijon.Utils.Extensions;
 
 namespace AnimeTracker.Adapters.Nautijon.Adapters;
 
-public class NautijonAdapter : TracingAdapter, INautijonAdapter
+public class NautijonAdapter(
+	IHttpClientFactory httpClientFactory,
+	AnimeTileAssembler animeTileAssembler,
+	AnimeEpisodesAssembler episodesAssembler,
+	ILogger<NautijonAdapter> logger
+) : TracingAdapter(logger), INautijonAdapter
 {
-	private readonly IHttpClientFactory _httpClientFactory;
-	private readonly AnimeTileAssembler _animeTileAssembler;
-	private readonly AnimeEpisodesAssembler _episodesAssembler;
-
 	public const string ClientName = "Nautijon";
 
-	public NautijonAdapter(ILogger<NautijonAdapter> logger, IHttpClientFactory httpClientFactory, AnimeTileAssembler animeTileAssembler, AnimeEpisodesAssembler episodesAssembler) : base(logger)
+	public async Task<AnimeBase[]> GetAnimes(AnimeDate date, CancellationToken cancellationToken = default)
 	{
-		_httpClientFactory = httpClientFactory;
-		_animeTileAssembler = animeTileAssembler;
-		_episodesAssembler = episodesAssembler;
+		using var _ = LogAdapter($"{Log.F(date)}");
+
+		var html = await GetHtml(GetSeasonUrl(date), cancellationToken);
+
+		var dom = new HtmlDocument();
+		dom.LoadHtml(html);
+
+		// Shows carried over from the previous season live in their own block; they are not this
+		// season's releases and would pollute the countdown list.
+		var nodes = dom.DocumentNode.SelectNodes("//div[@class='elt' and not(ancestor::div[@id='saison_continue'])]");
+
+		if (nodes is null) return [];
+
+		return nodes.Select(node =>
+		{
+			var doc = new HtmlDocument();
+			doc.LoadHtml(node.InnerHtml);
+			return animeTileAssembler.Convert(date, doc);
+		}).ToArray();
 	}
 
+	public async Task<Episode[]> GetAnimeEpisodes(string animeUrl, CancellationToken cancellationToken = default)
+	{
+		using var _ = LogAdapter($"{Log.F(animeUrl)}");
 
-	private string GetAnimesUrl(AnimeDate date)
+		var html = await GetHtml(animeUrl, cancellationToken);
+
+		var dom = new HtmlDocument();
+		dom.LoadHtml(html);
+
+		return episodesAssembler.Convert(dom);
+	}
+
+	internal static string GetSeasonUrl(AnimeDate date)
 	{
 		var season = date.Season switch
 		{
@@ -33,73 +60,20 @@ public class NautijonAdapter : TracingAdapter, INautijonAdapter
 			AnimeSeason.Spring => "printemps",
 			AnimeSeason.Summer => "été",
 			AnimeSeason.Fall => "automne",
-			_ => throw new ArgumentOutOfRangeException(nameof(date.Season), date.Season, null)
+			_ => throw new ArgumentOutOfRangeException(nameof(date), date.Season, null)
 		};
 
 		return $"https://www.nautiljon.com/animes/{season}-{date.Year}.html?format=1&y=0&tri=p&public_averti=1&simulcast=";
 	}
 
-	public async Task<AnimeBase[]> GetAnimes(AnimeDate date)
+	private async Task<string> GetHtml(string url, CancellationToken cancellationToken)
 	{
-		using var _ = LogAdapter($"{Log.F(date)}");
+		using var client = httpClientFactory.CreateClient(ClientName);
 
-		var html = await GetAnimesHtml(date);
+		var response = await client.GetAsync(url, cancellationToken);
 
-		var dom = new HtmlDocument();
-		dom.LoadHtml(html);
+		response.EnsureSuccessStatusCode();
 
-		var nodes = dom.DocumentNode.SelectNodes("//div[@class='elt' and not(ancestor::div[@id='saison_continue'])]");
-
-		var animes =  nodes.Select(a =>
-		{
-			var doc = new HtmlDocument();
-			doc.LoadHtml(a.InnerHtml);
-			return _animeTileAssembler.Convert(date, doc);
-		}).ToArray();
-
-		return animes;
-	}
-
-
-	public async Task<Episode[]> GetAnimeEpisodes(string animeUrl)
-	{
-		using var _ = LogAdapter($"{Log.F(animeUrl)}");
-
-		var html = await  GetHtml(animeUrl);
-
-		var dom = new HtmlDocument();
-		dom.LoadHtml(html);
-
-
-		return _episodesAssembler.Convert(dom);
-
-	}
-
-	private async Task<string> GetHtml(string url)
-	{
-		using var client = GetHttpClient();
-
-		var content = await client.GetAsync(url);
-
-		content.EnsureSuccessStatusCode();
-
-		return await content.Content.ReadAsStringAsync();
-	}
-
-
-
-	private async Task<string> GetAnimesHtml(AnimeDate date)
-	{
-		var url = GetAnimesUrl(date);
-
-		return await GetHtml(url);
-	}
-
-	private HttpClient GetHttpClient()
-	{
-		var client = _httpClientFactory.CreateClient(NautijonAdapter.ClientName);
-
-
-		return client;
+		return await response.Content.ReadAsStringAsync(cancellationToken);
 	}
 }

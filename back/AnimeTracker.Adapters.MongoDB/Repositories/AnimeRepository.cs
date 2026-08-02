@@ -1,51 +1,63 @@
-﻿using AnimeTracker.Abstractions.Interfaces.Repositories;
-using AnimeTracker.Adapters.MongoDB.Repositories.Base;
+using AnimeTracker.Abstractions.Interfaces.Repositories;
 using AnimeTracker.Abstractions.Models.Base.Anime;
 using AnimeTracker.Abstractions.Models.Entities;
+using AnimeTracker.Adapters.MongoDB.Repositories.Base;
 using Elyspio.Utils.Telemetry.Technical.Helpers;
 using Mapster;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-using MongoDB.Driver.Linq;
 
 namespace AnimeTracker.Adapters.MongoDB.Repositories;
 
-internal class AnimeRepository(IConfiguration configuration, ILogger<BaseRepository<AnimeEntity>> logger) : CrudRepository<AnimeEntity, AnimeBase>(configuration, logger),	IAnimeRepository
+internal class AnimeRepository(IMongoDatabase database, ILogger<AnimeRepository> logger)
+	: CrudRepository<AnimeEntity, AnimeBase>(database, logger), IAnimeRepository
 {
-	public async Task<AnimeEntity> UpdateEpisodes(string animeUrl, Episode[] episodes)
+	public async Task<List<AnimeEntity>> GetBySeason(AnimeDate date, CancellationToken cancellationToken = default)
 	{
-		using var _ = LogRepository($"{Log.F(animeUrl)} {Log.F(episodes.Length)}");
+		using var trace = LogRepository($"{Log.F(date)}");
 
-		var update = Builders<AnimeEntity>.Update.Set(e => e.Episodes, episodes);
-
-		return await EntityCollection.FindOneAndUpdateAsync(anime => anime.Url == animeUrl, update, new ()
-		{
-			ReturnDocument = ReturnDocument.After
-		});
-
+		return await EntityCollection.Find(SeasonFilter(date)).ToListAsync(cancellationToken);
 	}
 
-	public async Task Refresh(AnimeDate date, IReadOnlyCollection<AnimeBase> animes)
+	public async Task<AnimeEntity?> UpdateEpisodes(string animeUrl, Episode[] episodes, CancellationToken cancellationToken = default)
 	{
-		using var _ = LogRepository($"{Log.F(date)} {Log.F(animes.Count)}");
+		using var trace = LogRepository($"{Log.F(animeUrl)} {Log.F(episodes.Length)}");
 
-		var existingAnimes = (await EntityCollection.AsQueryable().Where(anime => anime.Date.Season == date.Season && anime.Date.Year == date.Year).ToListAsync()).ToDictionary(anime => anime.Url);
+		return await EntityCollection.FindOneAndUpdateAsync(
+			anime => anime.Url == animeUrl,
+			Update.Set(e => e.Episodes, episodes),
+			new FindOneAndUpdateOptions<AnimeEntity> { ReturnDocument = ReturnDocument.After },
+			cancellationToken);
+	}
 
-		var operations =  animes.Select(WriteModel<AnimeEntity> (anime) =>
+	public async Task Refresh(AnimeDate date, IReadOnlyCollection<AnimeBase> animes, CancellationToken cancellationToken = default)
+	{
+		using var trace = LogRepository($"{Log.F(date)} {Log.F(animes.Count)}");
+
+		if (animes.Count == 0) return;
+
+		var existing = (await EntityCollection.Find(SeasonFilter(date)).ToListAsync(cancellationToken))
+			.ToDictionary(anime => anime.Url);
+
+		var operations = animes.Select(WriteModel<AnimeEntity> (anime) =>
 		{
-			var animeEntity = anime.Adapt<AnimeEntity>();
+			var entity = anime.Adapt<AnimeEntity>();
 
-			if (!existingAnimes.TryGetValue(anime.Url, out var existingAnime))
-			{
-				return new InsertOneModel<AnimeEntity>(animeEntity);
-			}
+			if (!existing.TryGetValue(anime.Url, out var stored)) return new InsertOneModel<AnimeEntity>(entity);
 
-			animeEntity.Id = existingAnime.Id;
-			return new ReplaceOneModel<AnimeEntity>(Filter.Eq(e => e.Id, existingAnime.Id), animeEntity);
+			// Replacing wholesale would drop the episodes scraped on the previous pass: the season
+			// list page does not carry them, they are fetched anime by anime afterwards.
+			entity.Id = stored.Id;
+			entity.Episodes = stored.Episodes;
 
+			return new ReplaceOneModel<AnimeEntity>(Filter.Eq(e => e.Id, stored.Id), entity);
 		});
 
-		await EntityCollection.BulkWriteAsync(operations, new BulkWriteOptions { IsOrdered = false });
+		await EntityCollection.BulkWriteAsync(operations, new BulkWriteOptions { IsOrdered = false }, cancellationToken);
+	}
+
+	private static FilterDefinition<AnimeEntity> SeasonFilter(AnimeDate date)
+	{
+		return Builders<AnimeEntity>.Filter.Where(anime => anime.Date.Year == date.Year && anime.Date.Season == date.Season);
 	}
 }

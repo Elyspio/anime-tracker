@@ -1,66 +1,37 @@
-﻿using AnimeTracker.Adapters.MongoDB.Technical;
 using Elyspio.Utils.Telemetry.Tracing.Elements;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 namespace AnimeTracker.Adapters.MongoDB.Repositories.Base;
 
-/// <summary>
-///     Manage entity in MongoDB
-/// </summary>
-/// <typeparam name="T">Entity implementation</typeparam>
+/// <summary>Manages one entity type's collection.</summary>
+/// <typeparam name="T">Entity implementation.</typeparam>
 public abstract class BaseRepository<T> : TracingRepository
 {
+	private readonly IMongoDatabase _database;
 	private readonly string _collectionName;
-	private readonly MongoContext _context;
 
-	/// <summary>
-	///     Default constructor
-	/// </summary>
-	/// <param name="configuration"></param>
-	/// <param name="logger"></param>
-	protected BaseRepository(IConfiguration configuration, ILogger logger) : base(logger)
+	protected BaseRepository(IMongoDatabase database, ILogger logger) : base(logger)
 	{
-		_context = new MongoContext(configuration);
+		_database = database;
 		_collectionName = typeof(T).Name[..^"Entity".Length];
 	}
 
-	/// <summary>
-	///     Implementation of the collection
-	/// </summary>
-	protected IMongoCollection<T> EntityCollection => _context.MongoDatabase.GetCollection<T>(_collectionName);
+	protected IMongoCollection<T> EntityCollection => _database.GetCollection<T>(_collectionName);
 
-
-	/// <summary>
-	///     Create an index for this collection
-	/// </summary>
-	/// <param name="properties"></param>
-	/// <param name="unique"></param>
-	protected void CreateIndexIfMissing(ICollection<string> properties, bool unique = false)
+	protected async Task CreateIndexIfMissing(ICollection<string> properties, bool unique = false, CancellationToken cancellationToken = default)
 	{
 		var indexName = string.Join("-", properties);
-		var indexes = EntityCollection.Indexes.List().ToList();
-		var foundIndex = indexes.Any(index => index["key"].AsBsonDocument.Names.Contains(indexName));
 
-		var indexBuilder = Builders<T>.IndexKeys;
+		var cursor = await EntityCollection.Indexes.ListAsync(cancellationToken);
+		var indexes = await cursor.ToListAsync(cancellationToken);
+		if (indexes.Any(index => index["name"].AsString == indexName)) return;
 
-		var newIndex = indexBuilder.Combine(properties.Select(property => indexBuilder.Ascending(property)));
+		var keys = Builders<T>.IndexKeys;
+		var definition = keys.Combine(properties.Select(property => keys.Ascending(property)));
 
-
-		var options = new CreateIndexOptions
-		{
-			Unique = unique,
-			Name = indexName
-		};
-
-		var indexModel = new CreateIndexModel<T>(newIndex, options);
-
-
-		if (foundIndex) return;
-
-		_logger.LogWarning($"Property {_collectionName}.{indexName} is not indexed, creating one");
-		EntityCollection.Indexes.CreateOne(indexModel);
-		_logger.LogWarning($"Property {_collectionName}.{indexName} is now indexed");
+		await EntityCollection.Indexes.CreateOneAsync(
+			new CreateIndexModel<T>(definition, new CreateIndexOptions { Unique = unique, Name = indexName }),
+			cancellationToken: cancellationToken);
 	}
 }

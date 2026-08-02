@@ -1,61 +1,68 @@
-﻿using AnimeTracker.Abstractions.Interfaces.Adapters;
-using Elyspio.Utils.Telemetry.Tracing.Elements;
+using AnimeTracker.Abstractions.Interfaces.Adapters;
 using AnimeTracker.Abstractions.Interfaces.Repositories;
 using AnimeTracker.Abstractions.Interfaces.Services;
 using AnimeTracker.Abstractions.Models.Base.Anime;
-using AnimeTracker.Abstractions.Models.Entities;
 using AnimeTracker.Abstractions.Models.Transports;
 using AnimeTracker.Core.Assemblers;
 using Elyspio.Utils.Telemetry.Technical.Helpers;
+using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.Extensions.Logging;
 
 namespace AnimeTracker.Core.Services;
 
-public class AnimeService : TracingService, IAnimeService
+public class AnimeService(
+	IAnimeRepository animeRepository,
+	INautijonAdapter nautijonAdapter,
+	TimeProvider timeProvider,
+	ILogger<AnimeService> logger
+) : TracingService(logger), IAnimeService
 {
-	private readonly AnimeAssembler _animeAssembler = new();
-	private readonly INautijonAdapter _nautijonAdapter;
-	private readonly IAnimeRepository _animeRepository;
-	private readonly IMassTransitJobAdapter _massTransitJobAdapter;
+	/// <summary>
+	///     Nautiljon is scraped through a Cloudflare solver that answers one request at a time.
+	///     Refreshing a season is therefore a sequential walk, spaced out so a full pass looks like
+	///     someone browsing rather than a crawler.
+	/// </summary>
+	private static readonly TimeSpan DelayBetweenAnimes = TimeSpan.FromSeconds(2);
 
-	public AnimeService(IAnimeRepository animeRepository, ILogger<AnimeService> logger, INautijonAdapter nautijonAdapter, IMassTransitJobAdapter massTransitJobAdapter) : base(logger)
+	public async Task<IReadOnlyCollection<Anime>> GetBySeason(AnimeDate date, CancellationToken cancellationToken = default)
 	{
-		_animeRepository = animeRepository;
-		_nautijonAdapter = nautijonAdapter;
-		_massTransitJobAdapter = massTransitJobAdapter;
+		using var _ = LogService($"{Log.F(date)}");
+
+		var entities = await animeRepository.GetBySeason(date, cancellationToken);
+
+		var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+
+		return entities
+			.Select(entity => AnimeAssembler.Convert(entity, today))
+			// Soonest bingeable first; anything without an estimated end sinks to the bottom.
+			.OrderBy(anime => anime.Binge.BingeableAt ?? DateOnly.MaxValue)
+			.ThenByDescending(anime => anime.Popularity)
+			.ToArray();
 	}
 
-
-	public async Task<IReadOnlyCollection<Anime>> GetAll()
+	public async Task RefreshAll(AnimeDate date, CancellationToken cancellationToken = default)
 	{
-		using var _ = LogService();
+		using var _ = LogService($"{Log.F(date)}");
 
-		var animes = await _animeRepository.GetAll();
+		var animes = await nautijonAdapter.GetAnimes(date, cancellationToken);
 
-		return _animeAssembler.Convert(animes);
-	}
-
-	public async Task Refresh(string animeUrl)
-	{
-		using var _ = LogService($"{Log.F(animeUrl)}");
-
-		var episodes = await _nautijonAdapter.GetAnimeEpisodes(animeUrl);
-
-		var entity = await _animeRepository.UpdateEpisodes(animeUrl, episodes);
-	}
-
-	public async Task RefreshAll(AnimeDate date)
-	{
-		using var logger = LogService(Log.F(date));
-
-		var animes = await _nautijonAdapter.GetAnimes(date);
-
-		await _animeRepository.Refresh(date, animes);
+		await animeRepository.Refresh(date, animes, cancellationToken);
 
 		foreach (var anime in animes)
 		{
-			_ = _massTransitJobAdapter.SendAnimeRefreshMessage(anime.Url);
-		}
+			cancellationToken.ThrowIfCancellationRequested();
 
+			await Refresh(anime.Url, cancellationToken);
+			await Task.Delay(DelayBetweenAnimes, timeProvider, cancellationToken);
+		}
+	}
+
+	public async Task Refresh(string animeUrl, CancellationToken cancellationToken = default)
+	{
+		using var _ = LogService($"{Log.F(animeUrl)}");
+
+		var episodes = await nautijonAdapter.GetAnimeEpisodes(animeUrl, cancellationToken);
+
+		await animeRepository.UpdateEpisodes(animeUrl, episodes, cancellationToken);
 	}
 }

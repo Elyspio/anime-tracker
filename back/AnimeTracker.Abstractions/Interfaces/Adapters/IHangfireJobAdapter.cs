@@ -1,19 +1,11 @@
-﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 namespace AnimeTracker.Abstractions.Interfaces.Adapters;
 
 public interface IHangfireJobAdapter
 {
-	/// <summary>
-	/// Schedule a recurring job
-	/// </summary>
-	/// <param name="id"></param>
-	/// <param name="methodCall"></param>
-	/// <param name="cron"></param>
-	/// <param name="delay"></param>
-	/// <returns></returns>
-	Task Schedule(string id, Expression<Func<Task>> methodCall, string cron, TimeSpan? delay = null);
+	/// <summary>Registers or updates a recurring job.</summary>
+	Task Schedule(string id, Expression<Func<Task>> methodCall, string cron);
 
 	void Clear(string id);
 }

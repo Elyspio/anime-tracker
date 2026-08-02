@@ -1,50 +1,27 @@
-﻿using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
-using MongoDB.Driver;
 
 namespace AnimeTracker.Adapters.MongoDB.Technical;
 
 /// <summary>
-///     Manage app mongo connection
+///     BSON conventions for the whole process. Registered once, before any collection is resolved:
+///     enums are stored as names so a reordered enum cannot silently reinterpret stored documents.
 /// </summary>
-public sealed class MongoContext
+public static class MongoMappings
 {
-	static MongoContext()
+	private static bool _registered;
+
+	public static void Register()
 	{
-		var pack = new ConventionPack
+		if (_registered) return;
+		_registered = true;
+
+		ConventionRegistry.Register("EnumStringConvention", new ConventionPack
 		{
 			new EnumRepresentationConvention(BsonType.String)
-		};
-		ConventionRegistry.Register("EnumStringConvention", pack, _ => true);
+		}, _ => true);
+
 		BsonSerializer.RegisterSerializationProvider(new EnumAsStringSerializationProvider());
 	}
-
-	/// <summary>
-	///     Default constructor
-	/// </summary>
-	/// <param name="configuration"></param>
-	public MongoContext(IConfiguration configuration)
-	{
-		var connectionString = configuration["Database"];
-
-		ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
-
-		var (client, url) = MongoClientFactory.Create(connectionString);
-
-		foreach (var server in url.Servers)
-		{
-			Console.WriteLine($"Connecting to Database '{server.Host}:{server.Port}/{url.DatabaseName}'");
-		}
-
-
-		MongoDatabase = client.GetDatabase(url.DatabaseName);
-	}
-
-	/// <summary>
-	///     Récupération de la IMongoDatabase
-	/// </summary>
-	/// <returns></returns>
-	public IMongoDatabase MongoDatabase { get; }
 }
