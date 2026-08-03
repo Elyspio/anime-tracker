@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "back/AnimeTracker.AppHost/AnimeTracker.AppHost.csproj"
+  }
+}

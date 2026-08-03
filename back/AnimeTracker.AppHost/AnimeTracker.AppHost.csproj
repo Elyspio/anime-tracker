@@ -1,0 +1,21 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.4.6">
+
+	<ItemGroup>
+		<ProjectReference Include="..\AnimeTracker.Web\AnimeTracker.Web.csproj"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Aspire.Hosting.JavaScript" Version="13.4.6"/>
+		<PackageReference Include="Aspire.Hosting.Keycloak" Version="13.4.6-preview.1.26319.6"/>
+		<PackageReference Include="Aspire.Hosting.MongoDB" Version="13.4.6"/>
+	</ItemGroup>
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<UserSecretsId>5b1f8c74-2e63-49ad-8f10-6c9d3a274be8</UserSecretsId>
+	</PropertyGroup>
+
+</Project>

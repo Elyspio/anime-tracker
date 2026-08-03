@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10"/>
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10"/>
+		<PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.7.0"/>
+		<PackageReference Include="Microsoft.Extensions.ServiceDiscovery" Version="10.7.0"/>
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\AnimeTracker.Abstractions\AnimeTracker.Abstractions.csproj"/>
+		<ProjectReference Include="..\AnimeTracker.Core\AnimeTracker.Core.csproj"/>
+		<ProjectReference Include="..\AnimeTracker.Adapters.MongoDB\AnimeTracker.Adapters.MongoDB.csproj"/>
+		<ProjectReference Include="..\AnimeTracker.Adapters.AniList\AnimeTracker.Adapters.AniList.csproj"/>
+		<ProjectReference Include="..\AnimeTracker.Adapters.Hangfire\AnimeTracker.Adapters.Hangfire.csproj"/>
+	</ItemGroup>
+
+</Project>

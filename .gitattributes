@@ -1,0 +1,7 @@
+* text=auto
+
+# Anything a Linux container executes must keep LF endings. A CRLF shebang line makes the kernel
+# look for an interpreter named "/bin/sh\r", which fails with a message that names neither.
+*.sh text eol=lf
+Dockerfile text eol=lf
+dockerfile text eol=lf

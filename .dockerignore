@@ -1,8 +1,8 @@
-back/**/bin
-back/**/obj
-deploy
-.idea
-.git
+**/bin
+**/obj
+**/node_modules
 front/dist
-front/node_modules
-back/.vs
+.git
+.idea
+.vs
+deploy/build/out
