@@ -13,17 +13,21 @@ public static class AnimeAssembler
 		return new Anime
 		{
 			Id = entity.Id.AsGuid(),
+			SourceId = entity.SourceId,
 			Date = entity.Date,
 			Title = entity.Title,
-			Studio = entity.Studio,
 			Description = entity.Description,
+			Studio = entity.Studio,
 			ImageUrl = entity.ImageUrl,
 			Url = entity.Url,
+			Format = entity.Format,
+			IsAdult = entity.IsAdult,
 			Score = entity.Score,
 			Popularity = entity.Popularity,
+			VotesCount = entity.VotesCount,
 			EpisodesCount = entity.EpisodesCount,
+			Genres = entity.Genres,
 			Episodes = entity.Episodes,
-			Tags = entity.Tags,
 			Binge = BingePredictor.Predict(entity.Episodes, entity.EpisodesCount, today)
 		};
 	}

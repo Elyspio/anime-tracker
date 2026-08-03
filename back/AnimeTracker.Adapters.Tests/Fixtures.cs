@@ -1,14 +1,16 @@
 namespace AnimeTracker.Adapters.Tests;
 
 /// <summary>
-///     Pages recorded from nautiljon.com through FlareSolverr. They are the only thing that catches
-///     a markup change upstream, so they are stored verbatim rather than trimmed to the nodes the
-///     assemblers happen to read today.
+///     Recorded AniList replies. They pin the API's *shape* — field names, nesting, which fields come
+///     back null — which is the thing a schema change upstream breaks and no hand-written payload
+///     would catch. Re-record one by replaying the adapter's own query rather than editing it.
 /// </summary>
 public static class Fixtures
 {
 	public static string Read(string name)
 	{
-		return File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", name));
+		var path = Path.Combine(AppContext.BaseDirectory, "Fixtures", name);
+
+		return File.ReadAllText(path);
 	}
 }

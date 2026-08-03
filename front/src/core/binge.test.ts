@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-	collectTags,
+	collectGenres,
 	currentSeason,
 	daysUntil,
 	formatBingeChip,
+	matchesGenres,
 	matchesStatus,
-	matchesTags,
 } from "./binge";
 import type { Anime, BingePrediction } from "@/core/api/types";
 
@@ -24,17 +24,21 @@ function prediction(overrides: Partial<BingePrediction> = {}): BingePrediction {
 function anime(overrides: Partial<Anime> = {}): Anime {
 	return {
 		id: "1",
+		sourceId: 1,
 		date: { year: 2026, season: "Winter" },
-		title: "Titre",
-		studio: "Studio",
+		title: "Title",
 		description: "",
+		studio: "Studio",
 		imageUrl: "",
 		url: "",
+		format: "Tv",
+		isAdult: false,
 		score: 8,
 		popularity: 100,
+		votesCount: 100,
 		episodesCount: 12,
+		genres: [],
 		episodes: [],
-		tags: [],
 		binge: prediction(),
 		...overrides,
 	};
@@ -57,11 +61,11 @@ describe("daysUntil", () => {
 describe("formatBingeChip", () => {
 	it("shows weeks for anything more than a week out", () => {
 		// 2026-03-22 is 49 days away — seven whole weeks.
-		expect(formatBingeChip(prediction(), now).label).toBe("7 sem.");
+		expect(formatBingeChip(prediction(), now).label).toBe("7w");
 	});
 
 	it("shows days inside the last week, where the exact wait matters", () => {
-		expect(formatBingeChip(prediction({ bingeableAt: "2026-02-04" }), now).label).toBe("3 j");
+		expect(formatBingeChip(prediction({ bingeableAt: "2026-02-04" }), now).label).toBe("3d");
 	});
 
 	it("marks a finished season as bingeable, in the reserved success tone", () => {
@@ -86,14 +90,28 @@ describe("formatBingeChip", () => {
 			now,
 		);
 
-		expect(chip.label).toBe("Fin inconnue");
+		expect(chip.label).toBe("No end announced");
 		expect(chip.tone).toBe("default");
+	});
+
+	it("says an announced date is scheduled, not estimated", () => {
+		// The whole point of the Announced status: the reader can tell a broadcaster's date from
+		// one this app worked out.
+		const announced = formatBingeChip(prediction({ status: "Announced" }), now);
+		const estimated = formatBingeChip(prediction({ status: "Estimated" }), now);
+
+		expect(announced.label).toBe("7w");
+		expect(announced.title).toContain("scheduled");
+		expect(estimated.title).toContain("estimated");
 	});
 });
 
 describe("matchesStatus", () => {
 	const bingeable = anime({ binge: prediction({ status: "BingeableNow" }) });
 	const soon = anime({ binge: prediction({ bingeableAt: "2026-02-20" }) });
+	const announcedSoon = anime({
+		binge: prediction({ status: "Announced", bingeableAt: "2026-02-20" }),
+	});
 	const later = anime({ binge: prediction({ bingeableAt: "2026-06-01" }) });
 	const unknown = anime({ binge: prediction({ status: "UnknownEnd", bingeableAt: null }) });
 
@@ -108,50 +126,36 @@ describe("matchesStatus", () => {
 		expect(matchesStatus(soon, "bingeable", now)).toBe(false);
 	});
 
-	it("selects estimates within the month on 'soon', and excludes distant ones", () => {
+	it("selects anything ending within the month on 'soon', announced or estimated", () => {
 		expect(matchesStatus(soon, "soon", now)).toBe(true);
+		expect(matchesStatus(announcedSoon, "soon", now)).toBe(true);
 		expect(matchesStatus(later, "soon", now)).toBe(false);
 		expect(matchesStatus(unknown, "soon", now)).toBe(false);
 	});
 });
 
-describe("matchesTags", () => {
-	const shonen = anime({
-		tags: [
-			{ name: "Action", url: "" },
-			{ name: "Shōnen", url: "" },
-		],
+describe("matchesGenres", () => {
+	const shonen = anime({ genres: ["Action", "Adventure"] });
+
+	it("keeps everything when no genre is selected", () => {
+		expect(matchesGenres(shonen, [])).toBe(true);
 	});
 
-	it("keeps everything when no tag is selected", () => {
-		expect(matchesTags(shonen, [])).toBe(true);
-	});
-
-	it("requires every selected tag, not just one", () => {
-		expect(matchesTags(shonen, ["Action"])).toBe(true);
-		expect(matchesTags(shonen, ["Action", "Shōnen"])).toBe(true);
-		expect(matchesTags(shonen, ["Action", "Romance"])).toBe(false);
+	it("requires every selected genre, not just one", () => {
+		expect(matchesGenres(shonen, ["Action"])).toBe(true);
+		expect(matchesGenres(shonen, ["Action", "Adventure"])).toBe(true);
+		expect(matchesGenres(shonen, ["Action", "Romance"])).toBe(false);
 	});
 });
 
-describe("collectTags", () => {
-	it("deduplicates and sorts the tags of the loaded season", () => {
+describe("collectGenres", () => {
+	it("deduplicates and sorts the genres of the loaded season", () => {
 		const animes = [
-			anime({
-				tags: [
-					{ name: "Shōnen", url: "" },
-					{ name: "Action", url: "" },
-				],
-			}),
-			anime({
-				tags: [
-					{ name: "Action", url: "" },
-					{ name: "Comédie", url: "" },
-				],
-			}),
+			anime({ genres: ["Adventure", "Action"] }),
+			anime({ genres: ["Action", "Comedy"] }),
 		];
 
-		expect(collectTags(animes)).toEqual(["Action", "Comédie", "Shōnen"]);
+		expect(collectGenres(animes)).toEqual(["Action", "Adventure", "Comedy"]);
 	});
 });
 

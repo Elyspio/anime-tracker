@@ -14,6 +14,9 @@ namespace AnimeTracker.Web.Controllers;
 public class AnimeController(IAnimeService animeService, TimeProvider timeProvider, ILogger<AnimeController> logger)
 	: TracingController(logger)
 {
+	/// <summary>Enough to see yesterday's run and why it stopped, not an audit log.</summary>
+	private const int RecentRunsLimit = 20;
+
 	/// <summary>Every anime of a season, soonest bingeable first. Defaults to the current season.</summary>
 	[HttpGet]
 	[AllowAnonymous]
@@ -30,14 +33,30 @@ public class AnimeController(IAnimeService animeService, TimeProvider timeProvid
 	/// </summary>
 	[HttpPost("refresh")]
 	[Authorize(AuthModule.AdminPolicy)]
-	[ProducesResponseType(StatusCodes.Status202Accepted)]
-	public IActionResult RefreshAll([FromQuery] int? year, [FromQuery] AnimeSeason? season)
+	[ProducesResponseType<RefreshRun>(StatusCodes.Status202Accepted)]
+	[ProducesResponseType<RefreshRun>(StatusCodes.Status409Conflict)]
+	public async Task<IActionResult> RefreshAll([FromQuery] int? year, [FromQuery] AnimeSeason? season, CancellationToken cancellationToken)
 	{
 		using var trace = LogController($"{Log.F(year)} {Log.F(season)}");
 
-		var date = Resolve(year, season);
+		// A season already being refreshed is answered with that run rather than refreshed twice.
+		var result = await animeService.QueueRefresh(Resolve(year, season), cancellationToken);
 
-		return Accepted(new RefreshQueued(animeService.QueueRefresh(date), date));
+		return result.AlreadyRunning ? Conflict(result.Run) : Accepted(result.Run);
+	}
+
+	/// <summary>
+	///     Recent refresh runs, newest first. Anonymous like the season itself: this says how far
+	///     along a public scraping schedule is, and it explains a half-filled grid to whoever is
+	///     looking at one.
+	/// </summary>
+	[HttpGet("refreshes")]
+	[AllowAnonymous]
+	public async Task<IReadOnlyCollection<RefreshRun>> GetRefreshes(CancellationToken cancellationToken)
+	{
+		using var trace = LogController();
+
+		return await animeService.GetRecentRuns(RecentRunsLimit, cancellationToken);
 	}
 
 	private AnimeDate Resolve(int? year, AnimeSeason? season)

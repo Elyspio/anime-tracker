@@ -32,8 +32,8 @@ export function SeasonSelector({ year, season, onChange }: Props) {
 
 	return (
 		<Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-			<Tooltip title="Saison précédente">
-				<IconButton size="small" onClick={() => move(-1)} aria-label="Saison précédente">
+			<Tooltip title="Previous season">
+				<IconButton size="small" onClick={() => move(-1)} aria-label="Previous season">
 					<ChevronLeftIcon />
 				</IconButton>
 			</Tooltip>
@@ -63,8 +63,8 @@ export function SeasonSelector({ year, season, onChange }: Props) {
 				sx={{ width: 100 }}
 			/>
 
-			<Tooltip title="Saison suivante">
-				<IconButton size="small" onClick={() => move(1)} aria-label="Saison suivante">
+			<Tooltip title="Next season">
+				<IconButton size="small" onClick={() => move(1)} aria-label="Next season">
 					<ChevronRightIcon />
 				</IconButton>
 			</Tooltip>

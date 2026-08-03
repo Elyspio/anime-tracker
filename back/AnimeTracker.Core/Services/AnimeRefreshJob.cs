@@ -15,6 +15,10 @@ public class AnimeRefreshJob(IAnimeService animeService, TimeProvider timeProvid
 {
 	public const string RecurringJobId = "anime-season-refresh";
 
+	/// <summary>
+	///     Queues rather than fetches: going through the same path as the admin button means the
+	///     daily run inherits its refusal to start a second refresh of a season already in flight.
+	/// </summary>
 	// ReSharper disable once MemberCanBePrivate.Global — called by Hangfire through an expression.
 	public async Task RefreshCurrentSeason()
 	{
@@ -22,7 +26,9 @@ public class AnimeRefreshJob(IAnimeService animeService, TimeProvider timeProvid
 
 		var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
 
-		await animeService.RefreshAll(AnimeDate.Current(today));
+		var result = await animeService.QueueRefresh(AnimeDate.Current(today));
+
+		if (result.AlreadyRunning) _logger.LogInformation("Season {Date} is already refreshing, skipping the daily run", result.Run.Date);
 	}
 
 	/// <summary>
@@ -30,10 +36,10 @@ public class AnimeRefreshJob(IAnimeService animeService, TimeProvider timeProvid
 	///     arguments to its storage, and primitives survive a schema change that a record would not.
 	/// </summary>
 	// ReSharper disable once MemberCanBePrivate.Global — called by Hangfire through an expression.
-	public async Task RefreshSeason(int year, AnimeSeason season)
+	public async Task RefreshSeason(int year, AnimeSeason season, Guid runId)
 	{
-		using var trace = LogService($"{Log.F(year)} {Log.F(season)}");
+		using var trace = LogService($"{Log.F(year)} {Log.F(season)} {Log.F(runId)}");
 
-		await animeService.RefreshAll(new AnimeDate(year, season));
+		await animeService.RefreshAll(new AnimeDate(year, season), runId);
 	}
 }

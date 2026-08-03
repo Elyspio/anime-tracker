@@ -18,7 +18,7 @@
 		<ProjectReference Include="..\AnimeTracker.Abstractions\AnimeTracker.Abstractions.csproj"/>
 		<ProjectReference Include="..\AnimeTracker.Core\AnimeTracker.Core.csproj"/>
 		<ProjectReference Include="..\AnimeTracker.Adapters.MongoDB\AnimeTracker.Adapters.MongoDB.csproj"/>
-		<ProjectReference Include="..\AnimeTracker.Adapters.Nautijon\AnimeTracker.Adapters.Nautijon.csproj"/>
+		<ProjectReference Include="..\AnimeTracker.Adapters.AniList\AnimeTracker.Adapters.AniList.csproj"/>
 		<ProjectReference Include="..\AnimeTracker.Adapters.Hangfire\AnimeTracker.Adapters.Hangfire.csproj"/>
 	</ItemGroup>
 

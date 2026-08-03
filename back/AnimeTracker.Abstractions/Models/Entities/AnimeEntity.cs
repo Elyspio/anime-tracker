@@ -1,4 +1,4 @@
-﻿using AnimeTracker.Abstractions.Interfaces.Business;
+using AnimeTracker.Abstractions.Interfaces.Business;
 using AnimeTracker.Abstractions.Models.Base.Anime;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;

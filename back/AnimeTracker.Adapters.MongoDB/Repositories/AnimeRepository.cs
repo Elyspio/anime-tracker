@@ -19,17 +19,6 @@ internal class AnimeRepository(IMongoDatabase database, ILogger<AnimeRepository>
 		return await EntityCollection.Find(SeasonFilter(date)).ToListAsync(cancellationToken);
 	}
 
-	public async Task<AnimeEntity?> UpdateEpisodes(string animeUrl, Episode[] episodes, CancellationToken cancellationToken = default)
-	{
-		using var trace = LogRepository($"{Log.F(animeUrl)} {Log.F(episodes.Length)}");
-
-		return await EntityCollection.FindOneAndUpdateAsync(
-			anime => anime.Url == animeUrl,
-			Update.Set(e => e.Episodes, episodes),
-			new FindOneAndUpdateOptions<AnimeEntity> { ReturnDocument = ReturnDocument.After },
-			cancellationToken);
-	}
-
 	public async Task Refresh(AnimeDate date, IReadOnlyCollection<AnimeBase> animes, CancellationToken cancellationToken = default)
 	{
 		using var trace = LogRepository($"{Log.F(date)} {Log.F(animes.Count)}");
@@ -37,18 +26,17 @@ internal class AnimeRepository(IMongoDatabase database, ILogger<AnimeRepository>
 		if (animes.Count == 0) return;
 
 		var existing = (await EntityCollection.Find(SeasonFilter(date)).ToListAsync(cancellationToken))
-			.ToDictionary(anime => anime.Url);
+			.ToDictionary(anime => anime.SourceId);
 
+		// Replace wholesale: one fetch carries every field an anime has, episodes included, so there
+		// is nothing stored worth merging in. Only the document id has to survive.
 		var operations = animes.Select(WriteModel<AnimeEntity> (anime) =>
 		{
 			var entity = anime.Adapt<AnimeEntity>();
 
-			if (!existing.TryGetValue(anime.Url, out var stored)) return new InsertOneModel<AnimeEntity>(entity);
+			if (!existing.TryGetValue(anime.SourceId, out var stored)) return new InsertOneModel<AnimeEntity>(entity);
 
-			// Replacing wholesale would drop the episodes scraped on the previous pass: the season
-			// list page does not carry them, they are fetched anime by anime afterwards.
 			entity.Id = stored.Id;
-			entity.Episodes = stored.Episodes;
 
 			return new ReplaceOneModel<AnimeEntity>(Filter.Eq(e => e.Id, stored.Id), entity);
 		});

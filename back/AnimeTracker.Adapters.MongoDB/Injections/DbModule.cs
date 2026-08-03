@@ -30,6 +30,7 @@ public static class DbModule
 		services.AddSingleton(sp => sp.GetRequiredService<IMongoClient>().GetDatabase(databaseName));
 
 		services.AddSingleton<IAnimeRepository, AnimeRepository>();
+		services.AddSingleton<IRefreshRunRepository, RefreshRunRepository>();
 
 		return services;
 	}

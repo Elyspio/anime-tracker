@@ -14,8 +14,9 @@ function parseDate(iso: string): Date {
 	return new Date(`${iso}T00:00:00`);
 }
 
+/** Formatted in the reader's own locale — the app has no opinion on date order. */
 function formatDate(iso: string): string {
-	return parseDate(iso).toLocaleDateString("fr-FR", {
+	return parseDate(iso).toLocaleDateString(undefined, {
 		day: "numeric",
 		month: "long",
 		year: "numeric",
@@ -32,14 +33,14 @@ export function daysUntil(iso: string, now: Date): number {
 
 /**
  * The one label the product is built around. Weeks rather than dates for anything more than a
- * week out — "dans 6 semaines" is what a decision is made on, an exact date is not.
+ * week out — "in 6 weeks" is what a decision is made on, an exact date is not.
  */
 export function formatBingeChip(binge: BingePrediction, now: Date): BingeChip {
 	if (binge.status === "UnknownEnd") {
 		return {
-			label: "Fin inconnue",
+			label: "No end announced",
 			tone: "default",
-			title: "Le nombre total d'épisodes n'est pas annoncé : aucune date ne peut être estimée.",
+			title: "The total episode count has not been announced, so no date can be given.",
 		};
 	}
 
@@ -48,25 +49,30 @@ export function formatBingeChip(binge: BingePrediction, now: Date): BingeChip {
 			label: "Bingeable",
 			tone: "success",
 			title: binge.bingeableAt
-				? `Dernier épisode sorti le ${formatDate(binge.bingeableAt)}.`
-				: "Tous les épisodes sont sortis.",
+				? `Last episode aired on ${formatDate(binge.bingeableAt)}.`
+				: "Every episode is out.",
 		};
 	}
 
 	const days = binge.bingeableAt ? daysUntil(binge.bingeableAt, now) : 0;
+
+	// The distinction the product has always claimed and could not make until the source started
+	// publishing future dates: a broadcaster's date, or our own extrapolation.
 	const title = binge.bingeableAt
-		? `Dernier épisode estimé au ${formatDate(binge.bingeableAt)}, d'après la cadence observée.`
+		? binge.status === "Announced"
+			? `Last episode scheduled for ${formatDate(binge.bingeableAt)}.`
+			: `Last episode estimated for ${formatDate(binge.bingeableAt)}, from the observed cadence.`
 		: "";
 
 	if (days <= 0) return { label: "Bingeable", tone: "success", title };
-	if (days <= 7) return { label: `${days} j`, tone: "info", title };
+	if (days <= 7) return { label: `${days}d`, tone: "info", title };
 
-	return { label: `${Math.ceil(days / 7)} sem.`, tone: "info", title };
+	return { label: `${Math.ceil(days / 7)}w`, tone: "info", title };
 }
 
 export type StatusFilter = "all" | "bingeable" | "soon" | "unknown";
 
-/** "Bientôt" is a month out: roughly the horizon over which waiting is still a plan. */
+/** "Soon" is a month out: roughly the horizon over which waiting is still a plan. */
 const SOON_DAYS = 31;
 
 export function matchesStatus(anime: Anime, filter: StatusFilter, now: Date): boolean {
@@ -75,30 +81,30 @@ export function matchesStatus(anime: Anime, filter: StatusFilter, now: Date): bo
 	if (filter === "bingeable") return anime.binge.status === "BingeableNow";
 
 	return (
-		anime.binge.status === "Estimated" &&
+		(anime.binge.status === "Estimated" || anime.binge.status === "Announced") &&
 		anime.binge.bingeableAt !== null &&
 		daysUntil(anime.binge.bingeableAt, now) <= SOON_DAYS
 	);
 }
 
-export function matchesTags(anime: Anime, selected: readonly string[]): boolean {
+export function matchesGenres(anime: Anime, selected: readonly string[]): boolean {
 	if (selected.length === 0) return true;
 
-	return selected.every((tag) => anime.tags.some((animeTag) => animeTag.name === tag));
+	return selected.every((genre) => anime.genres.includes(genre));
 }
 
-/** Every tag present in the loaded season, alphabetically, for the filter dropdown. */
-export function collectTags(animes: readonly Anime[]): string[] {
-	return [...new Set(animes.flatMap((anime) => anime.tags.map((tag) => tag.name)))]
-		.filter((tag) => tag.trim().length > 0)
-		.sort((a, b) => a.localeCompare(b, "fr"));
+/** Every genre present in the loaded season, alphabetically, for the filter dropdown. */
+export function collectGenres(animes: readonly Anime[]): string[] {
+	return [...new Set(animes.flatMap((anime) => anime.genres))]
+		.filter((genre) => genre.trim().length > 0)
+		.sort((a, b) => a.localeCompare(b));
 }
 
 export const seasonLabels: Record<AnimeSeason, string> = {
-	Winter: "Hiver",
-	Spring: "Printemps",
-	Summer: "Été",
-	Fall: "Automne",
+	Winter: "Winter",
+	Spring: "Spring",
+	Summer: "Summer",
+	Fall: "Fall",
 };
 
 /** The season a date falls in, mirroring the backend's three-month blocks from January. */

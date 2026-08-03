@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import StarIcon from "@mui/icons-material/Star";
 import PersonIcon from "@mui/icons-material/Person";
+import { useState } from "react";
 import { BingeBadge } from "@/view/animes/BingeBadge";
 import type { Anime } from "@/core/api/types";
 
@@ -21,6 +22,11 @@ export function AnimeCard({ anime, now }: Props) {
 	const total = anime.binge.totalEpisodes;
 	const released = anime.binge.releasedEpisodes;
 	const progress = total && total > 0 ? Math.min(100, (released / total) * 100) : 0;
+
+	// A source entry with no cover stores an empty string, and <img src=""> resolves to the current
+	// document — a broken image behind a src that looks fine. Fall back explicitly.
+	const [imageFailed, setImageFailed] = useState(false);
+	const showImage = anime.imageUrl !== "" && !imageFailed;
 
 	return (
 		<Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -36,18 +42,30 @@ export function AnimeCard({ anime, now }: Props) {
 				}}
 			>
 				<Box sx={{ position: "relative" }}>
-					<Box
-						component="img"
-						src={anime.imageUrl}
-						alt=""
-						loading="lazy"
-						sx={{
-							width: "100%",
-							aspectRatio: "2 / 3",
-							objectFit: "cover",
-							display: "block",
-						}}
-					/>
+					{showImage ? (
+						<Box
+							component="img"
+							src={anime.imageUrl}
+							alt=""
+							loading="lazy"
+							onError={() => setImageFailed(true)}
+							sx={{
+								width: "100%",
+								aspectRatio: "2 / 3",
+								objectFit: "cover",
+								display: "block",
+							}}
+						/>
+					) : (
+						<Box
+							sx={{
+								width: "100%",
+								aspectRatio: "2 / 3",
+								display: "block",
+								bgcolor: "action.hover",
+							}}
+						/>
+					)}
 					{/* The countdown sits on the art: it is the reason to look at the card at all. */}
 					<Box sx={{ position: "absolute", top: 8, left: 8 }}>
 						<BingeBadge binge={anime.binge} now={now} size="small" />
@@ -68,13 +86,13 @@ export function AnimeCard({ anime, now }: Props) {
 					</Typography>
 
 					<Typography variant="caption" color="text.secondary" noWrap>
-						{anime.studio || "Studio inconnu"}
+						{anime.studio || "Unknown studio"}
 					</Typography>
 
 					<Box sx={{ mt: "auto" }}>
 						<Stack direction="row" sx={{ justifyContent: "space-between", mb: 0.5 }}>
 							<Typography variant="caption" color="text.secondary">
-								{released} / {total ?? "?"} ép.
+								{released} / {total ?? "?"} eps
 							</Typography>
 							<Stack direction="row" spacing={1.5}>
 								{anime.score !== null && (
@@ -86,6 +104,7 @@ export function AnimeCard({ anime, now }: Props) {
 										<StarIcon sx={{ fontSize: 14, color: "warning.main" }} />
 										<Typography variant="caption">
 											{anime.score.toFixed(1)}
+											{anime.votesCount !== null && ` (${anime.votesCount})`}
 										</Typography>
 									</Stack>
 								)}

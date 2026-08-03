@@ -3,8 +3,8 @@ using AnimeTracker.Adapters.Hangfire.Adapters;
 using AnimeTracker.Adapters.Hangfire.Injections;
 using AnimeTracker.Adapters.MongoDB.Injections;
 using AnimeTracker.Adapters.MongoDB.Technical;
-using AnimeTracker.Adapters.Nautijon.Adapters;
-using AnimeTracker.Adapters.Nautijon.Injections;
+using AnimeTracker.Adapters.AniList.Configs;
+using AnimeTracker.Adapters.AniList.Injections;
 using AnimeTracker.Core.Injections;
 using AnimeTracker.Core.Services;
 using AnimeTracker.Web.Auth;
@@ -29,7 +29,7 @@ if (builder.Configuration.IsTelemetryEnabled(out var telemetryOptions))
 {
 	var telemetry = new AppOpenTelemetryBuilder<Program>(telemetryOptions!, builder.Configuration);
 	telemetry.AddAssembly<AnimeService>();
-	telemetry.AddAssembly<NautijonAdapter>();
+	telemetry.AddAssembly<AniListOptions>();
 	telemetry.AddAssembly<EnumAsStringSerializationProvider>();
 	telemetry.AddAssembly<HangfireJobAdapter>();
 	telemetry.Build(builder.Services);
@@ -42,7 +42,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 
 // One Add* per project, wired here and nowhere else.
 builder.Services.AddPersistence(builder.Configuration);
-builder.Services.AddNautijonAdapter(builder.Configuration);
+builder.Services.AddAniListAdapter(builder.Configuration);
 builder.Services.AddHangfireJobs(builder.Configuration);
 builder.Services.AddCore();
 builder.Services.AddAppAuth(builder.Configuration);

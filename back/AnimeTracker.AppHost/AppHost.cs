@@ -1,4 +1,4 @@
-// Aspire AppHost — MongoDB + Keycloak + FlareSolverr + the API + the Vite front, for local development.
+// Aspire AppHost — MongoDB + Keycloak + the API + the Vite front, for local development.
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -33,17 +33,12 @@ var keycloak = builder.AddKeycloak("keycloak", 8080)
 var authority = ReferenceExpression.Create($"{keycloak.GetEndpoint("http")}/realms/anime-tracker");
 const string clientId = "anime-tracker";
 
-// Nautiljon sits behind Cloudflare: every scrape goes through this solver, which holds the
-// clearance cookie. Nothing works without it, locally or in production.
-var flareSolverr = builder.AddContainer("flaresolverr", "ghcr.io/flaresolverr/flaresolverr", "latest")
-	.WithHttpEndpoint(targetPort: 8191, name: "http")
-	.WithEnvironment("LOG_LEVEL", "info");
-
+// No scraping infrastructure: AniList is a public API, so the only external dependency at runtime
+// is an outbound HTTPS call the API makes itself.
 var api = builder.AddProject<AnimeTracker_Web>("api")
 	.WithReference(mongodb, "MongoDB")
 	.WaitFor(mongodb)
 	.WaitFor(keycloak)
-	.WithEnvironment("Nautijon__FlareSolverrUrl", flareSolverr.GetEndpoint("http"))
 	.WithEnvironment("Auth__Authority", authority)
 	.WithEnvironment("Auth__Audience", clientId)
 	.WithEnvironment("Auth__AdminRole", "anime-tracker-admin");

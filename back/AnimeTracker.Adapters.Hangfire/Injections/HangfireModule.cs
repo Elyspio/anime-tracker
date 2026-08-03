@@ -38,12 +38,16 @@ public static class HangfireModule
 				CheckQueuedJobsStrategy = CheckQueuedJobsStrategy.TailNotificationsCollection
 			}));
 
-		// The season refresh walks Nautiljon one page at a time behind a single Cloudflare solver.
-		// A second worker would double the request rate without finishing any sooner.
+		// A season refresh is idempotent and cheap to trigger again by hand. Hangfire's default of ten
+		// automatic attempts would replay a failing job ten times over without anyone asking.
+		GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute { Attempts = 0 });
+
+		// Two workers so a second season does not have to wait out the first. Each refresh is a
+		// single API call, so this decides nothing about how hard the source is hit.
 		services.AddHangfireServer(options =>
 		{
 			options.ServerName = "anime-tracker";
-			options.WorkerCount = 1;
+			options.WorkerCount = 2;
 		});
 
 		services.AddSingleton<IHangfireJobAdapter, HangfireJobAdapter>();

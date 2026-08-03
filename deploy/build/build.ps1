@@ -31,11 +31,10 @@ if (-not $chart) {
 $values = Join-Path $chart "values.yaml"
 $secrets = Join-Path $chart "values.secrets.yaml"
 if (-not (Test-Path $secrets)) {
-    throw "Fichier de secrets absent : $secrets. Il porte la chaîne MongoDB et l'URL FlareSolverr."
+    throw "Fichier de secrets absent : $secrets. Il porte la chaîne de connexion MongoDB."
 }
 
-# Un seul replica : le serveur Hangfire et le scraper sont des singletons, deux instances
-# doubleraient la charge sur Nautiljon sans accélérer quoi que ce soit.
+# Un seul replica : le serveur Hangfire et le job de rafraîchissement sont des singletons.
 helm upgrade --install anime-tracker $chart `
     -f $values -f $secrets `
     --set image.tag=$tag -n $Namespace

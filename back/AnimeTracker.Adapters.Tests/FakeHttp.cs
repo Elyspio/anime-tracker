@@ -1,6 +1,5 @@
 using System.Net;
 using System.Text;
-using System.Text.Json;
 
 namespace AnimeTracker.Adapters.Tests;
 
@@ -9,7 +8,7 @@ public sealed record CapturedRequest(HttpMethod Method, string Url, string Body)
 
 /// <summary>
 ///     Records every request and answers from a canned routing table, so the adapter can be tested
-///     against recorded pages without reaching Nautiljon or a FlareSolverr instance.
+///     against recorded replies without reaching AniList.
 /// </summary>
 public sealed class FakeHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
 {
@@ -25,29 +24,27 @@ public sealed class FakeHttpMessageHandler(Func<HttpRequestMessage, HttpResponse
 		return responder(request);
 	}
 
-	/// <summary>A FlareSolverr envelope carrying a rendered page.</summary>
-	public static HttpResponseMessage Solved(string html, int siteStatus = 200)
+	public static HttpResponseMessage Json(string payload, HttpStatusCode status = HttpStatusCode.OK)
 	{
-		return Envelope(new
+		return new HttpResponseMessage(status)
 		{
-			status = "ok",
-			message = "",
-			solution = new { status = siteStatus, response = html }
-		});
-	}
-
-	/// <summary>A FlareSolverr envelope reporting that it could not fetch anything.</summary>
-	public static HttpResponseMessage SolverError(string message)
-	{
-		return Envelope(new { status = "error", message, solution = (object?)null });
-	}
-
-	private static HttpResponseMessage Envelope(object payload)
-	{
-		return new HttpResponseMessage(HttpStatusCode.OK)
-		{
-			Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
+			Content = new StringContent(payload, Encoding.UTF8, "application/json")
 		};
+	}
+
+	/// <summary>A page carrying no media and declaring itself the last one.</summary>
+	public static HttpResponseMessage EmptyPage()
+	{
+		return Json("""{"data":{"Page":{"pageInfo":{"hasNextPage":false},"media":[]}}}""");
+	}
+
+	/// <summary>
+	///     GraphQL reports failure inside a 200, so this is what a rejected query actually looks
+	///     like on the wire.
+	/// </summary>
+	public static HttpResponseMessage GraphQlError(string message)
+	{
+		return Json($$"""{"errors":[{"message":{{System.Text.Json.JsonSerializer.Serialize(message)}}}],"data":null}""");
 	}
 }
 

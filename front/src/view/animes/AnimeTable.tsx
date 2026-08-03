@@ -12,7 +12,7 @@ import {
 import { BingeBadge } from "@/view/animes/BingeBadge";
 import type { Anime } from "@/core/api/types";
 
-type SortKey = "binge" | "title" | "studio" | "score" | "episodes" | "popularity";
+type SortKey = "binge" | "title" | "studio" | "score" | "votes" | "episodes" | "popularity";
 
 interface Column {
 	key: SortKey;
@@ -22,14 +22,15 @@ interface Column {
 
 const columns: Column[] = [
 	{ key: "binge", label: "Bingeable", numeric: false },
-	{ key: "title", label: "Titre", numeric: false },
+	{ key: "title", label: "Title", numeric: false },
 	{ key: "studio", label: "Studio", numeric: false },
-	{ key: "episodes", label: "Épisodes", numeric: true },
-	{ key: "score", label: "Note", numeric: true },
-	{ key: "popularity", label: "Popularité", numeric: true },
+	{ key: "episodes", label: "Episodes", numeric: true },
+	{ key: "score", label: "Rating", numeric: true },
+	{ key: "votes", label: "Ratings", numeric: true },
+	{ key: "popularity", label: "Popularity", numeric: true },
 ];
 
-/** Sorts undefined-last regardless of direction, so "Fin inconnue" never crowds the top. */
+/** Sorts undefined-last regardless of direction, so "no end announced" never crowds the top. */
 function compare(a: Anime, b: Anime, key: SortKey): number {
 	switch (key) {
 		case "binge": {
@@ -41,11 +42,13 @@ function compare(a: Anime, b: Anime, key: SortKey): number {
 			return left.localeCompare(right);
 		}
 		case "title":
-			return a.title.localeCompare(b.title, "fr");
+			return a.title.localeCompare(b.title);
 		case "studio":
-			return a.studio.localeCompare(b.studio, "fr");
+			return a.studio.localeCompare(b.studio);
 		case "score":
 			return (b.score ?? -1) - (a.score ?? -1);
+		case "votes":
+			return (b.votesCount ?? -1) - (a.votesCount ?? -1);
 		case "episodes":
 			return b.binge.releasedEpisodes - a.binge.releasedEpisodes;
 		case "popularity":
@@ -122,6 +125,7 @@ export function AnimeTable({ animes, now }: Props) {
 								{anime.binge.releasedEpisodes} / {anime.binge.totalEpisodes ?? "?"}
 							</TableCell>
 							<TableCell align="right">{anime.score?.toFixed(1) ?? "—"}</TableCell>
+							<TableCell align="right">{anime.votesCount ?? "—"}</TableCell>
 							<TableCell align="right">{anime.popularity}</TableCell>
 						</TableRow>
 					))}

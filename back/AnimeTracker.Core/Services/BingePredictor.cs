@@ -17,14 +17,9 @@ public static class BingePredictor
 
 	public static BingePrediction Predict(IReadOnlyCollection<Episode> episodes, int? totalEpisodes, DateOnly today)
 	{
-		var releaseDates = episodes
-			.Select(episode => episode.ReleaseDate)
-			.OfType<DateOnly>()
-			.Where(date => date <= today)
-			.Order()
-			.ToArray();
+		var dates = episodes.Select(episode => episode.ReleaseDate).Order().ToArray();
 
-		var released = releaseDates.Length;
+		var released = dates.Count(date => date <= today);
 
 		// Nothing announced: refuse to invent an end date rather than show a number that is wrong.
 		if (totalEpisodes is not { } total)
@@ -43,33 +38,45 @@ public static class BingePredictor
 			return new BingePrediction
 			{
 				Status = BingeStatus.BingeableNow,
-				BingeableAt = releaseDates.Length > 0 ? releaseDates[^1] : today,
+				BingeableAt = released > 0 ? dates[released - 1] : today,
 				ReleasedEpisodes = released,
 				TotalEpisodes = total
 			};
 		}
 
-		// No episode out yet — the first one has not aired, so there is nothing to extrapolate from.
-		if (released == 0)
+		// The schedule already reaches the last announced episode: that date is the broadcaster's,
+		// so publish it as a fact instead of extrapolating over the top of it.
+		if (dates.Length >= total)
 		{
-			var upcoming = episodes.Select(episode => episode.ReleaseDate).OfType<DateOnly>().Order().ToArray();
-
 			return new BingePrediction
 			{
-				Status = upcoming.Length > 0 ? BingeStatus.Estimated : BingeStatus.UnknownEnd,
-				BingeableAt = upcoming.Length > 0 ? upcoming[0].AddDays(FallbackCadence.Days * (total - 1)) : null,
+				Status = BingeStatus.Announced,
+				BingeableAt = dates[total - 1],
+				ReleasedEpisodes = released,
+				TotalEpisodes = total
+			};
+		}
+
+		// A total was announced but not a single slot was: there is no anchor to extrapolate from,
+		// and a date built on nothing would be indistinguishable on screen from a measured one.
+		if (dates.Length == 0)
+		{
+			return new BingePrediction
+			{
+				Status = BingeStatus.UnknownEnd,
+				BingeableAt = null,
 				ReleasedEpisodes = 0,
 				TotalEpisodes = total
 			};
 		}
 
-		var cadence = MedianCadence(releaseDates);
-		var remaining = total - released;
+		// Partly scheduled: extend the tail at the cadence the published slots show.
+		var cadence = MedianCadence(dates);
 
 		return new BingePrediction
 		{
 			Status = BingeStatus.Estimated,
-			BingeableAt = releaseDates[^1].AddDays(cadence.Days * remaining),
+			BingeableAt = dates[^1].AddDays(cadence.Days * (total - dates.Length)),
 			ReleasedEpisodes = released,
 			TotalEpisodes = total
 		};

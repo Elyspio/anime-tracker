@@ -9,14 +9,16 @@ public interface IAnimeService
 	Task<IReadOnlyCollection<Anime>> GetBySeason(AnimeDate date, CancellationToken cancellationToken = default);
 
 	/// <summary>
-	///     Queues a season refresh and returns the job id. Scraping a season takes tens of minutes,
-	///     which is far longer than any HTTP client will wait, so callers never run it inline.
+	///     Queues a season refresh and returns the run to follow. The fetch itself takes about a
+	///     second, but it stays on the scheduler: that is what gives the nightly job and the button a
+	///     single path, and what leaves a written trace of every run. A season already being
+	///     refreshed is answered with that run rather than a second one.
 	/// </summary>
-	string QueueRefresh(AnimeDate date);
+	Task<RefreshQueueResult> QueueRefresh(AnimeDate date, CancellationToken cancellationToken = default);
 
-	/// <summary>Re-scrapes a season: the anime list, then each anime's episodes.</summary>
-	Task RefreshAll(AnimeDate date, CancellationToken cancellationToken = default);
+	/// <summary>Most recent refresh runs, newest first.</summary>
+	Task<IReadOnlyCollection<RefreshRun>> GetRecentRuns(int limit, CancellationToken cancellationToken = default);
 
-	/// <summary>Re-scrapes the episodes of a single anime.</summary>
-	Task Refresh(string animeUrl, CancellationToken cancellationToken = default);
+	/// <summary>Fetches a season from the source and replaces what is stored, reporting against <paramref name="runId" />.</summary>
+	Task RefreshAll(AnimeDate date, Guid runId, CancellationToken cancellationToken = default);
 }
