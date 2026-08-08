@@ -12,8 +12,10 @@ export function AnimeCardGrid({ animes, now }: Props) {
 		<Box
 			sx={{
 				display: "grid",
-				gap: 2,
-				gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+				// Four columns at the width the design was drawn for, and it reflows below that.
+				columnGap: 3,
+				rowGap: 3.5,
+				gridTemplateColumns: "repeat(auto-fill, minmax(228px, 1fr))",
 			}}
 		>
 			{animes.map((anime) => (

@@ -1,28 +1,18 @@
 import { useState } from "react";
-import {
-	AppBar,
-	Badge,
-	Box,
-	Button,
-	Container,
-	IconButton,
-	Stack,
-	Toolbar,
-	Tooltip,
-	Typography,
-} from "@mui/material";
+import { AppBar, Box, Button, Container, Divider, Stack, Toolbar, Typography } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import HistoryIcon from "@mui/icons-material/History";
 import { useSnackbar } from "notistack";
 import { useAppAuth } from "@/core/auth/AuthProvider";
 import { useRefreshSeason } from "@/core/api/mutations";
 import { useRefreshRuns, useSeasonRefetchOnRunCompletion } from "@/core/api/queries";
-import { findRunFor, isRunActive } from "@/core/refreshRuns";
+import { findRunFor } from "@/core/refreshRuns";
 import { currentSeason } from "@/core/binge";
 import { AnimesPage } from "@/view/animes/AnimesPage";
 import { RefreshRunsDrawer } from "@/view/layout/RefreshRunsDrawer";
 import { SeasonSelector } from "@/view/layout/SeasonSelector";
+import { SyncIndicator } from "@/view/layout/SyncIndicator";
 import { ThemeToggle } from "@/view/layout/ThemeToggle";
+import { UserAvatar } from "@/view/layout/UserAvatar";
 import type { AnimeSeason } from "@/core/api/types";
 
 export function AppLayout() {
@@ -37,7 +27,6 @@ export function AppLayout() {
 	// The 202 carries no new data — the grid fills in when the fetch itself lands, a moment later.
 	useSeasonRefetchOnRunCompletion(runs.data);
 
-	const activeRuns = (runs.data ?? []).filter(isRunActive);
 	const currentRun = findRunFor(runs.data, selected.year, selected.season);
 
 	const runRefresh = () =>
@@ -72,14 +61,9 @@ export function AppLayout() {
 
 	return (
 		<Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
-			<AppBar
-				position="sticky"
-				color="transparent"
-				elevation={0}
-				sx={{ backdropFilter: "blur(12px)", borderBottom: 1, borderColor: "divider" }}
-			>
+			<AppBar position="sticky">
 				<Toolbar sx={{ gap: 2, flexWrap: "wrap" }}>
-					<Typography variant="h6" sx={{ mr: 2 }}>
+					<Typography variant="h5" sx={{ whiteSpace: "nowrap" }}>
 						Anime Tracker
 					</Typography>
 
@@ -89,10 +73,13 @@ export function AppLayout() {
 						onChange={change}
 					/>
 
-					<Stack direction="row" spacing={1} sx={{ ml: "auto", alignItems: "center" }}>
+					<Stack direction="row" spacing={1.5} sx={{ ml: "auto", alignItems: "center" }}>
+						{/* Anonymous too: an empty grid is explained by whether a run has ever succeeded. */}
+						<SyncIndicator runs={runs.data} onOpen={() => setRunsOpen(true)} />
+
 						{auth.isAuthenticated && (
 							<Button
-								startIcon={<RefreshIcon />}
+								startIcon={<RefreshIcon fontSize="small" />}
 								onClick={runRefresh}
 								loading={refresh.isPending}
 								variant="outlined"
@@ -102,22 +89,22 @@ export function AppLayout() {
 							</Button>
 						)}
 
-						{/* Anonymous too: an empty grid is explained by whether a run has ever succeeded. */}
-						<Tooltip title="Refreshes">
-							<IconButton size="small" onClick={() => setRunsOpen(true)}>
-								<Badge badgeContent={activeRuns.length} color="info">
-									<HistoryIcon fontSize="small" />
-								</Badge>
-							</IconButton>
-						</Tooltip>
-
 						<ThemeToggle />
+
 						{auth.isAuthenticated ? (
 							<>
+								<Divider orientation="vertical" flexItem sx={{ my: 1.25 }} />
 								{auth.name && (
-									<Typography variant="body2" color="text.secondary">
-										{auth.name}
-									</Typography>
+									<Stack
+										direction="row"
+										spacing={1}
+										sx={{ alignItems: "center", minWidth: 0 }}
+									>
+										<UserAvatar name={auth.name} />
+										<Typography variant="body2" color="text.secondary" noWrap>
+											{auth.name}
+										</Typography>
+									</Stack>
 								)}
 								<Button size="small" onClick={auth.signOut}>
 									Sign out
@@ -132,7 +119,7 @@ export function AppLayout() {
 				</Toolbar>
 			</AppBar>
 
-			<Container maxWidth="xl" sx={{ py: 4 }}>
+			<Container maxWidth="xl" sx={{ py: 3 }}>
 				<AnimesPage year={selected.year} season={selected.season} />
 			</Container>
 

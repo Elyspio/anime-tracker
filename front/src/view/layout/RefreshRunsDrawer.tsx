@@ -16,6 +16,7 @@ import {
 	statusTones,
 } from "@/core/refreshRuns";
 import { seasonLabels } from "@/core/binge";
+import { Mono } from "@/view/components/Mono";
 import type { RefreshRun } from "@/core/api/types";
 
 interface Props {
@@ -43,16 +44,17 @@ function RunCard({ run }: { run: RefreshRun }) {
 					size="small"
 					label={statusLabels[run.status]}
 					color={statusTones[run.status]}
+					variant={statusTones[run.status] === "default" ? "outlined" : "filled"}
 				/>
 			</Stack>
 
-			{active && <LinearProgress sx={{ height: 4, borderRadius: 2 }} />}
+			{active && <LinearProgress />}
 
-			<Typography variant="caption" color="text.secondary">
+			<Mono sx={{ color: "text.disabled" }}>
 				{active
 					? `Started ${formatInstant(run.startedAt)}`
 					: `${formatInstant(run.startedAt)} · ${run.total} anime${run.total === 1 ? "" : "s"} · ${formatDuration(run)}`}
-			</Typography>
+			</Mono>
 
 			{run.error && (
 				<Typography variant="caption" color="error.main">
@@ -67,7 +69,7 @@ export function RefreshRunsDrawer({ open, onClose, runs, isPending, error }: Pro
 	return (
 		<Drawer anchor="right" open={open} onClose={onClose}>
 			<Box sx={{ width: { xs: 320, sm: 400 }, p: 3 }}>
-				<Typography variant="h6" sx={{ mb: 2 }}>
+				<Typography variant="h5" sx={{ mb: 2.5 }}>
 					Refreshes
 				</Typography>
 

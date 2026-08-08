@@ -5,8 +5,10 @@ import {
 	Box,
 	Chip,
 	CircularProgress,
+	Divider,
 	FormControlLabel,
 	MenuItem,
+	Select,
 	Stack,
 	Switch,
 	TextField,
@@ -14,16 +16,16 @@ import {
 	ToggleButtonGroup,
 	Typography,
 } from "@mui/material";
-import GridViewIcon from "@mui/icons-material/GridView";
-import TableRowsIcon from "@mui/icons-material/TableRows";
 import { useAnimes } from "@/core/api/queries";
 import { collectGenres, matchesGenres, matchesStatus, type StatusFilter } from "@/core/binge";
 import {
+	collectStudios,
 	episodicFormats,
 	formatLabels,
 	matchesAdult,
 	matchesFormat,
 	matchesRange,
+	matchesStudio,
 	noRangeFilter,
 	sortAnimes,
 	sortLabels,
@@ -32,13 +34,16 @@ import {
 import { useViewMode } from "@/config/viewMode";
 import { AnimeCardGrid } from "@/view/animes/AnimeCardGrid";
 import { AnimeTable } from "@/view/animes/AnimeTable";
+import { FilterField } from "@/view/components/FilterField";
+import { Mono } from "@/view/components/Mono";
+import { fonts } from "@/config/tokens";
 import { animeFormats, type AnimeFormat, type AnimeSeason } from "@/core/api/types";
 
 const statusFilters: { value: StatusFilter; label: string }[] = [
 	{ value: "all", label: "All" },
 	{ value: "bingeable", label: "Bingeable" },
 	{ value: "soon", label: "Soon" },
-	{ value: "unknown", label: "No end announced" },
+	{ value: "unknown", label: "No end" },
 ];
 
 const sortKeys: SortKey[] = ["score", "votes", "binge"];
@@ -46,6 +51,21 @@ const sortKeys: SortKey[] = ["score", "votes", "binge"];
 /** Thresholds worth offering. Finer steps would be precision nobody triages on. */
 const minScoreOptions = [0, 5, 6, 7, 8, 9];
 const minVotesOptions = [0, 10, 50, 100, 500, 1000];
+
+/** Borderless: the FilterField around it already draws the box. */
+const bareSelect = {
+	"& .MuiSelect-select": { py: 0, pl: 0 },
+	"& .MuiOutlinedInput-notchedOutline": { border: 0 },
+	"&:hover .MuiOutlinedInput-notchedOutline": { border: 0 },
+	"&.Mui-focused .MuiOutlinedInput-notchedOutline": { border: 0 },
+};
+
+const bareInput = {
+	"& .MuiOutlinedInput-root": { p: 0, minHeight: 32 },
+	"& .MuiOutlinedInput-notchedOutline": { border: 0 },
+	"&:hover .MuiOutlinedInput-notchedOutline": { border: 0 },
+	"& .Mui-focused .MuiOutlinedInput-notchedOutline": { border: 0 },
+};
 
 interface Props {
 	year: number;
@@ -57,6 +77,7 @@ export function AnimesPage({ year, season }: Props) {
 	const [viewMode, setViewMode] = useViewMode();
 	const [status, setStatus] = useState<StatusFilter>("all");
 	const [genres, setGenres] = useState<string[]>([]);
+	const [studio, setStudio] = useState("");
 	const [range, setRange] = useState(noRangeFilter);
 	const [sort, setSort] = useState<SortKey>("score");
 	const [formats, setFormats] = useState<AnimeFormat[]>([...episodicFormats]);
@@ -67,6 +88,7 @@ export function AnimesPage({ year, season }: Props) {
 
 	const animes = data ?? [];
 	const availableGenres = useMemo(() => collectGenres(animes), [animes]);
+	const availableStudios = useMemo(() => collectStudios(animes), [animes]);
 	const visible = useMemo(
 		() =>
 			sortAnimes(
@@ -74,19 +96,20 @@ export function AnimesPage({ year, season }: Props) {
 					(anime) =>
 						matchesStatus(anime, status, now) &&
 						matchesGenres(anime, genres) &&
+						matchesStudio(anime, studio) &&
 						matchesRange(anime, range) &&
 						matchesFormat(anime, formats) &&
 						matchesAdult(anime, includeAdult),
 				),
 				sort,
 			),
-		[animes, status, genres, range, sort, formats, includeAdult, now],
+		[animes, status, genres, studio, range, sort, formats, includeAdult, now],
 	);
 
 	if (isPending) {
 		return (
 			<Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-				<CircularProgress />
+				<CircularProgress size={28} />
 			</Box>
 		);
 	}
@@ -96,48 +119,52 @@ export function AnimesPage({ year, season }: Props) {
 	}
 
 	return (
-		<Stack spacing={3}>
-			<Stack
-				direction={{ xs: "column", md: "row" }}
-				spacing={2}
-				sx={{ alignItems: { md: "center" }, justifyContent: "space-between" }}
-			>
-				<Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
-					{statusFilters.map((filter) => (
+		<Stack sx={{ gap: 2.5 }}>
+			<Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+				{statusFilters.map((filter) => {
+					const selected = status === filter.value;
+
+					return (
 						<Chip
 							key={filter.value}
 							label={filter.label}
 							onClick={() => setStatus(filter.value)}
-							color={status === filter.value ? "primary" : "default"}
-							variant={status === filter.value ? "filled" : "outlined"}
+							sx={{
+								height: 30,
+								fontFamily: fonts.sans,
+								fontSize: 13,
+								bgcolor: selected ? "text.primary" : "background.paper",
+								color: selected ? "background.paper" : "text.secondary",
+								borderColor: selected ? "text.primary" : "divider",
+								"&:hover": {
+									bgcolor: selected ? "text.primary" : "background.paper",
+									borderColor: selected ? "text.primary" : "text.disabled",
+									color: selected ? "background.paper" : "text.primary",
+								},
+							}}
 						/>
-					))}
-				</Stack>
+					);
+				})}
 
-				<Stack
-					direction="row"
-					spacing={2}
-					sx={{ alignItems: "center", flexWrap: "wrap", gap: 2 }}
-				>
-					<TextField
-						select
-						size="small"
-						label="Sort by"
+				<Divider orientation="vertical" flexItem sx={{ mx: 0.5, my: 0.5 }} />
+
+				<FilterField label="Sort">
+					<Select
 						value={sort}
 						onChange={(event) => setSort(event.target.value as SortKey)}
-						sx={{ minWidth: 190 }}
+						variant="outlined"
+						sx={bareSelect}
 					>
 						{sortKeys.map((key) => (
 							<MenuItem key={key} value={key}>
 								{sortLabels[key]}
 							</MenuItem>
 						))}
-					</TextField>
+					</Select>
+				</FilterField>
 
-					<TextField
-						select
-						size="small"
-						label="Min rating"
+				<FilterField label="Rating">
+					<Select
 						value={range.minScore}
 						onChange={(event) =>
 							setRange((previous) => ({
@@ -145,19 +172,18 @@ export function AnimesPage({ year, season }: Props) {
 								minScore: Number(event.target.value),
 							}))
 						}
-						sx={{ minWidth: 120 }}
+						sx={{ ...bareSelect, fontFamily: fonts.mono }}
 					>
 						{minScoreOptions.map((value) => (
 							<MenuItem key={value} value={value}>
-								{value === 0 ? "Any" : `${value}/10`}
+								{value === 0 ? "Any" : `${value}+`}
 							</MenuItem>
 						))}
-					</TextField>
+					</Select>
+				</FilterField>
 
-					<TextField
-						select
-						size="small"
-						label="Min ratings"
+				<FilterField label="Ratings">
+					<Select
 						value={range.minVotes}
 						onChange={(event) =>
 							setRange((previous) => ({
@@ -165,15 +191,32 @@ export function AnimesPage({ year, season }: Props) {
 								minVotes: Number(event.target.value),
 							}))
 						}
-						sx={{ minWidth: 120 }}
+						sx={{ ...bareSelect, fontFamily: fonts.mono }}
 					>
 						{minVotesOptions.map((value) => (
 							<MenuItem key={value} value={value}>
-								{value === 0 ? "Any" : `${value}+`}
+								{value === 0 ? "Any" : `${value.toLocaleString()}+`}
 							</MenuItem>
 						))}
-					</TextField>
+					</Select>
+				</FilterField>
 
+				<FilterField label="Studio">
+					<Select
+						value={studio}
+						onChange={(event) => setStudio(event.target.value)}
+						sx={{ ...bareSelect, maxWidth: 170 }}
+					>
+						<MenuItem value="">All</MenuItem>
+						{availableStudios.map((name) => (
+							<MenuItem key={name} value={name}>
+								{name}
+							</MenuItem>
+						))}
+					</Select>
+				</FilterField>
+
+				<FilterField label="Formats" sx={{ minWidth: 210 }}>
 					<Autocomplete
 						multiple
 						size="small"
@@ -182,62 +225,79 @@ export function AnimesPage({ year, season }: Props) {
 						value={formats}
 						onChange={(_event, next) => setFormats(next)}
 						getOptionLabel={(option) => formatLabels[option]}
-						sx={{ minWidth: 220 }}
-						renderInput={(params) => <TextField {...params} label="Formats" />}
+						sx={{ flex: 1, ...bareInput }}
+						renderInput={(params) => <TextField {...params} placeholder="All" />}
 					/>
+				</FilterField>
 
+				<FilterField label="Genres" sx={{ minWidth: 210 }}>
 					<Autocomplete
 						multiple
 						size="small"
 						options={availableGenres}
 						value={genres}
 						onChange={(_event, next) => setGenres(next)}
-						sx={{ minWidth: 240 }}
-						renderInput={(params) => (
-							<TextField {...params} label="Genres" placeholder="Filter" />
-						)}
+						sx={{ flex: 1, ...bareInput }}
+						renderInput={(params) => <TextField {...params} placeholder="All" />}
 					/>
+				</FilterField>
 
-					<FormControlLabel
-						control={
-							<Switch
-								size="small"
-								checked={includeAdult}
-								onChange={(event) => setIncludeAdult(event.target.checked)}
-							/>
-						}
-						label="Adult"
-					/>
+				<FormControlLabel
+					sx={{ ml: 0.5, mr: 0 }}
+					control={
+						<Switch
+							checked={includeAdult}
+							onChange={(event) => setIncludeAdult(event.target.checked)}
+							sx={{ mr: 1 }}
+						/>
+					}
+					label={
+						<Typography variant="body2" sx={{ color: "text.secondary" }}>
+							Adult
+						</Typography>
+					}
+				/>
 
-					<ToggleButtonGroup
-						exclusive
-						size="small"
-						value={viewMode}
-						onChange={(_event, next) => next && setViewMode(next)}
-					>
-						<ToggleButton value="cards" aria-label="Card view">
-							<GridViewIcon fontSize="small" />
-						</ToggleButton>
-						<ToggleButton value="table" aria-label="Table view">
-							<TableRowsIcon fontSize="small" />
-						</ToggleButton>
-					</ToggleButtonGroup>
-				</Stack>
+				<ToggleButtonGroup
+					exclusive
+					value={viewMode}
+					onChange={(_event, next) => next && setViewMode(next)}
+					sx={{ ml: "auto" }}
+				>
+					<ToggleButton value="cards" aria-label="Card view">
+						Grid
+					</ToggleButton>
+					<ToggleButton value="table" aria-label="Table view">
+						List
+					</ToggleButton>
+				</ToggleButtonGroup>
 			</Stack>
 
 			{animes.length === 0 ? (
 				<Alert severity="info">
 					Nothing stored for this season yet. Sign in and start a refresh to fetch it.
 				</Alert>
-			) : visible.length === 0 ? (
-				<Alert severity="info">No anime matches these filters.</Alert>
 			) : (
 				<>
-					<Typography variant="body2" color="text.secondary">
-						{visible.length} of {animes.length} anime{animes.length > 1 ? "s" : ""}
-					</Typography>
+					<Stack
+						direction="row"
+						sx={{
+							alignItems: "baseline",
+							gap: 1.25,
+							pb: 0.75,
+							borderBottom: 1,
+							borderColor: "divider",
+						}}
+					>
+						<Mono sx={{ fontSize: 19, color: "text.primary" }}>{visible.length}</Mono>
+						<Typography variant="body2" sx={{ color: "text.disabled" }}>
+							of {animes.length} titles this season
+						</Typography>
+					</Stack>
 
-					{viewMode === "cards" ? (
+					{visible.length === 0 ? (
+						<Alert severity="info">No anime matches these filters.</Alert>
+					) : viewMode === "cards" ? (
 						<AnimeCardGrid animes={visible} now={now} />
 					) : (
 						<AnimeTable animes={visible} now={now} />

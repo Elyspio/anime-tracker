@@ -61,11 +61,19 @@ describe("daysUntil", () => {
 describe("formatBingeChip", () => {
 	it("shows weeks for anything more than a week out", () => {
 		// 2026-03-22 is 49 days away — seven whole weeks.
-		expect(formatBingeChip(prediction(), now).label).toBe("7w");
+		expect(formatBingeChip(prediction(), now).label).toBe("Binge in 7 weeks");
 	});
 
 	it("shows days inside the last week, where the exact wait matters", () => {
-		expect(formatBingeChip(prediction({ bingeableAt: "2026-02-04" }), now).label).toBe("3d");
+		expect(formatBingeChip(prediction({ bingeableAt: "2026-02-04" }), now).label).toBe(
+			"Binge in 3 days",
+		);
+	});
+
+	it("keeps the unit singular when only one is left", () => {
+		expect(formatBingeChip(prediction({ bingeableAt: "2026-02-02" }), now).label).toBe(
+			"Binge in 1 day",
+		);
 	});
 
 	it("marks a finished season as bingeable, in the reserved success tone", () => {
@@ -100,7 +108,7 @@ describe("formatBingeChip", () => {
 		const announced = formatBingeChip(prediction({ status: "Announced" }), now);
 		const estimated = formatBingeChip(prediction({ status: "Estimated" }), now);
 
-		expect(announced.label).toBe("7w");
+		expect(announced.label).toBe("Binge in 7 weeks");
 		expect(announced.title).toContain("scheduled");
 		expect(estimated.title).toContain("estimated");
 	});

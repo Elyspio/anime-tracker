@@ -76,6 +76,18 @@ export function matchesFormat(anime: Anime, selected: readonly AnimeFormat[]): b
 	return selected.length === 0 || selected.includes(anime.format);
 }
 
+/** Every studio credited in the loaded season, alphabetically, for the filter dropdown. */
+export function collectStudios(animes: readonly Anime[]): string[] {
+	return [...new Set(animes.map((anime) => anime.studio))]
+		.filter((studio) => studio.trim().length > 0)
+		.sort((a, b) => a.localeCompare(b));
+}
+
+/** The empty selection is "All": a season has too many studios for a default worth guessing. */
+export function matchesStudio(anime: Anime, selected: string): boolean {
+	return selected === "" || anime.studio === selected;
+}
+
 /** Adult entries are fetched and stored like any other, and hidden until explicitly asked for. */
 export function matchesAdult(anime: Anime, includeAdult: boolean): boolean {
 	return includeAdult || !anime.isAdult;

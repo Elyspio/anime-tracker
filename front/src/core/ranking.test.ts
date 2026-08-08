@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+	collectStudios,
 	matchesAdult,
 	matchesFormat,
 	matchesRange,
+	matchesStudio,
 	sortAnimes,
 	episodicFormats,
 } from "@/core/ranking";
@@ -109,6 +111,34 @@ describe("matchesFormat", () => {
 	it("shows everything when no format is selected", () => {
 		// An empty selection is "no filter", not "nothing" — an empty grid would look like a bug.
 		expect(matchesFormat(anime("x", 1, 8, { format: "Movie" }), [])).toBe(true);
+	});
+});
+
+describe("collectStudios", () => {
+	it("lists each studio once, alphabetically", () => {
+		const studios = collectStudios([
+			anime("a", 1, 8, { studio: "Studio Bind" }),
+			anime("b", 1, 8, { studio: "CloverWorks" }),
+			anime("c", 1, 8, { studio: "Studio Bind" }),
+		]);
+
+		expect(studios).toEqual(["CloverWorks", "Studio Bind"]);
+	});
+
+	it("drops entries whose studio was never credited", () => {
+		// The source stores an empty string, and an empty option would filter to nothing.
+		expect(collectStudios([anime("a", 1, 8, { studio: "" })])).toEqual([]);
+	});
+});
+
+describe("matchesStudio", () => {
+	it("keeps everything when nothing is selected", () => {
+		expect(matchesStudio(anime("a", 1, 8, { studio: "OLM" }), "")).toBe(true);
+	});
+
+	it("keeps only the selected studio", () => {
+		expect(matchesStudio(anime("a", 1, 8, { studio: "OLM" }), "OLM")).toBe(true);
+		expect(matchesStudio(anime("a", 1, 8, { studio: "NUT" }), "OLM")).toBe(false);
 	});
 });
 

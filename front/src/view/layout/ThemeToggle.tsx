@@ -3,13 +3,13 @@ import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from 
 import CheckIcon from "@mui/icons-material/Check";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
-import SettingsBrightnessIcon from "@mui/icons-material/SettingsBrightness";
+import ContrastIcon from "@mui/icons-material/Contrast";
 import { useThemeMode, type ThemeMode } from "@/config/themeMode";
 
 const options: { mode: ThemeMode; label: string; icon: ReactNode }[] = [
-	{ mode: "system", label: "Système", icon: <SettingsBrightnessIcon fontSize="small" /> },
-	{ mode: "light", label: "Clair", icon: <LightModeIcon fontSize="small" /> },
-	{ mode: "dark", label: "Sombre", icon: <DarkModeIcon fontSize="small" /> },
+	{ mode: "system", label: "System", icon: <ContrastIcon fontSize="small" /> },
+	{ mode: "light", label: "Light", icon: <LightModeIcon fontSize="small" /> },
+	{ mode: "dark", label: "Dark", icon: <DarkModeIcon fontSize="small" /> },
 ];
 
 export function ThemeToggle() {
@@ -27,13 +27,8 @@ export function ThemeToggle() {
 
 	return (
 		<>
-			<Tooltip title="Thème">
-				<IconButton
-					size="small"
-					color="inherit"
-					onClick={open}
-					aria-label="Changer de thème"
-				>
+			<Tooltip title="Theme">
+				<IconButton size="small" onClick={open} aria-label="Change theme">
 					{current.icon}
 				</IconButton>
 			</Tooltip>

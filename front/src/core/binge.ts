@@ -65,9 +65,13 @@ export function formatBingeChip(binge: BingePrediction, now: Date): BingeChip {
 		: "";
 
 	if (days <= 0) return { label: "Bingeable", tone: "success", title };
-	if (days <= 7) return { label: `${days}d`, tone: "info", title };
+	if (days <= 7) return { label: `Binge in ${plural(days, "day")}`, tone: "info", title };
 
-	return { label: `${Math.ceil(days / 7)}w`, tone: "info", title };
+	return { label: `Binge in ${plural(Math.ceil(days / 7), "week")}`, tone: "info", title };
+}
+
+function plural(count: number, unit: string): string {
+	return `${count} ${unit}${count === 1 ? "" : "s"}`;
 }
 
 export type StatusFilter = "all" | "bingeable" | "soon" | "unknown";

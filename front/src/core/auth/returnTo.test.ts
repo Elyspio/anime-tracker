@@ -3,9 +3,9 @@ import { captureReturnTo, resolveReturnTo } from "@/core/auth/returnTo";
 
 describe("captureReturnTo", () => {
 	it("keeps the path, query and hash of the page the user left", () => {
-		expect(
-			captureReturnTo({ pathname: "/", search: "?season=Summer2026", hash: "#top" }),
-		).toBe("/?season=Summer2026#top");
+		expect(captureReturnTo({ pathname: "/", search: "?season=Summer2026", hash: "#top" })).toBe(
+			"/?season=Summer2026#top",
+		);
 	});
 
 	it("does not capture the callback route itself", () => {
