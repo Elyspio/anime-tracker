@@ -5,6 +5,7 @@ import {
 	matchesFormat,
 	matchesRange,
 	matchesStudio,
+	matchesTitle,
 	sortAnimes,
 	episodicFormats,
 } from "@/core/ranking";
@@ -21,6 +22,7 @@ function anime(
 		sourceId: 1,
 		date: { year: 2026, season: "Summer" },
 		title,
+		alternativeTitles: [],
 		description: "",
 		studio: "",
 		imageUrl: "",
@@ -139,6 +141,39 @@ describe("matchesStudio", () => {
 	it("keeps only the selected studio", () => {
 		expect(matchesStudio(anime("a", 1, 8, { studio: "OLM" }), "OLM")).toBe(true);
 		expect(matchesStudio(anime("a", 1, 8, { studio: "NUT" }), "OLM")).toBe(false);
+	});
+});
+
+describe("matchesTitle", () => {
+	const frieren = anime("Sousou no Frieren", 1, 8, {
+		alternativeTitles: ["Frieren: Beyond Journey's End", "葬送のフリーレン"],
+	});
+
+	it("keeps everything when the query is blank", () => {
+		expect(matchesTitle(frieren, "")).toBe(true);
+		expect(matchesTitle(frieren, "   ")).toBe(true);
+	});
+
+	it("matches a substring of the displayed title, ignoring case", () => {
+		expect(matchesTitle(frieren, "SOUSOU")).toBe(true);
+		expect(matchesTitle(frieren, "no frie")).toBe(true);
+	});
+
+	it("matches the alternative titles", () => {
+		expect(matchesTitle(frieren, "beyond journey")).toBe(true);
+		expect(matchesTitle(frieren, "フリーレン")).toBe(true);
+	});
+
+	it("ignores accents, full-width letters and extra spaces", () => {
+		expect(matchesTitle(frieren, "Friéren")).toBe(true);
+		expect(matchesTitle(frieren, "Ｆｒｉｅｒｅｎ")).toBe(true);
+		expect(matchesTitle(frieren, "  sousou   no  ")).toBe(true);
+		expect(matchesTitle(anime("Mushoku Tensei Ⅲ", 1, 8), "tensei iii")).toBe(true);
+	});
+
+	it("rejects a title that does not contain the query", () => {
+		expect(matchesTitle(frieren, "bleach")).toBe(false);
+		expect(matchesTitle(anime("がっこう", 1, 8), "かっこう")).toBe(false);
 	});
 });
 

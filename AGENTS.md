@@ -220,9 +220,9 @@ as `admin` and triggers a refresh — that button is the bootstrap path.
   `front/src/core/api/types.ts`. Both halves of the tripwire exist and must be edited together:
   `EnumContractTests` in `AnimeTracker.Core.Tests`, and `types.test.ts` on the frontend, where each
   union is declared once as a `Record<Union, true>` so the compiler catches a forgotten member.
-- The **vote count** (`VotesCount`, from `<meta itemprop="ratingCount">` on the anime's own page) and
-  **popularity** (the listing's "N membres veulent le voir / l'ont vu") are different numbers. Only
-  the first says how many people graded the show. Do not use one where the other is meant.
+- The **vote count** (`VotesCount`, the sum of AniList's score histogram) and **popularity**
+  (members who listed the show, graded or not) are different numbers. Only the first says how many
+  people graded the show. Do not use one where the other is meant.
 
 ## Code style
 
@@ -238,10 +238,10 @@ as `admin` and triggers a refresh — that button is the bootstrap path.
 
 ## Deployment cautions
 
-`deploy/build/build.ps1` builds the single-container image and pushes it to an external registry.
-It does not deploy: the chart and its `deploy.ps1` live in the infrastructure repository, at
-`infrastructure-elylan/kubernetes/apps/anime-tracker`, and take the printed tag as `-Tag`. Run
-either only when explicitly asked to publish.
+`deploy/build/build.ps1` builds the single-container image, pushes it to an external registry
+**and deploys it**: it ends by calling the chart's `deploy.ps1` with the new tag as `-Tag`. The chart
+lives in the infrastructure repository, at `infrastructure-elylan/kubernetes/apps/anime-tracker`,
+whose local clone is `P:\own\common\keycloak`. Run it only when explicitly asked to publish.
 
 Run a **single replica**, and roll it with `strategy: Recreate`. The Hangfire server and the
 refresher are singletons, and `AnimeHostedService` proves it in both directions: `StopAsync`

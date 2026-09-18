@@ -88,6 +88,33 @@ export function matchesStudio(anime: Anime, selected: string): boolean {
 	return selected === "" || anime.studio === selected;
 }
 
+/**
+ * Case-, accent- and width-insensitive: "Ｆｒｉｅｒｅｎ", "frieren" and "Friéren" are one search.
+ * NFKD also spells out ligatures and Roman numerals, so "Ⅲ" is found by typing "III".
+ */
+function normalizeTitle(text: string): string {
+	return (
+		text
+			.normalize("NFKD")
+			// Latin combining accents only, then recompose: left decomposed, が would contain か.
+			.replace(/[\u0300-\u036f]/g, "")
+			.normalize("NFC")
+			.toLowerCase()
+			.replace(/\s+/g, " ")
+			.trim()
+	);
+}
+
+/** A substring of the displayed title or of any alternative one. An empty query keeps everything. */
+export function matchesTitle(anime: Anime, query: string): boolean {
+	const needle = normalizeTitle(query);
+	if (needle === "") return true;
+
+	return [anime.title, ...anime.alternativeTitles].some((title) =>
+		normalizeTitle(title).includes(needle),
+	);
+}
+
 /** Adult entries are fetched and stored like any other, and hidden until explicitly asked for. */
 export function matchesAdult(anime: Anime, includeAdult: boolean): boolean {
 	return includeAdult || !anime.isAdult;

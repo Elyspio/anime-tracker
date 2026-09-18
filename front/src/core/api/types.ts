@@ -100,6 +100,8 @@ export interface Anime {
 	sourceId: number;
 	date: AnimeDate;
 	title: string;
+	/** English, native and synonym titles, for search only. Empty until the season is refreshed. */
+	alternativeTitles: string[];
 	description: string;
 	studio: string;
 	imageUrl: string;

@@ -16,11 +16,14 @@ internal class MediaAssembler
 
 	public AnimeBase Convert(AnimeDate date, Media media)
 	{
+		var title = Title(media);
+
 		return new AnimeBase
 		{
 			SourceId = media.Id,
 			Date = date,
-			Title = Title(media),
+			Title = title,
+			AlternativeTitles = AlternativeTitles(media, title),
 			Description = media.Description?.Trim() ?? "",
 			Studio = media.Studios?.Nodes?.FirstOrDefault()?.Name ?? "",
 			ImageUrl = media.CoverImage?.Large ?? "",
@@ -47,6 +50,21 @@ internal class MediaAssembler
 		if (!string.IsNullOrWhiteSpace(romaji)) return romaji.Trim();
 
 		return media.Title?.English?.Trim() ?? "";
+	}
+
+	/// <summary>
+	///     English, native and synonyms, minus the displayed title. Synonyms repeat the other titles
+	///     with different casing often enough that duplicates are compared case-insensitively.
+	/// </summary>
+	private static string[] AlternativeTitles(Media media, string title)
+	{
+		IEnumerable<string?> candidates = [media.Title?.English, media.Title?.Native, .. media.Synonyms ?? []];
+
+		return candidates
+			.Select(candidate => candidate?.Trim() ?? "")
+			.Where(candidate => candidate.Length > 0 && !string.Equals(candidate, title, StringComparison.OrdinalIgnoreCase))
+			.Distinct(StringComparer.OrdinalIgnoreCase)
+			.ToArray();
 	}
 
 	/// <summary>

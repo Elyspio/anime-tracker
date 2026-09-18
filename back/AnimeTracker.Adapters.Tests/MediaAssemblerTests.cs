@@ -61,6 +61,39 @@ public class MediaAssemblerTests
 	}
 
 	[Fact]
+	public void Collects_the_english_native_and_synonym_titles()
+	{
+		var anime = Convert("""
+			{"id":1,"title":{"romaji":"Sousou no Frieren","english":"Frieren: Beyond Journey's End","native":"葬送のフリーレン"},
+			 "synonyms":["Frieren at the Funeral"]}
+			""");
+
+		anime.AlternativeTitles.ShouldBe(["Frieren: Beyond Journey's End", "葬送のフリーレン", "Frieren at the Funeral"]);
+	}
+
+	[Fact]
+	public void Leaves_the_displayed_title_and_duplicates_out_of_the_alternatives()
+	{
+		// Synonyms routinely echo the other titles, casing aside; the fallback title is already shown.
+		var anime = Convert("""
+			{"id":1,"title":{"romaji":null,"english":"Frieren","native":" 葬送のフリーレン "},
+			 "synonyms":["frieren","葬送のフリーレン","", "  ", null,"Sousou no Frieren","SOUSOU NO FRIEREN"]}
+			""");
+
+		anime.Title.ShouldBe("Frieren");
+		anime.AlternativeTitles.ShouldBe(["葬送のフリーレン", "Sousou no Frieren"]);
+	}
+
+	[Fact]
+	public void Keeps_an_unannounced_episode_count_null()
+	{
+		// A show scheduled before its total is announced — the prediction must stay UnknownEnd.
+		var anime = Convert("""{"id":1,"episodes":null,"airingSchedule":{"nodes":[{"episode":1,"airingAt":1783162800}]}}""");
+
+		anime.EpisodesCount.ShouldBeNull();
+	}
+
+	[Fact]
 	public void Leaves_an_ungraded_anime_without_a_score()
 	{
 		var anime = Convert("""{"id":1,"averageScore":null,"stats":null}""");
@@ -107,6 +140,7 @@ public class MediaAssemblerTests
 
 		anime.SourceId.ShouldBe(42);
 		anime.Title.ShouldBeEmpty();
+		anime.AlternativeTitles.ShouldBeEmpty();
 		anime.Genres.ShouldBeEmpty();
 		anime.Episodes.ShouldBeEmpty();
 		anime.Popularity.ShouldBe(0);

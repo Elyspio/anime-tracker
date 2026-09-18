@@ -81,7 +81,7 @@ public class AniListAdapterTests
 		anime.Format.ShouldBe(AnimeFormat.Tv);
 		anime.IsAdult.ShouldBeFalse();
 		anime.EpisodesCount.ShouldBe(14);
-		anime.Popularity.ShouldBe(135534);
+		anime.Popularity.ShouldBe(157452);
 		anime.Genres.ShouldBe(["Adventure", "Drama", "Ecchi", "Fantasy"]);
 		anime.ImageUrl.ShouldStartWith("https://s4.anilist.co/");
 		anime.Date.ShouldBe(Summer2026);
@@ -90,15 +90,15 @@ public class AniListAdapterTests
 	[Fact]
 	public async Task Converts_the_score_out_of_ten()
 	{
-		// AniList grades out of 100 and this one is at 85.
-		(await RecordedAnimes()).Single(item => item.SourceId == 178789).Score.ShouldBe(8.5);
+		// AniList grades out of 100 and this one is at 84.
+		(await RecordedAnimes()).Single(item => item.SourceId == 178789).Score.ShouldBe(8.4);
 	}
 
 	[Fact]
 	public async Task Sums_the_score_distribution_into_a_vote_count()
 	{
-		// The API publishes the histogram but no total; 9119 is the sum of its buckets.
-		(await RecordedAnimes()).Single(item => item.SourceId == 178789).VotesCount.ShouldBe(9119);
+		// The API publishes the histogram but no total; 14008 is the sum of its buckets.
+		(await RecordedAnimes()).Single(item => item.SourceId == 178789).VotesCount.ShouldBe(14008);
 	}
 
 	[Fact]
@@ -106,20 +106,23 @@ public class AniListAdapterTests
 	{
 		var episodes = (await RecordedAnimes()).Single(item => item.SourceId == 178789).Episodes.ToArray();
 
-		episodes.Length.ShouldBe(13);
-		episodes.Select(episode => episode.Number).ShouldBe(Enumerable.Range(1, 13));
+		episodes.Length.ShouldBe(14);
+		episodes.Select(episode => episode.Number).ShouldBe(Enumerable.Range(1, 14));
 		episodes[0].ReleaseDate.ShouldBe(new DateOnly(2026, 7, 4));
 
-		// The last slot is 2026-09-20 15:00 UTC, which is midnight on the 21st in Tokyo. Read as UTC
-		// it would date the end of the season a day early — and late-night slots are the norm.
-		episodes[^1].ReleaseDate.ShouldBe(new DateOnly(2026, 9, 21));
+		// Episode 13's slot is 2026-09-20 15:00 UTC, which is midnight on the 21st in Tokyo. Read as
+		// UTC it would land a day early — and late-night slots are the norm.
+		episodes[12].ReleaseDate.ShouldBe(new DateOnly(2026, 9, 21));
 	}
 
 	[Fact]
-	public async Task Keeps_an_unannounced_episode_count_null()
+	public async Task Collects_every_other_title_the_source_knows()
 	{
-		// BLACK TORCH is scheduled but has no announced total — the prediction must stay UnknownEnd.
-		(await RecordedAnimes()).Single(item => item.SourceId == 187538).EpisodesCount.ShouldBeNull();
+		var anime = (await RecordedAnimes()).Single(item => item.SourceId == 178789);
+
+		anime.AlternativeTitles.ShouldContain("Mushoku Tensei: Jobless Reincarnation Season 3");
+		anime.AlternativeTitles.ShouldContain("Mushoku Tensei: Isekai Ittara Honki Dasu 3rd Season");
+		anime.AlternativeTitles.ShouldNotContain(anime.Title);
 	}
 
 	[Fact]
