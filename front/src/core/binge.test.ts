@@ -27,6 +27,7 @@ function anime(overrides: Partial<Anime> = {}): Anime {
 		sourceId: 1,
 		date: { year: 2026, season: "Winter" },
 		title: "Title",
+		alternativeTitles: [],
 		description: "",
 		studio: "Studio",
 		imageUrl: "",

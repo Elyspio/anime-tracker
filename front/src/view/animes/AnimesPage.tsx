@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import ClearIcon from "@mui/icons-material/Clear";
 import {
 	Alert,
 	Autocomplete,
@@ -7,6 +8,8 @@ import {
 	CircularProgress,
 	Divider,
 	FormControlLabel,
+	IconButton,
+	InputAdornment,
 	MenuItem,
 	Select,
 	Stack,
@@ -26,6 +29,7 @@ import {
 	matchesFormat,
 	matchesRange,
 	matchesStudio,
+	matchesTitle,
 	noRangeFilter,
 	sortAnimes,
 	sortLabels,
@@ -64,7 +68,7 @@ const bareInput = {
 	"& .MuiOutlinedInput-root": { p: 0, minHeight: 32 },
 	"& .MuiOutlinedInput-notchedOutline": { border: 0 },
 	"&:hover .MuiOutlinedInput-notchedOutline": { border: 0 },
-	"& .Mui-focused .MuiOutlinedInput-notchedOutline": { border: 0 },
+	"& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": { border: 0 },
 };
 
 interface Props {
@@ -75,6 +79,7 @@ interface Props {
 export function AnimesPage({ year, season }: Props) {
 	const { data, isPending, error } = useAnimes(year, season);
 	const [viewMode, setViewMode] = useViewMode();
+	const [title, setTitle] = useState("");
 	const [status, setStatus] = useState<StatusFilter>("all");
 	const [genres, setGenres] = useState<string[]>([]);
 	const [studio, setStudio] = useState("");
@@ -94,6 +99,7 @@ export function AnimesPage({ year, season }: Props) {
 			sortAnimes(
 				animes.filter(
 					(anime) =>
+						matchesTitle(anime, title) &&
 						matchesStatus(anime, status, now) &&
 						matchesGenres(anime, genres) &&
 						matchesStudio(anime, studio) &&
@@ -103,7 +109,7 @@ export function AnimesPage({ year, season }: Props) {
 				),
 				sort,
 			),
-		[animes, status, genres, studio, range, sort, formats, includeAdult, now],
+		[animes, title, status, genres, studio, range, sort, formats, includeAdult, now],
 	);
 
 	if (isPending) {
@@ -121,6 +127,34 @@ export function AnimesPage({ year, season }: Props) {
 	return (
 		<Stack sx={{ gap: 2.5 }}>
 			<Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+				<FilterField label="Title" sx={{ minWidth: 220 }}>
+					<TextField
+						size="small"
+						value={title}
+						onChange={(event) => setTitle(event.target.value)}
+						placeholder="Search…"
+						sx={{ flex: 1, ...bareInput }}
+						slotProps={{
+							htmlInput: { "aria-label": "Search by title" },
+							input: {
+								endAdornment: title && (
+									<InputAdornment position="end">
+										<IconButton
+											size="small"
+											aria-label="Clear title search"
+											onClick={() => setTitle("")}
+										>
+											<ClearIcon fontSize="small" />
+										</IconButton>
+									</InputAdornment>
+								),
+							},
+						}}
+					/>
+				</FilterField>
+
+				<Divider orientation="vertical" flexItem sx={{ mx: 0.5, my: 0.5 }} />
+
 				{statusFilters.map((filter) => {
 					const selected = status === filter.value;
 
