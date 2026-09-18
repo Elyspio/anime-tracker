@@ -27,13 +27,14 @@ internal sealed record Media(
 	int? Popularity,
 	string? Description,
 	MediaTitle? Title,
+	IReadOnlyList<string?>? Synonyms,
 	CoverImage? CoverImage,
 	IReadOnlyList<string>? Genres,
 	StudioConnection? Studios,
 	MediaStats? Stats,
 	AiringConnection? AiringSchedule);
 
-internal sealed record MediaTitle(string? Romaji, string? English);
+internal sealed record MediaTitle(string? Romaji, string? English, string? Native);
 
 internal sealed record CoverImage(string? Large);
 

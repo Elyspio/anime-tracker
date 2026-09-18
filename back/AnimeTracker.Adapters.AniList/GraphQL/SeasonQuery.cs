@@ -22,7 +22,8 @@ internal static class SeasonQuery
 		      averageScore
 		      popularity
 		      description(asHtml: false)
-		      title { romaji english }
+		      title { romaji english native }
+		      synonyms
 		      coverImage { large }
 		      genres
 		      studios(isMain: true) { nodes { name } }

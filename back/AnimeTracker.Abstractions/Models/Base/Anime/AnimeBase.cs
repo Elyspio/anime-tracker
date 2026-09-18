@@ -16,6 +16,12 @@ public class AnimeBase
 
 	public required string Title { get; set; }
 
+	/// <summary>
+	///     Every other name the source knows the anime by — English, native, community synonyms — for
+	///     search only. Not required: documents stored before the field existed read back empty.
+	/// </summary>
+	public IReadOnlyCollection<string> AlternativeTitles { get; set; } = [];
+
 	public required string Description { get; set; }
 
 	public required string Studio { get; set; }

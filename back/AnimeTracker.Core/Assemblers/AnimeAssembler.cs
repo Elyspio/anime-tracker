@@ -16,6 +16,7 @@ public static class AnimeAssembler
 			SourceId = entity.SourceId,
 			Date = entity.Date,
 			Title = entity.Title,
+			AlternativeTitles = entity.AlternativeTitles,
 			Description = entity.Description,
 			Studio = entity.Studio,
 			ImageUrl = entity.ImageUrl,

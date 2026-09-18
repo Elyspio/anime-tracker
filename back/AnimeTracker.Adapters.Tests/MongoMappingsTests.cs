@@ -82,6 +82,7 @@ public class MongoMappingsTests
 			SourceId = 178789,
 			Date = new AnimeDate(2026, AnimeSeason.Summer),
 			Title = "Mushoku Tensei III",
+			AlternativeTitles = ["Mushoku Tensei: Jobless Reincarnation Season 3", "無職転生 Ⅲ"],
 			Description = "",
 			Studio = "Studio Bind",
 			ImageUrl = "https://s4.anilist.co/cover.jpg",
@@ -102,8 +103,36 @@ public class MongoMappingsTests
 		restored.Format.ShouldBe(AnimeFormat.Tv);
 		restored.Score.ShouldBe(8.5);
 		restored.VotesCount.ShouldBe(9119);
+		restored.AlternativeTitles.ShouldBe(["Mushoku Tensei: Jobless Reincarnation Season 3", "無職転生 Ⅲ"]);
 		restored.Genres.ShouldBe(["Adventure", "Drama"]);
 		restored.Episodes.Single().ReleaseDate.ShouldBe(new DateOnly(2026, 7, 4));
+	}
+
+	[Fact]
+	public void Reads_an_anime_stored_before_alternative_titles_existed_as_having_none()
+	{
+		// Seasons nobody refreshed since the field was added still carry documents without it.
+		var document = Serialize(new AnimeEntity
+		{
+			SourceId = 1,
+			Date = new AnimeDate(2026, AnimeSeason.Summer),
+			Title = "",
+			Description = "",
+			Studio = "",
+			ImageUrl = "",
+			Url = "",
+			Format = AnimeFormat.Unknown,
+			IsAdult = false,
+			Score = null,
+			Popularity = 0,
+			VotesCount = null,
+			EpisodesCount = null,
+			Genres = [],
+			Episodes = []
+		});
+		document.Remove("AlternativeTitles");
+
+		BsonSerializer.Deserialize<AnimeEntity>(document).AlternativeTitles.ShouldBeEmpty();
 	}
 
 	[Fact]
