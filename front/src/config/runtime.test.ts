@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { resolveRuntimeConfig } from "./runtime";
 
 const origin = "https://monitor.elyspio.fr";
@@ -11,11 +11,7 @@ describe("resolveRuntimeConfig", () => {
 	});
 
 	it("reports an error when the authority is not an absolute http URL", () => {
-		const { error } = resolveRuntimeConfig(
-			{ oauth: { authority: "auth.elyspio.fr", client_id: "anime-tracker" } },
-			{},
-			origin,
-		);
+		const { error } = resolveRuntimeConfig({ oauth: { authority: "auth.elyspio.fr", client_id: "anime-tracker" } }, {}, origin);
 
 		expect(error).toBeDefined();
 	});
@@ -29,7 +25,7 @@ describe("resolveRuntimeConfig", () => {
 				},
 			},
 			{},
-			origin,
+			origin
 		);
 
 		expect(error).toBeUndefined();
@@ -45,7 +41,7 @@ describe("resolveRuntimeConfig", () => {
 				VITE_OIDC_AUTHORITY: "http://localhost:8080/realms/anime-tracker",
 				VITE_OIDC_CLIENT_ID: "anime-tracker",
 			},
-			origin,
+			origin
 		);
 
 		expect(config.oauth.authority).toBe("http://localhost:8080/realms/anime-tracker");

@@ -1,12 +1,4 @@
-import {
-	createContext,
-	useCallback,
-	useContext,
-	useEffect,
-	useMemo,
-	useState,
-	type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { createAppTheme, type PaletteMode } from "@/config/theme";
 
@@ -26,9 +18,7 @@ export function isThemeMode(value: unknown): value is ThemeMode {
  * "system": the grid is wall-to-wall cover art, and a light surround washes the posters out.
  */
 export function readStoredMode(storage: Pick<Storage, "getItem"> | undefined): ThemeMode {
-	return isThemeMode(storage?.getItem(STORAGE_KEY))
-		? (storage!.getItem(STORAGE_KEY) as ThemeMode)
-		: "dark";
+	return isThemeMode(storage?.getItem(STORAGE_KEY)) ? (storage!.getItem(STORAGE_KEY) as ThemeMode) : "dark";
 }
 
 /** Collapses the preference and the OS setting into the palette that actually renders. */
@@ -54,12 +44,8 @@ const darkMediaQuery = "(prefers-color-scheme: dark)";
  * MUI theme. It renders the {@link ThemeProvider} itself so callers only pick a mode, never a theme.
  */
 export function ThemeModeProvider({ children }: { children: ReactNode }) {
-	const [mode, setModeState] = useState<ThemeMode>(() =>
-		readStoredMode(typeof window === "undefined" ? undefined : window.localStorage),
-	);
-	const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(
-		() => typeof window !== "undefined" && window.matchMedia(darkMediaQuery).matches,
-	);
+	const [mode, setModeState] = useState<ThemeMode>(() => readStoredMode(typeof window === "undefined" ? undefined : window.localStorage));
+	const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => typeof window !== "undefined" && window.matchMedia(darkMediaQuery).matches);
 
 	// While on "system", track OS theme changes so the UI flips without a reload.
 	useEffect(() => {
@@ -80,10 +66,7 @@ export function ThemeModeProvider({ children }: { children: ReactNode }) {
 
 	const resolved = resolvePaletteMode(mode, systemPrefersDark);
 	const theme = useMemo(() => createAppTheme(resolved), [resolved]);
-	const value = useMemo<ThemeModeContextValue>(
-		() => ({ mode, resolved, setMode }),
-		[mode, resolved, setMode],
-	);
+	const value = useMemo<ThemeModeContextValue>(() => ({ mode, resolved, setMode }), [mode, resolved, setMode]);
 
 	return (
 		<ThemeModeContext.Provider value={value}>

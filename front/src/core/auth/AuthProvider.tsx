@@ -49,7 +49,7 @@ function AppAuthBridge({ children }: { children: ReactNode }) {
 			signOut: () => void auth.signoutRedirect(),
 			error: auth.error?.message ?? null,
 		}),
-		[auth],
+		[auth]
 	);
 
 	return <AppAuthContext.Provider value={value}>{children}</AppAuthContext.Provider>;

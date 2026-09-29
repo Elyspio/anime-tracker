@@ -17,10 +17,7 @@ export function captureReturnTo(location: Pick<Location, "pathname" | "search" |
  * the callback route itself never is — landing back on it is the bug this exists to fix.
  */
 export function resolveReturnTo(state: unknown): string {
-	const candidate =
-		typeof state === "object" && state !== null
-			? (state as Partial<SigninState>).returnTo
-			: undefined;
+	const candidate = typeof state === "object" && state !== null ? (state as Partial<SigninState>).returnTo : undefined;
 
 	if (typeof candidate !== "string") return "/";
 	if (!candidate.startsWith("/") || candidate.startsWith("//")) return "/";

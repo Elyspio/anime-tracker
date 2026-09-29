@@ -105,11 +105,11 @@ export function AnimesPage({ year, season }: Props) {
 						matchesStudio(anime, studio) &&
 						matchesRange(anime, range) &&
 						matchesFormat(anime, formats) &&
-						matchesAdult(anime, includeAdult),
+						matchesAdult(anime, includeAdult)
 				),
-				sort,
+				sort
 			),
-		[animes, title, status, genres, studio, range, sort, formats, includeAdult, now],
+		[animes, title, status, genres, studio, range, sort, formats, includeAdult, now]
 	);
 
 	if (isPending) {
@@ -139,11 +139,7 @@ export function AnimesPage({ year, season }: Props) {
 							input: {
 								endAdornment: title && (
 									<InputAdornment position="end">
-										<IconButton
-											size="small"
-											aria-label="Clear title search"
-											onClick={() => setTitle("")}
-										>
+										<IconButton size="small" aria-label="Clear title search" onClick={() => setTitle("")}>
 											<ClearIcon fontSize="small" />
 										</IconButton>
 									</InputAdornment>
@@ -183,12 +179,7 @@ export function AnimesPage({ year, season }: Props) {
 				<Divider orientation="vertical" flexItem sx={{ mx: 0.5, my: 0.5 }} />
 
 				<FilterField label="Sort">
-					<Select
-						value={sort}
-						onChange={(event) => setSort(event.target.value as SortKey)}
-						variant="outlined"
-						sx={bareSelect}
-					>
+					<Select value={sort} onChange={(event) => setSort(event.target.value as SortKey)} variant="outlined" sx={bareSelect}>
 						{sortKeys.map((key) => (
 							<MenuItem key={key} value={key}>
 								{sortLabels[key]}
@@ -236,11 +227,7 @@ export function AnimesPage({ year, season }: Props) {
 				</FilterField>
 
 				<FilterField label="Studio">
-					<Select
-						value={studio}
-						onChange={(event) => setStudio(event.target.value)}
-						sx={{ ...bareSelect, maxWidth: 170 }}
-					>
+					<Select value={studio} onChange={(event) => setStudio(event.target.value)} sx={{ ...bareSelect, maxWidth: 170 }}>
 						<MenuItem value="">All</MenuItem>
 						{availableStudios.map((name) => (
 							<MenuItem key={name} value={name}>
@@ -278,13 +265,7 @@ export function AnimesPage({ year, season }: Props) {
 
 				<FormControlLabel
 					sx={{ ml: 0.5, mr: 0 }}
-					control={
-						<Switch
-							checked={includeAdult}
-							onChange={(event) => setIncludeAdult(event.target.checked)}
-							sx={{ mr: 1 }}
-						/>
-					}
+					control={<Switch checked={includeAdult} onChange={(event) => setIncludeAdult(event.target.checked)} sx={{ mr: 1 }} />}
 					label={
 						<Typography variant="body2" sx={{ color: "text.secondary" }}>
 							Adult
@@ -292,12 +273,7 @@ export function AnimesPage({ year, season }: Props) {
 					}
 				/>
 
-				<ToggleButtonGroup
-					exclusive
-					value={viewMode}
-					onChange={(_event, next) => next && setViewMode(next)}
-					sx={{ ml: "auto" }}
-				>
+				<ToggleButtonGroup exclusive value={viewMode} onChange={(_event, next) => next && setViewMode(next)} sx={{ ml: "auto" }}>
 					<ToggleButton value="cards" aria-label="Card view">
 						Grid
 					</ToggleButton>
@@ -308,9 +284,7 @@ export function AnimesPage({ year, season }: Props) {
 			</Stack>
 
 			{animes.length === 0 ? (
-				<Alert severity="info">
-					Nothing stored for this season yet. Sign in and start a refresh to fetch it.
-				</Alert>
+				<Alert severity="info">Nothing stored for this season yet. Sign in and start a refresh to fetch it.</Alert>
 			) : (
 				<>
 					<Stack

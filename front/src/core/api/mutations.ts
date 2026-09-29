@@ -21,24 +21,14 @@ export function useRefreshSeason() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: async ({
-			year,
-			season,
-		}: {
-			year: number;
-			season: AnimeSeason;
-		}): Promise<RefreshOutcome> => {
+		mutationFn: async ({ year, season }: { year: number; season: AnimeSeason }): Promise<RefreshOutcome> => {
 			try {
 				const { data } = await http.post<RefreshRun>("/api/animes/refresh", null, {
 					params: { year, season },
 				});
 				return { alreadyRunning: false, run: data };
 			} catch (error) {
-				if (
-					isAxiosError<RefreshRun>(error) &&
-					error.response?.status === 409 &&
-					error.response.data
-				) {
+				if (isAxiosError<RefreshRun>(error) && error.response?.status === 409 && error.response.data) {
 					return { alreadyRunning: true, run: error.response.data };
 				}
 				throw error;

@@ -21,10 +21,7 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
 		<ThemeModeProvider>
-			<SnackbarProvider
-				maxSnack={3}
-				anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-			>
+			<SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
 				<QueryClientProvider client={queryClient}>
 					<AppAuthProvider>
 						<AppLayout />
@@ -32,5 +29,5 @@ createRoot(document.getElementById("root")!).render(
 				</QueryClientProvider>
 			</SnackbarProvider>
 		</ThemeModeProvider>
-	</StrictMode>,
+	</StrictMode>
 );

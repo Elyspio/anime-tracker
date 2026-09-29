@@ -12,11 +12,7 @@ interface Props {
  */
 export function Eyebrow({ children, sx }: Props) {
 	return (
-		<Typography
-			variant="overline"
-			component="span"
-			sx={{ color: "text.disabled", whiteSpace: "nowrap", ...sx }}
-		>
+		<Typography variant="overline" component="span" sx={[{ color: "text.disabled", whiteSpace: "nowrap" }, ...(Array.isArray(sx) ? sx : [sx])]}>
 			{children}
 		</Typography>
 	);

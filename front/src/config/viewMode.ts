@@ -16,9 +16,7 @@ export function readStoredViewMode(storage: Pick<Storage, "getItem"> | undefined
 }
 
 export function useViewMode(): [ViewMode, (mode: ViewMode) => void] {
-	const [mode, setModeState] = useState<ViewMode>(() =>
-		readStoredViewMode(typeof window === "undefined" ? undefined : window.localStorage),
-	);
+	const [mode, setModeState] = useState<ViewMode>(() => readStoredViewMode(typeof window === "undefined" ? undefined : window.localStorage));
 
 	const setMode = useCallback((next: ViewMode) => {
 		setModeState(next);

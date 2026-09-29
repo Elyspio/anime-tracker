@@ -38,8 +38,11 @@ front/
 deploy/build/    Single-container image and deployment script
 ```
 
-Backend: .NET 10, ASP.NET Core, Aspire 13, MongoDB, Hangfire, xUnit v3.
-Frontend: React 19, TypeScript, Vite+, MUI 9, TanStack Query, Axios, `react-oidc-context`, Vitest.
+Backend: .NET 10 (SDK pinned to 10.0.400 in `global.json`), ASP.NET Core, Aspire 13.5, MongoDB, Hangfire,
+xUnit v3 on Microsoft.Testing.Platform.
+Frontend: React 19, TypeScript 7, Vite+ (Oxlint, Oxfmt, Vitest via `vite-plus/test`), MUI 9, TanStack Query,
+Axios, `react-oidc-context`. Node 26, pnpm 12. Lint and format settings come from
+`@elyspio/vite-eslint-config` (`getDefaultConfig` in `front/vite.config.ts`).
 
 ## Invariants
 
@@ -162,7 +165,7 @@ These are the properties the design rests on. Changing them is a product decisio
 ```bash
 aspire run                                  # Mongo + Keycloak + API + Vite
 dotnet build back/AnimeTracker.slnx
-dotnet test back/AnimeTracker.slnx
+dotnet test --solution back/AnimeTracker.slnx
 ```
 
 ### When the build cannot write its output
@@ -186,7 +189,8 @@ output without attaching to it.
 ```bash
 cd front
 pnpm install --frozen-lockfile
-pnpm check    # `vp check --fix` mutates files; review the diff
+pnpm check    # vp check: Oxfmt + Oxlint (type-aware) + TypeScript; read-only
+pnpm fmt      # vp fmt rewrites files; review the diff
 pnpm test
 pnpm build
 ```

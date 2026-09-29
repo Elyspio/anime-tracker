@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { findRunFor, formatDuration, isRunActive } from "@/core/refreshRuns";
 import type { RefreshRun, RefreshStatus } from "@/core/api/types";
 
@@ -60,8 +60,6 @@ describe("formatDuration", () => {
 	});
 
 	it("does not round a very fast run down to zero", () => {
-		expect(formatDuration(run({ finishedAt: "2026-08-03T12:00:00.200Z" }))).toBe(
-			"under a second",
-		);
+		expect(formatDuration(run({ finishedAt: "2026-08-03T12:00:00.200Z" }))).toBe("under a second");
 	});
 });

@@ -48,9 +48,7 @@ export function formatBingeChip(binge: BingePrediction, now: Date): BingeChip {
 		return {
 			label: "Bingeable",
 			tone: "success",
-			title: binge.bingeableAt
-				? `Last episode aired on ${formatDate(binge.bingeableAt)}.`
-				: "Every episode is out.",
+			title: binge.bingeableAt ? `Last episode aired on ${formatDate(binge.bingeableAt)}.` : "Every episode is out.",
 		};
 	}
 
@@ -84,11 +82,7 @@ export function matchesStatus(anime: Anime, filter: StatusFilter, now: Date): bo
 	if (filter === "unknown") return anime.binge.status === "UnknownEnd";
 	if (filter === "bingeable") return anime.binge.status === "BingeableNow";
 
-	return (
-		(anime.binge.status === "Estimated" || anime.binge.status === "Announced") &&
-		anime.binge.bingeableAt !== null &&
-		daysUntil(anime.binge.bingeableAt, now) <= SOON_DAYS
-	);
+	return (anime.binge.status === "Estimated" || anime.binge.status === "Announced") && anime.binge.bingeableAt !== null && daysUntil(anime.binge.bingeableAt, now) <= SOON_DAYS;
 }
 
 export function matchesGenres(anime: Anime, selected: readonly string[]): boolean {
@@ -99,9 +93,7 @@ export function matchesGenres(anime: Anime, selected: readonly string[]): boolea
 
 /** Every genre present in the loaded season, alphabetically, for the filter dropdown. */
 export function collectGenres(animes: readonly Anime[]): string[] {
-	return [...new Set(animes.flatMap((anime) => anime.genres))]
-		.filter((genre) => genre.trim().length > 0)
-		.sort((a, b) => a.localeCompare(b));
+	return [...new Set(animes.flatMap((anime) => anime.genres))].filter((genre) => genre.trim().length > 0).sort((a, b) => a.localeCompare(b));
 }
 
 export const seasonLabels: Record<AnimeSeason, string> = {

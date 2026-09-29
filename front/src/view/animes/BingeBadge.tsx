@@ -45,8 +45,7 @@ export function BingeBadge({ binge, now, size = "medium" }: Props) {
 								color: `${hue}.main`,
 								borderColor: `${hue}.main`,
 								// A tint of the tone's own colour, so the chip holds over cover art.
-								bgcolor: (theme) =>
-									`color-mix(in srgb, ${theme.palette[hue].main} 16%, ${theme.palette.background.paper})`,
+								bgcolor: (theme) => `color-mix(in srgb, ${theme.palette[hue].main} 16%, ${theme.palette.background.paper})`,
 							}
 				}
 			/>

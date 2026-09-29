@@ -1,14 +1,5 @@
 import { useState, type MouseEvent } from "react";
-import {
-	Box,
-	ButtonBase,
-	Divider,
-	IconButton,
-	Menu,
-	MenuItem,
-	Stack,
-	Tooltip,
-} from "@mui/material";
+import { Box, ButtonBase, Divider, IconButton, Menu, MenuItem, Stack, Tooltip } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import RemoveIcon from "@mui/icons-material/Remove";
@@ -25,11 +16,7 @@ interface Props {
 }
 
 /** Seasons are consecutive, so the arrows step across the year boundary rather than clamping. */
-function step(
-	year: number,
-	season: AnimeSeason,
-	offset: number,
-): { year: number; season: AnimeSeason } {
+function step(year: number, season: AnimeSeason, offset: number): { year: number; season: AnimeSeason } {
 	const index = animeSeasons.indexOf(season) + offset;
 
 	if (index < 0) return { year: year - 1, season: animeSeasons[animeSeasons.length - 1] };
@@ -110,27 +97,16 @@ export function SeasonSelector({ year, season, onChange }: Props) {
 				<Divider />
 
 				{/* Stepping a year at a time: nothing further out than a few years is ever stored. */}
-				<Stack
-					direction="row"
-					sx={{ alignItems: "center", justifyContent: "space-between", px: 1.5, py: 0.5 }}
-				>
+				<Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", px: 1.5, py: 0.5 }}>
 					<Eyebrow>Year</Eyebrow>
 					<Stack direction="row" sx={{ alignItems: "center", gap: 0.5 }}>
-						<IconButton
-							size="small"
-							onClick={() => onChange(year - 1, season)}
-							aria-label="Previous year"
-						>
+						<IconButton size="small" onClick={() => onChange(year - 1, season)} aria-label="Previous year">
 							<RemoveIcon fontSize="small" />
 						</IconButton>
 						<Box sx={{ minWidth: 44, textAlign: "center" }}>
 							<Mono variant="body2">{year}</Mono>
 						</Box>
-						<IconButton
-							size="small"
-							onClick={() => onChange(year + 1, season)}
-							aria-label="Next year"
-						>
+						<IconButton size="small" onClick={() => onChange(year + 1, season)} aria-label="Next year">
 							<AddIcon fontSize="small" />
 						</IconButton>
 					</Stack>

@@ -59,16 +59,7 @@ export const lightTokens: Tokens = {
 	warnSoft: "#FEF1C8",
 	danger: "#DC2626",
 	dangerSoft: "#FEE2E2",
-	avatars: [
-		"#2E5D4A",
-		"#B4543A",
-		"#54678C",
-		"#8C5454",
-		"#486A4A",
-		"#A0712E",
-		"#5B5B6E",
-		"#38493E",
-	],
+	avatars: ["#2E5D4A", "#B4543A", "#54678C", "#8C5454", "#486A4A", "#A0712E", "#5B5B6E", "#38493E"],
 };
 
 export const darkTokens: Tokens = {
@@ -126,8 +117,7 @@ export const fonts = {
  * One compound transition for every control. Colour moves at 120ms, the press nudge at 60ms —
  * borders never animate their width, only their colour.
  */
-export const controlTransition =
-	"background 120ms ease, border-color 120ms ease, color 120ms ease, transform 60ms ease";
+export const controlTransition = "background 120ms ease, border-color 120ms ease, color 120ms ease, transform 60ms ease";
 
 /** The topbar is the one fixed element, and everything else scrolls under it. */
 export const topbarHeight = 64;

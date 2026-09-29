@@ -1,14 +1,5 @@
 import { createTheme, type Theme } from "@mui/material";
-import {
-	controlTransition,
-	darkTokens,
-	fonts,
-	lightTokens,
-	radii,
-	shadows,
-	topbarHeight,
-	type Tokens,
-} from "@/config/tokens";
+import { controlTransition, darkTokens, fonts, lightTokens, radii, shadows, topbarHeight, type Tokens } from "@/config/tokens";
 
 export type PaletteMode = "light" | "dark";
 

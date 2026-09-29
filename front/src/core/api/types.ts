@@ -31,15 +31,7 @@ export interface Episode {
 	releaseDate: string;
 }
 
-export type AnimeFormat =
-	| "Unknown"
-	| "Tv"
-	| "TvShort"
-	| "Ona"
-	| "Ova"
-	| "Movie"
-	| "Special"
-	| "Music";
+export type AnimeFormat = "Unknown" | "Tv" | "TvShort" | "Ona" | "Ova" | "Movie" | "Special" | "Music";
 
 export const animeFormats = membersOf<AnimeFormat>({
 	Unknown: true,

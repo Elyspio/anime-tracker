@@ -14,11 +14,7 @@ interface Props {
  */
 export function Mono({ children, variant = "caption", sx }: Props) {
 	return (
-		<Typography
-			variant={variant}
-			component="span"
-			sx={{ fontFamily: fonts.mono, fontVariantNumeric: "tabular-nums", ...sx }}
-		>
+		<Typography variant={variant} component="span" sx={[{ fontFamily: fonts.mono, fontVariantNumeric: "tabular-nums" }, ...(Array.isArray(sx) ? sx : [sx])]}>
 			{children}
 		</Typography>
 	);

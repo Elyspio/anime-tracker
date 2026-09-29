@@ -1,17 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-	Box,
-	Link,
-	Stack,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
-	TableSortLabel,
-	Tooltip,
-} from "@mui/material";
+import { Box, Link, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, Tooltip } from "@mui/material";
 import { formatBingeChip } from "@/core/binge";
 import { bingeDotColor } from "@/view/animes/BingeBadge";
 import { Mono } from "@/view/components/Mono";
@@ -73,13 +61,7 @@ function Poster({ anime }: { anime: Anime }) {
 			}}
 		>
 			{anime.imageUrl !== "" && (
-				<Box
-					component="img"
-					src={anime.imageUrl}
-					alt=""
-					loading="lazy"
-					sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-				/>
+				<Box component="img" src={anime.imageUrl} alt="" loading="lazy" sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
 			)}
 		</Box>
 	);
@@ -98,12 +80,7 @@ function EpisodeProgress({ anime }: { anime: Anime }) {
 					sx={{
 						height: "100%",
 						width: `${filled}%`,
-						bgcolor:
-							total === null
-								? "divider"
-								: anime.binge.status === "BingeableNow"
-									? "success.main"
-									: "text.primary",
+						bgcolor: total === null ? "divider" : anime.binge.status === "BingeableNow" ? "success.main" : "text.primary",
 					}}
 				/>
 			</Box>
@@ -146,18 +123,8 @@ export function AnimeTable({ animes, now }: Props) {
 						<TableCell sx={{ width: 44 }} />
 						<TableCell sx={{ width: 56 }} />
 						{columns.map((column) => (
-							<TableCell
-								key={column.key}
-								align={column.numeric ? "right" : "left"}
-								sortDirection={
-									sortKey === column.key ? (descending ? "desc" : "asc") : false
-								}
-							>
-								<TableSortLabel
-									active={sortKey === column.key}
-									direction={descending ? "desc" : "asc"}
-									onClick={() => toggle(column.key)}
-								>
+							<TableCell key={column.key} align={column.numeric ? "right" : "left"} sortDirection={sortKey === column.key ? (descending ? "desc" : "asc") : false}>
+								<TableSortLabel active={sortKey === column.key} direction={descending ? "desc" : "asc"} onClick={() => toggle(column.key)}>
 									{column.label}
 								</TableSortLabel>
 							</TableCell>
@@ -171,19 +138,14 @@ export function AnimeTable({ animes, now }: Props) {
 						return (
 							<TableRow key={anime.id} hover>
 								<TableCell>
-									<Mono sx={{ color: "text.disabled" }}>
-										{String(index + 1).padStart(2, "0")}
-									</Mono>
+									<Mono sx={{ color: "text.disabled" }}>{String(index + 1).padStart(2, "0")}</Mono>
 								</TableCell>
 								<TableCell sx={{ py: 1 }}>
 									<Poster anime={anime} />
 								</TableCell>
 								<TableCell>
 									<Tooltip title={chip.title}>
-										<Stack
-											direction="row"
-											sx={{ alignItems: "center", gap: 0.75 }}
-										>
+										<Stack direction="row" sx={{ alignItems: "center", gap: 0.75 }}>
 											<Box
 												sx={{
 													width: 5,
@@ -193,26 +155,16 @@ export function AnimeTable({ animes, now }: Props) {
 													flexShrink: 0,
 												}}
 											/>
-											<Mono sx={{ color: "text.secondary" }}>
-												{chip.label}
-											</Mono>
+											<Mono sx={{ color: "text.secondary" }}>{chip.label}</Mono>
 										</Stack>
 									</Tooltip>
 								</TableCell>
 								<TableCell sx={{ fontWeight: 500 }}>
-									<Link
-										href={anime.url}
-										target="_blank"
-										rel="noopener"
-										underline="hover"
-										color="inherit"
-									>
+									<Link href={anime.url} target="_blank" rel="noopener" underline="hover" color="inherit">
 										{anime.title}
 									</Link>
 								</TableCell>
-								<TableCell sx={{ color: "text.disabled" }}>
-									{anime.studio || "—"}
-								</TableCell>
+								<TableCell sx={{ color: "text.disabled" }}>{anime.studio || "—"}</TableCell>
 								<TableCell>
 									<EpisodeProgress anime={anime} />
 								</TableCell>
@@ -220,14 +172,10 @@ export function AnimeTable({ animes, now }: Props) {
 									<Mono variant="body2">{anime.score?.toFixed(1) ?? "—"}</Mono>
 								</TableCell>
 								<TableCell align="right">
-									<Mono sx={{ color: "text.disabled" }}>
-										{anime.votesCount?.toLocaleString() ?? "—"}
-									</Mono>
+									<Mono sx={{ color: "text.disabled" }}>{anime.votesCount?.toLocaleString() ?? "—"}</Mono>
 								</TableCell>
 								<TableCell align="right">
-									<Mono sx={{ color: "text.disabled" }}>
-										{anime.popularity.toLocaleString()}
-									</Mono>
+									<Mono sx={{ color: "text.disabled" }}>{anime.popularity.toLocaleString()}</Mono>
 								</TableCell>
 							</TableRow>
 						);

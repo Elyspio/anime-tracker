@@ -48,7 +48,7 @@ La base est vide au premier lancement : connectez-vous en `admin` et lancez un r
 récupérer la saison courante. Il dure environ une seconde.
 
 ```bash
-dotnet test back/AnimeTracker.slnx
+dotnet test --solution back/AnimeTracker.slnx
 cd front && pnpm test
 ```
 

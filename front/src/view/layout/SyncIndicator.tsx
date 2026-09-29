@@ -24,10 +24,7 @@ export function SyncIndicator({ runs, onOpen }: Props) {
 
 	return (
 		<Tooltip title="Refreshes">
-			<ButtonBase
-				onClick={onOpen}
-				sx={{ borderRadius: 1, px: 1, py: 0.5, "&:hover": { bgcolor: "action.hover" } }}
-			>
+			<ButtonBase onClick={onOpen} sx={{ borderRadius: 1, px: 1, py: 0.5, "&:hover": { bgcolor: "action.hover" } }}>
 				<Stack direction="row" sx={{ alignItems: "center", gap: 1 }}>
 					{active && (
 						<Box
