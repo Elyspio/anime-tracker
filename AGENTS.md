@@ -11,8 +11,14 @@ is one click away. Both views open on the **highest-rated** shows first, because
 heard of is triaged by reputation before it is triaged by date. Score, vote count, popularity,
 format and genres exist to pick between shows, never to replace the countdown.
 
-There is no user state — no watchlist, no per-episode progress. Browsing is anonymous; the only
-privileged action is triggering a refresh.
+A second question hangs off the first: **is it out in French?** A `French dub` filter and a badge
+answer it from streaming platforms, never from AniList, which publishes nothing about dubs. It is
+being built in slices — see [the plan](docs/plans/french-dub-filter.md) and
+[ADR 0003](docs/adr/0003-vf-sources-behind-solver-and-vpn.md) — and the sections below marked
+*French dub* describe what a slice must respect as it lands, not what already runs.
+
+There is no user state — no watchlist, no per-episode progress. Browsing is anonymous; the privileged
+actions are triggering a refresh and, once French dub lands, correcting a platform match.
 
 Product text is English. These documents are French.
 
@@ -89,6 +95,8 @@ These are the properties the design rests on. Changing them is a product decisio
 - **No automatic retry.** `GlobalJobFilters` sets `AutomaticRetry` to zero attempts. A refresh is
   idempotent and cheap to trigger again by hand; ten silent replays of a failing job are not
   something anyone asked for.
+- **AniList stays credential-free and solver-free.** Only the French dub sources may use a solver
+  ([ADR 0003](docs/adr/0003-vf-sources-behind-solver-and-vpn.md)), and never on the AniList path.
 - The AniList client carries **no resilience pipeline**, and `AddHostingDefaults` deliberately does
   not put one on every client. The API allows 30 requests a minute and a season costs two; the only
   failure worth special handling is a 429, whose `Retry-After` the client obeys literally.
@@ -97,6 +105,45 @@ These are the properties the design rests on. Changing them is a product decisio
 - `AnimeRepository.Refresh` replaces a season wholesale. One fetch carries every field an anime has,
   so there is nothing stored worth merging in; only the document id survives.
 - Tests never reach the network. Drive the adapter through `FakeHttpMessageHandler`.
+
+### French dub
+
+The exception to "AniList is the only source", with the reasons in ADR 0003. None of this exists
+until its slice lands.
+
+- **A dub is measured, never predicted.** The stored fact is which AniList episode numbers a platform
+  has in French. `Up to date` and `Complete` are pure functions of that set and the episode list,
+  computed on every read like `BingePredictor`. They compare **sets of episode numbers**, never
+  totals: French audio on episodes 1, 2 and 4 is not "3 of 3".
+- **`Up to date`** needs at least one episode released in Japan, and every released number on a
+  single platform. **`Complete`** needs a known announced total — the data, not the `UnknownEnd`
+  status, which also covers a known total with no published slot — and every number from 1 to N on
+  a single platform. There is no union across platforms: nobody binges across two subscriptions.
+- **Unknown is not absent.** No series resolved, an alignment that cannot be shown, an anti-bot page,
+  a geo restriction or a transport error all mean *unknown*: no badge, excluded from both filters, the
+  previous measurement kept. A platform we do not track is never reported as "no dub".
+- **A wrong match is worse than a missing one**, for the reason ADR 0002 gives: nothing on screen tells
+  a fabricated dub from a real one. A candidate is kept only when the normalised title **and** the
+  episode count or the year agree, and episodes are aligned number by number to a resolved season, not
+  just to a series. A platform showing more episodes than AniList is a signal to look at, not proof of
+  coverage. Numbering that is absolute, seasons that cannot be told apart, split episodes, specials
+  and recaps all end as *unknown*.
+- **The dub is measured from the server, not from the reader.** Region and locale of the request are
+  stored with the measurement and the badge says what was checked. `Dub:Region` is configuration,
+  never a call to a geolocation service.
+- **Dub traffic goes through the solver pod and only through it.** The application pod stays direct:
+  AniList, Keycloak, MongoDB and inbound traffic never cross the VPN. An unreachable solver fails the
+  dub run, keeps the last measurement and touches neither the AniList refresh nor the grid.
+- **The dub sync is its own run**, of type `Dub`, queued by a successful AniList refresh — there is no
+  separate trigger. Concurrency and the 409 are per (season, run type). The sync carries the id of the
+  AniList run it derives from and drops its writes if a newer one has succeeded since.
+- **Dub data lives in its own collections**, keyed `(AniList id, platform)`, because
+  `AnimeRepository.Refresh` replaces a season wholesale and does not delete what left it. The
+  measurement is replaced on every sync and deleted with its anime; the admin override
+  (`Auto`, `Pinned(url)`, `Blocked`) never disappears on its own, and a `Pinned` URL is checked against
+  the platform's own domain.
+- **The badge is ink, never green**, and reads `FR dub 8/12 · ADN`. Green stays with the Japanese
+  bingeable.
 
 ### Scheduling and storage
 
@@ -149,7 +196,10 @@ These are the properties the design rests on. Changing them is a product decisio
   **no default policy** — unlike the reference application, adding an endpoint leaves it anonymous,
   so new mutating routes must opt in explicitly.
 - A refresh run is served anonymously, so its `Error` carries `exception.Message` and never a stack
-  trace.
+  trace. A dub run is no different.
+- French dub adds one mutating route, the override of a platform match, and it carries
+  `[Authorize(AuthModule.AdminPolicy)]` like the refresh. The list of matches needing a fix is a
+  public `GET`: it is a fact about a public schedule.
 - Keycloak nests roles under `realm_access.roles` **and** `resource_access.[client].roles`, and a token
   only ever carries a given role in one of the two — the local realm grants `anime-tracker-admin` as a
   realm role, the deployed `apps` realm grants it as a client role on `a-anime-tracker`. `AuthModule`
@@ -217,6 +267,11 @@ as `admin` and triggers a refresh — that button is the bootstrap path.
   change upstream. Re-record a fixture by replaying the adapter's own query, never by editing it.
 - A fixture cannot express a field AniList has never returned, so the rules layer is where nulls,
   unknown formats and empty nodes are covered. Every one of them appears in a real season.
+- French dub follows the same two layers as AniList. Recorded platform replies pin the API's *shape*;
+  hand-written nodes pin the *rules* — episodes 1, 2 and 4 without the 3, no episode released yet, a
+  known total with no slot, 13 platform episodes against 12, grouped seasons, absolute numbering, split
+  episodes, a dub announced but not playable, and a block or geo restriction that looks like an empty
+  catalogue. A fixture cannot express a case the platform never returned.
 - Countdown formatting or filtering changes: extend `front/src/core/binge.test.ts`. Sort or
   threshold changes: `ranking.test.ts`. Run progress or duration: `refreshRuns.test.ts`.
 - The `AnimeSeason`, `BingeStatus` and `RefreshStatus` names are a contract between
@@ -253,7 +308,12 @@ deletes the recurring job, so under a rolling update the departing pod would rem
 the new one just registered, and `StartAsync` marks every running refresh as interrupted, which a
 second live pod would apply to a run it does not own.
 
+French dub adds a **second Deployment in the infrastructure repository**: the solver and a NordVPN
+client with a French exit, its Service and its secret. This repository never holds a NordVPN credential.
+That pod is stateless and not bound by the single-replica rule; the application pod still is.
+
 The deployed app is reachable at `https://binge.animes.elyspio.fr`, validates tokens against the
 `apps` realm on `auth.elyspio.fr`, and stores everything in one MongoDB database — Hangfire's
-collections included. The only external dependency at runtime is an outbound HTTPS call to AniList;
-there is no solver or proxy to deploy alongside it.
+collections included. The only external dependency the grid needs at runtime is an outbound HTTPS call to AniList. Once
+French dub lands, the dub sync also depends on the solver pod and, through it, on the streaming
+platforms; none of that is on the path of an AniList refresh or of a page load.
