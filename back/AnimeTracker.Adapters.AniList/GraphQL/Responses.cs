@@ -32,7 +32,8 @@ internal sealed record Media(
 	IReadOnlyList<string>? Genres,
 	StudioConnection? Studios,
 	MediaStats? Stats,
-	AiringConnection? AiringSchedule);
+	AiringConnection? AiringSchedule,
+	IReadOnlyList<ExternalLink>? ExternalLinks);
 
 internal sealed record MediaTitle(string? Romaji, string? English, string? Native);
 
@@ -50,3 +51,9 @@ internal sealed record AiringConnection(IReadOnlyList<AiringEpisode>? Nodes);
 
 /// <summary><paramref name="AiringAt" /> is a Unix timestamp in seconds.</summary>
 internal sealed record AiringEpisode(int Episode, long AiringAt);
+
+/// <summary>
+///     <paramref name="Type" /> is INFO, STREAMING or SOCIAL. <paramref name="IsDisabled" /> is how
+///     AniList retires a link it knows is dead without deleting it.
+/// </summary>
+internal sealed record ExternalLink(string? Site, string? Type, bool IsDisabled, string? Url);

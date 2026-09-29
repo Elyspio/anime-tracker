@@ -29,6 +29,7 @@ internal static class SeasonQuery
 		      studios(isMain: true) { nodes { name } }
 		      stats { scoreDistribution { amount } }
 		      airingSchedule { nodes { episode airingAt } }
+		      externalLinks { site type isDisabled url }
 		    }
 		  }
 		}

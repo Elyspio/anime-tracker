@@ -81,7 +81,7 @@ public class AniListAdapterTests
 		anime.Format.ShouldBe(AnimeFormat.Tv);
 		anime.IsAdult.ShouldBeFalse();
 		anime.EpisodesCount.ShouldBe(14);
-		anime.Popularity.ShouldBe(157452);
+		anime.Popularity.ShouldBe(164503);
 		anime.Genres.ShouldBe(["Adventure", "Drama", "Ecchi", "Fantasy"]);
 		anime.ImageUrl.ShouldStartWith("https://s4.anilist.co/");
 		anime.Date.ShouldBe(Summer2026);
@@ -90,15 +90,15 @@ public class AniListAdapterTests
 	[Fact]
 	public async Task Converts_the_score_out_of_ten()
 	{
-		// AniList grades out of 100 and this one is at 84.
-		(await RecordedAnimes()).Single(item => item.SourceId == 178789).Score.ShouldBe(8.4);
+		// AniList grades out of 100 and this one is at 86.
+		(await RecordedAnimes()).Single(item => item.SourceId == 178789).Score.ShouldBe(8.6);
 	}
 
 	[Fact]
 	public async Task Sums_the_score_distribution_into_a_vote_count()
 	{
-		// The API publishes the histogram but no total; 14008 is the sum of its buckets.
-		(await RecordedAnimes()).Single(item => item.SourceId == 178789).VotesCount.ShouldBe(14008);
+		// The API publishes the histogram but no total; 29768 is the sum of its buckets.
+		(await RecordedAnimes()).Single(item => item.SourceId == 178789).VotesCount.ShouldBe(29768);
 	}
 
 	[Fact]
@@ -123,6 +123,35 @@ public class AniListAdapterTests
 		anime.AlternativeTitles.ShouldContain("Mushoku Tensei: Jobless Reincarnation Season 3");
 		anime.AlternativeTitles.ShouldContain("Mushoku Tensei: Isekai Ittara Honki Dasu 3rd Season");
 		anime.AlternativeTitles.ShouldNotContain(anime.Title);
+	}
+
+	[Fact]
+	public async Task Lists_where_the_anime_can_be_watched_and_leaves_the_other_links_out()
+	{
+		var links = (await RecordedAnimes()).Single(item => item.SourceId == 178789).StreamingLinks.ToArray();
+
+		// The node also carries a Twitter link and an official site, which are not places to watch.
+		links.Select(link => link.Site).ShouldBe(["Crunchyroll", "iQ", "YouTube", "Bilibili TV", "Netflix"]);
+		links[0].Url.ShouldBe("https://www.crunchyroll.com/series/G24H1N3MP/mushoku-tensei-jobless-reincarnation");
+	}
+
+	[Fact]
+	public async Task Keeps_the_first_of_two_links_to_the_same_platform()
+	{
+		// The recorded node lists OceanVeil twice, once per season of the show.
+		var links = (await RecordedAnimes()).Single(item => item.SourceId == 207141).StreamingLinks;
+
+		links.Where(link => link.Site == "OceanVeil").Select(link => link.Url).ShouldBe(["https://oceanveil.net/anime_titles/461"]);
+	}
+
+	[Fact]
+	public async Task Asks_for_the_external_links()
+	{
+		var handler = RecordedSeason();
+
+		await Build(handler).GetSeason(Summer2026, TestContext.Current.CancellationToken);
+
+		handler.Requests[0].Body.ShouldContain("externalLinks");
 	}
 
 	[Fact]

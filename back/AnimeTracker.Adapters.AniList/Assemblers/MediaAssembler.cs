@@ -36,7 +36,8 @@ internal class MediaAssembler
 			VotesCount = Votes(media),
 			EpisodesCount = media.Episodes,
 			Genres = media.Genres?.ToArray() ?? [],
-			Episodes = Schedule(media)
+			Episodes = Schedule(media),
+			StreamingLinks = StreamingLinks(media)
 		};
 	}
 
@@ -103,6 +104,30 @@ internal class MediaAssembler
 			.Select(node => new Episode(node.Episode, BroadcastDate(node.AiringAt)))
 			.OrderBy(episode => episode.Number)
 			.ToArray();
+	}
+
+	/// <summary>
+	///     Where the show can be watched, one link per platform. AniList keeps dead links in the list and
+	///     flags them <c>isDisabled</c> — on a recent season most of them are, bare home pages included —
+	///     so an enabled link is the only kind worth sending a reader to. Anything that is not a plain
+	///     http(s) address is dropped too: the link ends up as an <c>href</c>, and the source is edited
+	///     by anyone with an account.
+	/// </summary>
+	private static StreamingLink[] StreamingLinks(Media media)
+	{
+		return (media.ExternalLinks ?? [])
+			.Where(link => string.Equals(link.Type, "STREAMING", StringComparison.OrdinalIgnoreCase) && !link.IsDisabled)
+			.Select(link => new StreamingLink(link.Site?.Trim() ?? "", link.Url?.Trim() ?? ""))
+			.Where(link => link.Site.Length > 0 && IsPageOfASite(link.Url))
+			.DistinctBy(link => link.Site, StringComparer.OrdinalIgnoreCase)
+			.ToArray();
+	}
+
+	private static bool IsPageOfASite(string url)
+	{
+		return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+			&& uri.Scheme is "http" or "https"
+			&& uri.AbsolutePath.Length > 1;
 	}
 
 	private static DateOnly BroadcastDate(long airingAt)

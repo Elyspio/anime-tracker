@@ -52,4 +52,10 @@ public class AnimeBase
 
 	/// <summary>The airing schedule: aired and scheduled episodes together, ordered by number.</summary>
 	public required IReadOnlyCollection<Episode> Episodes { get; set; }
+
+	/// <summary>
+	///     Platforms the source lists the anime on, one per platform. Not required: documents stored
+	///     before the field existed read back empty until their season is refreshed.
+	/// </summary>
+	public IReadOnlyCollection<StreamingLink> StreamingLinks { get; set; } = [];
 }
