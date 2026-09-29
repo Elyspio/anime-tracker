@@ -146,17 +146,17 @@ public class MediaAssemblerTests
 	}
 
 	[Fact]
-	public void Drops_a_link_the_source_has_disabled()
+	public void Keeps_a_link_the_source_has_flagged_as_disabled()
 	{
-		// AniList retires a dead link by flagging it rather than deleting it; on a recent season most
-		// of the Crunchyroll and HIDIVE entries are.
+		// AniList sets isDisabled on links its checker could not fetch. On a recent season most of the
+		// Crunchyroll ones carry it, yet every one that named a series pointed at a series that exists.
 		var anime = Convert("""
 			{"id":1,"externalLinks":[
 			  {"site":"Crunchyroll","type":"STREAMING","isDisabled":true,"url":"https://www.crunchyroll.com/series/G3KHEVDJ7/the-apothecary-diaries"},
 			  {"site":"Netflix","type":"STREAMING","isDisabled":false,"url":"https://www.netflix.com/title/82760630"}]}
 			""");
 
-		anime.StreamingLinks.Select(link => link.Site).ShouldBe(["Netflix"]);
+		anime.StreamingLinks.Select(link => link.Site).ShouldBe(["Crunchyroll", "Netflix"]);
 	}
 
 	[Theory]

@@ -107,16 +107,21 @@ internal class MediaAssembler
 	}
 
 	/// <summary>
-	///     Where the show can be watched, one link per platform. AniList keeps dead links in the list and
-	///     flags them <c>isDisabled</c> — on a recent season most of them are, bare home pages included —
-	///     so an enabled link is the only kind worth sending a reader to. Anything that is not a plain
-	///     http(s) address is dropped too: the link ends up as an <c>href</c>, and the source is edited
-	///     by anyone with an account.
+	///     Where the show can be watched, one link per platform. A link to a platform's bare home page
+	///     says nothing about which show it was meant for, so only links to a page are kept. Anything
+	///     that is not a plain http(s) address is dropped too: the link ends up as an <c>href</c>, and
+	///     the source is edited by anyone with an account.
+	///     <para>
+	///         The <c>isDisabled</c> flag is deliberately ignored. AniList sets it on links its checker
+	///         could not fetch, and on the autumn 2026 season every disabled Crunchyroll link that named
+	///         a series (7 of 7) pointed at a series that exists and matches the show — the checker is
+	///         turned away by the platform, the link is not dead.
+	///     </para>
 	/// </summary>
 	private static StreamingLink[] StreamingLinks(Media media)
 	{
 		return (media.ExternalLinks ?? [])
-			.Where(link => string.Equals(link.Type, "STREAMING", StringComparison.OrdinalIgnoreCase) && !link.IsDisabled)
+			.Where(link => string.Equals(link.Type, "STREAMING", StringComparison.OrdinalIgnoreCase))
 			.Select(link => new StreamingLink(link.Site?.Trim() ?? "", link.Url?.Trim() ?? ""))
 			.Where(link => link.Site.Length > 0 && IsPageOfASite(link.Url))
 			.DistinctBy(link => link.Site, StringComparer.OrdinalIgnoreCase)
