@@ -27,9 +27,14 @@ Mesuré sur les 50 animes les plus populaires de l'automne 2026 (requête AniLis
 | HIDIVE      | 3                  |
 | ADN         | 0                  |
 
-Sur les 23 liens Crunchyroll, **12 seulement** portent un `/series/<id>` exploitable ; 9 pointent
-vers la page d'accueil nue, les autres vers un slug sans id. Un mapping « lien AniList strict »
-couvrirait donc ~24 % des shows populaires. ADN n'apparaît jamais dans les liens AniList.
+**Correction, après relecture des données.** Ce tableau comptait des liens que AniList a lui-même
+désactivés (`isDisabled`, sa façon de retirer un lien mort sans le supprimer) : 25 des 37 liens de
+streaming de cette saison en cours le sont, dont les 9 pages d'accueil nues. Une fois ceux-là écartés,
+**5 shows sur 50** ont un lien Crunchyroll actif, tous avec un `/series/<id>` ; aucun lien actif n'est
+une page d'accueil nue. Un mapping « lien AniList seul » couvre donc ~10 % d'une saison **en cours**.
+Sur une saison **terminée** (été 2026), les liens sont riches et actifs : les 10 premiers shows en
+portent de 1 à 5 chacun, sans un seul désactivé. Le mapping par recherche reste nécessaire pour la
+saison en cours, là où le filtre sert le plus. ADN n'apparaît jamais dans les liens AniList.
 
 ## Décisions verrouillées
 
@@ -221,9 +226,11 @@ et aucune tranche suivante ne fusionne avant.** `CONTEXT.md` gagne : VF, platefo
 
 ## Tranches (une PR chacune, depuis `main`)
 
-La PR #3 (mise à jour de la stack) est ouverte et non fusionnée ; on part de `main`, conflits possibles
-sur les fichiers de dépendances. **Ordre révisé** : les outils de correction du mauvais appariement
-existent avant que la synchro ne soit visible.
+La PR #3 (mise à jour de la stack) est fusionnée : `main` porte déjà la stack à jour. **Ordre révisé** :
+les outils de correction du mauvais appariement existent avant que la synchro ne soit visible.
+
+Avancement : la tranche 2 est écrite (branche `feat/streaming-links`, deux commits, `Back` et `Front`) ;
+la tranche 1 attend le spike, qui attend un serveur NordVPN France.
 
 1. **Spike + ADR 0003 + amendements** d'`AGENTS.md` et `CONTEXT.md`. Sonde jetable Crunchyroll puis
    ADN. **Critères de sortie, bloquants pour la source concernée :**

@@ -15,9 +15,11 @@ tous les liens de streaming d'une saison, et `voiceActors(language: FRENCH)` dit
 doubleur français est crédité, pas qu'un épisode est sorti. Il faut une seconde source, et seules les
 plateformes de streaming publient l'audio disponible épisode par épisode.
 
-Mesuré sur les 50 animes les plus populaires de l'automne 2026 : 23 ont un lien Crunchyroll, dont 12
-portent un `/series/<id>` exploitable ; 9 pointent vers la page d'accueil nue. ADN n'apparaît dans
-aucun lien AniList. Le mapping ne peut donc pas s'appuyer sur AniList seul.
+Mesuré sur les 50 animes les plus populaires de l'automne 2026, une saison en cours : AniList a
+désactivé (`isDisabled`) 25 des 37 liens de streaming, et il ne reste que 5 shows avec un lien
+Crunchyroll actif, tous avec un `/series/<id>`. ADN n'apparaît dans aucun lien AniList. Sur une saison
+terminée les liens sont bien fournis, mais c'est la saison en cours que le filtre sert : le mapping ne
+peut pas s'appuyer sur AniList seul.
 
 ## Décision
 
