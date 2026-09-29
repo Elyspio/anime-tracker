@@ -8,9 +8,10 @@ import type { Anime } from "@/core/api/types";
 interface Props {
 	anime: Anime;
 	now: Date;
+	onOpen: (anime: Anime, anchor: HTMLElement) => void;
 }
 
-export function AnimeCard({ anime, now }: Props) {
+export function AnimeCard({ anime, now, onOpen }: Props) {
 	const total = anime.binge.totalEpisodes;
 	const released = anime.binge.releasedEpisodes;
 	const progress = total && total > 0 ? Math.min(100, (released / total) * 100) : 100;
@@ -23,9 +24,8 @@ export function AnimeCard({ anime, now }: Props) {
 
 	return (
 		<ButtonBase
-			href={anime.url}
-			target="_blank"
-			rel="noopener"
+			onClick={(event) => onOpen(anime, event.currentTarget)}
+			aria-haspopup="true"
 			focusRipple
 			sx={{
 				display: "flex",
