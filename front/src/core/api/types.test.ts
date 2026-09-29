@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { animeFormats, animeSeasons, bingeStatuses, refreshStatuses } from "@/core/api/types";
 
 /**
@@ -16,25 +16,10 @@ describe("enum contract with the API", () => {
 	});
 
 	it("mirrors AnimeFormat", () => {
-		expect(animeFormats).toEqual([
-			"Unknown",
-			"Tv",
-			"TvShort",
-			"Ona",
-			"Ova",
-			"Movie",
-			"Special",
-			"Music",
-		]);
+		expect(animeFormats).toEqual(["Unknown", "Tv", "TvShort", "Ona", "Ova", "Movie", "Special", "Music"]);
 	});
 
 	it("mirrors RefreshStatus", () => {
-		expect(refreshStatuses).toEqual([
-			"Queued",
-			"Running",
-			"Succeeded",
-			"Failed",
-			"Interrupted",
-		]);
+		expect(refreshStatuses).toEqual(["Queued", "Running", "Succeeded", "Failed", "Interrupted"]);
 	});
 });

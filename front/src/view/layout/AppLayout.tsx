@@ -67,24 +67,14 @@ export function AppLayout() {
 						Anime Tracker
 					</Typography>
 
-					<SeasonSelector
-						year={selected.year}
-						season={selected.season}
-						onChange={change}
-					/>
+					<SeasonSelector year={selected.year} season={selected.season} onChange={change} />
 
 					<Stack direction="row" spacing={1.5} sx={{ ml: "auto", alignItems: "center" }}>
 						{/* Anonymous too: an empty grid is explained by whether a run has ever succeeded. */}
 						<SyncIndicator runs={runs.data} onOpen={() => setRunsOpen(true)} />
 
 						{auth.isAuthenticated && (
-							<Button
-								startIcon={<RefreshIcon fontSize="small" />}
-								onClick={runRefresh}
-								loading={refresh.isPending}
-								variant="outlined"
-								size="small"
-							>
+							<Button startIcon={<RefreshIcon fontSize="small" />} onClick={runRefresh} loading={refresh.isPending} variant="outlined" size="small">
 								{refreshLabel}
 							</Button>
 						)}
@@ -95,13 +85,9 @@ export function AppLayout() {
 							<>
 								<Divider orientation="vertical" flexItem sx={{ my: 1.25 }} />
 								{auth.name && (
-									<Stack
-										direction="row"
-										spacing={1}
-										sx={{ alignItems: "center", minWidth: 0 }}
-									>
+									<Stack direction="row" spacing={1} sx={{ alignItems: "center", minWidth: 0 }}>
 										<UserAvatar name={auth.name} />
-										<Typography variant="body2" color="text.secondary" noWrap>
+										<Typography variant="body2" noWrap sx={{ color: "text.secondary" }}>
 											{auth.name}
 										</Typography>
 									</Stack>
@@ -123,13 +109,7 @@ export function AppLayout() {
 				<AnimesPage year={selected.year} season={selected.season} />
 			</Container>
 
-			<RefreshRunsDrawer
-				open={runsOpen}
-				onClose={() => setRunsOpen(false)}
-				runs={runs.data}
-				isPending={runs.isPending}
-				error={runs.error}
-			/>
+			<RefreshRunsDrawer open={runsOpen} onClose={() => setRunsOpen(false)} runs={runs.data} isPending={runs.isPending} error={runs.error} />
 		</Box>
 	);
 }

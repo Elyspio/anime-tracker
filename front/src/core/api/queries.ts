@@ -13,8 +13,7 @@ export const qk = {
 export function useAnimes(year: number, season: AnimeSeason) {
 	return useQuery({
 		queryKey: qk.animes(year, season),
-		queryFn: async () =>
-			(await http.get<Anime[]>("/api/animes", { params: { year, season } })).data,
+		queryFn: async () => (await http.get<Anime[]>("/api/animes", { params: { year, season } })).data,
 		// A season's schedule changes at most once a day, when the refresh job runs.
 		staleTime: 5 * 60_000,
 	});
@@ -31,8 +30,7 @@ export function useRefreshRuns() {
 	return useQuery({
 		queryKey: qk.refreshRuns(),
 		queryFn: async () => (await http.get<RefreshRun[]>("/api/animes/refreshes")).data,
-		refetchInterval: (query) =>
-			(query.state.data ?? []).some(isRunActive) ? runPollInterval : false,
+		refetchInterval: (query) => ((query.state.data ?? []).some(isRunActive) ? runPollInterval : false),
 		staleTime: 0,
 	});
 }

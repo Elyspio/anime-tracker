@@ -78,9 +78,7 @@ export function matchesFormat(anime: Anime, selected: readonly AnimeFormat[]): b
 
 /** Every studio credited in the loaded season, alphabetically, for the filter dropdown. */
 export function collectStudios(animes: readonly Anime[]): string[] {
-	return [...new Set(animes.map((anime) => anime.studio))]
-		.filter((studio) => studio.trim().length > 0)
-		.sort((a, b) => a.localeCompare(b));
+	return [...new Set(animes.map((anime) => anime.studio))].filter((studio) => studio.trim().length > 0).sort((a, b) => a.localeCompare(b));
 }
 
 /** The empty selection is "All": a season has too many studios for a default worth guessing. */
@@ -110,9 +108,7 @@ export function matchesTitle(anime: Anime, query: string): boolean {
 	const needle = normalizeTitle(query);
 	if (needle === "") return true;
 
-	return [anime.title, ...anime.alternativeTitles].some((title) =>
-		normalizeTitle(title).includes(needle),
-	);
+	return [anime.title, ...anime.alternativeTitles].some((title) => normalizeTitle(title).includes(needle));
 }
 
 /** Adult entries are fetched and stored like any other, and hidden until explicitly asked for. */

@@ -23,7 +23,7 @@ function isHttpUrl(value: string): boolean {
 export function resolveRuntimeConfig(
 	configured: RuntimeConfig | undefined,
 	env: Pick<ImportMetaEnv, "VITE_OIDC_AUTHORITY" | "VITE_OIDC_CLIENT_ID">,
-	origin: string,
+	origin: string
 ): RuntimeConfigResolution {
 	const oauth = configured?.oauth;
 	const authority = env.VITE_OIDC_AUTHORITY ?? oauth?.authority ?? "";
@@ -45,20 +45,13 @@ export function resolveRuntimeConfig(
 		config,
 		// A missing authority must surface as a visible error. Silently inventing an auth
 		// default would let the app render as if unauthenticated access were intended.
-		error:
-			isHttpUrl(authority) && clientId.trim()
-				? undefined
-				: "OIDC authority and client ID must be configured.",
+		error: isHttpUrl(authority) && clientId.trim() ? undefined : "OIDC authority and client ID must be configured.",
 	};
 }
 
 const browserWindow = typeof window === "undefined" ? undefined : window;
 
-const resolution = resolveRuntimeConfig(
-	browserWindow?.animeTracker?.config,
-	import.meta.env,
-	browserWindow?.location.origin ?? "http://localhost",
-);
+const resolution = resolveRuntimeConfig(browserWindow?.animeTracker?.config, import.meta.env, browserWindow?.location.origin ?? "http://localhost");
 
 export const runtimeConfig = resolution.config;
 export const runtimeConfigError = resolution.error;

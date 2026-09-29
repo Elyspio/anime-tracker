@@ -38,10 +38,7 @@ export function UserAvatar({ name }: Props) {
 				color: "#FFFFFF",
 				fontFamily: fonts.mono,
 				fontSize: 11,
-				bgcolor: (theme) =>
-					theme.palette.mode === "dark"
-						? darkTokens.avatars[index]
-						: lightTokens.avatars[index],
+				bgcolor: (theme) => (theme.palette.mode === "dark" ? darkTokens.avatars[index] : lightTokens.avatars[index]),
 			}}
 		>
 			{initials(name)}

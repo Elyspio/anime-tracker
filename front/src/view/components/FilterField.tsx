@@ -15,19 +15,22 @@ interface Props {
 export function FilterField({ label, children, sx }: Props) {
 	return (
 		<Box
-			sx={{
-				display: "flex",
-				alignItems: "center",
-				gap: 1,
-				minHeight: 34,
-				pl: 1.5,
-				pr: 1.25,
-				border: 1,
-				borderColor: "divider",
-				borderRadius: 1,
-				bgcolor: "background.paper",
-				...sx,
-			}}
+			sx={[
+				{
+					display: "flex",
+					alignItems: "center",
+					gap: 1,
+					minHeight: 34,
+					pl: 1.5,
+					pr: 1.25,
+					border: 1,
+					borderColor: "divider",
+					borderRadius: 1,
+					bgcolor: "background.paper",
+				},
+				// SxProps may be an object, a theme callback or an array; spreading it would drop the last two.
+				...(Array.isArray(sx) ? sx : [sx]),
+			]}
 		>
 			<Eyebrow sx={{ fontSize: 10 }}>{label}</Eyebrow>
 			{children}

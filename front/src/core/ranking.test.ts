@@ -1,22 +1,8 @@
-import { describe, expect, it } from "vitest";
-import {
-	collectStudios,
-	matchesAdult,
-	matchesFormat,
-	matchesRange,
-	matchesStudio,
-	matchesTitle,
-	sortAnimes,
-	episodicFormats,
-} from "@/core/ranking";
+import { describe, expect, it } from "vite-plus/test";
+import { collectStudios, matchesAdult, matchesFormat, matchesRange, matchesStudio, matchesTitle, sortAnimes, episodicFormats } from "@/core/ranking";
 import type { Anime, AnimeFormat } from "@/core/api/types";
 
-function anime(
-	title: string,
-	votesCount: number | null,
-	score: number | null,
-	overrides: Partial<Anime> = {},
-): Anime {
+function anime(title: string, votesCount: number | null, score: number | null, overrides: Partial<Anime> = {}): Anime {
 	return {
 		id: title,
 		sourceId: 1,
@@ -89,12 +75,8 @@ describe("matchesRange", () => {
 
 	it("excludes an unrated anime as soon as a threshold is asked for", () => {
 		// "At least 7/10" means "show me graded shows above 7", not "and also the ungraded ones".
-		expect(matchesRange(anime("unrated", null, null), { minScore: 7, minVotes: 0 })).toBe(
-			false,
-		);
-		expect(matchesRange(anime("unrated", null, null), { minScore: 0, minVotes: 1 })).toBe(
-			false,
-		);
+		expect(matchesRange(anime("unrated", null, null), { minScore: 7, minVotes: 0 })).toBe(false);
+		expect(matchesRange(anime("unrated", null, null), { minScore: 0, minVotes: 1 })).toBe(false);
 	});
 });
 
@@ -118,11 +100,7 @@ describe("matchesFormat", () => {
 
 describe("collectStudios", () => {
 	it("lists each studio once, alphabetically", () => {
-		const studios = collectStudios([
-			anime("a", 1, 8, { studio: "Studio Bind" }),
-			anime("b", 1, 8, { studio: "CloverWorks" }),
-			anime("c", 1, 8, { studio: "Studio Bind" }),
-		]);
+		const studios = collectStudios([anime("a", 1, 8, { studio: "Studio Bind" }), anime("b", 1, 8, { studio: "CloverWorks" }), anime("c", 1, 8, { studio: "Studio Bind" })]);
 
 		expect(studios).toEqual(["CloverWorks", "Studio Bind"]);
 	});

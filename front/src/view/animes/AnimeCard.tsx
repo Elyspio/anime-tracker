@@ -35,8 +35,7 @@ export function AnimeCard({ anime, now }: Props) {
 				textAlign: "left",
 				borderRadius: 1.5,
 				"&:hover .cover": {
-					boxShadow: (theme) =>
-						theme.palette.mode === "dark" ? shadows.dark.md : shadows.light.md,
+					boxShadow: (theme) => (theme.palette.mode === "dark" ? shadows.dark.md : shadows.light.md),
 				},
 			}}
 		>
@@ -100,12 +99,7 @@ export function AnimeCard({ anime, now }: Props) {
 						flex: 1,
 						// An unannounced total has no fraction to draw, so the bar stays a rule.
 						"& .MuiLinearProgress-bar": {
-							bgcolor:
-								total === null
-									? "divider"
-									: bingeable
-										? "success.main"
-										: "text.primary",
+							bgcolor: total === null ? "divider" : bingeable ? "success.main" : "text.primary",
 						},
 					}}
 				/>

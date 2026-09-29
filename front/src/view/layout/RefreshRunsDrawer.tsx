@@ -1,20 +1,5 @@
-import {
-	Alert,
-	Box,
-	Chip,
-	Divider,
-	Drawer,
-	LinearProgress,
-	Stack,
-	Typography,
-} from "@mui/material";
-import {
-	formatDuration,
-	formatInstant,
-	isRunActive,
-	statusLabels,
-	statusTones,
-} from "@/core/refreshRuns";
+import { Alert, Box, Chip, Divider, Drawer, LinearProgress, Stack, Typography } from "@mui/material";
+import { formatDuration, formatInstant, isRunActive, statusLabels, statusTones } from "@/core/refreshRuns";
 import { seasonLabels } from "@/core/binge";
 import { Mono } from "@/view/components/Mono";
 import type { RefreshRun } from "@/core/api/types";
@@ -40,24 +25,17 @@ function RunCard({ run }: { run: RefreshRun }) {
 				<Typography variant="subtitle2">
 					{seasonLabels[run.date.season]} {run.date.year}
 				</Typography>
-				<Chip
-					size="small"
-					label={statusLabels[run.status]}
-					color={statusTones[run.status]}
-					variant={statusTones[run.status] === "default" ? "outlined" : "filled"}
-				/>
+				<Chip size="small" label={statusLabels[run.status]} color={statusTones[run.status]} variant={statusTones[run.status] === "default" ? "outlined" : "filled"} />
 			</Stack>
 
 			{active && <LinearProgress />}
 
 			<Mono sx={{ color: "text.disabled" }}>
-				{active
-					? `Started ${formatInstant(run.startedAt)}`
-					: `${formatInstant(run.startedAt)} · ${run.total} anime${run.total === 1 ? "" : "s"} · ${formatDuration(run)}`}
+				{active ? `Started ${formatInstant(run.startedAt)}` : `${formatInstant(run.startedAt)} · ${run.total} anime${run.total === 1 ? "" : "s"} · ${formatDuration(run)}`}
 			</Mono>
 
 			{run.error && (
-				<Typography variant="caption" color="error.main">
+				<Typography variant="caption" sx={{ color: "error.main" }}>
 					{run.error}
 				</Typography>
 			)}
@@ -77,9 +55,7 @@ export function RefreshRunsDrawer({ open, onClose, runs, isPending, error }: Pro
 
 				{error && <Alert severity="error">Could not load refreshes: {error.message}</Alert>}
 
-				{runs && runs.length === 0 && (
-					<Alert severity="info">No refresh recorded yet.</Alert>
-				)}
+				{runs && runs.length === 0 && <Alert severity="info">No refresh recorded yet.</Alert>}
 
 				<Stack divider={<Divider />} spacing={2}>
 					{runs?.map((run) => (

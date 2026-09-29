@@ -34,11 +34,7 @@ export function ThemeToggle() {
 			</Tooltip>
 			<Menu anchorEl={anchor} open={Boolean(anchor)} onClose={close}>
 				{options.map((option) => (
-					<MenuItem
-						key={option.mode}
-						selected={option.mode === mode}
-						onClick={() => choose(option.mode)}
-					>
+					<MenuItem key={option.mode} selected={option.mode === mode} onClick={() => choose(option.mode)}>
 						<ListItemIcon>{option.icon}</ListItemIcon>
 						<ListItemText>{option.label}</ListItemText>
 						{option.mode === mode && <CheckIcon fontSize="small" sx={{ ml: 3 }} />}

@@ -1,12 +1,5 @@
-import { describe, expect, it } from "vitest";
-import {
-	collectGenres,
-	currentSeason,
-	daysUntil,
-	formatBingeChip,
-	matchesGenres,
-	matchesStatus,
-} from "./binge";
+import { describe, expect, it } from "vite-plus/test";
+import { collectGenres, currentSeason, daysUntil, formatBingeChip, matchesGenres, matchesStatus } from "./binge";
 import type { Anime, BingePrediction } from "@/core/api/types";
 
 const now = new Date(2026, 1, 1); // 1 February 2026
@@ -66,38 +59,26 @@ describe("formatBingeChip", () => {
 	});
 
 	it("shows days inside the last week, where the exact wait matters", () => {
-		expect(formatBingeChip(prediction({ bingeableAt: "2026-02-04" }), now).label).toBe(
-			"Binge in 3 days",
-		);
+		expect(formatBingeChip(prediction({ bingeableAt: "2026-02-04" }), now).label).toBe("Binge in 3 days");
 	});
 
 	it("keeps the unit singular when only one is left", () => {
-		expect(formatBingeChip(prediction({ bingeableAt: "2026-02-02" }), now).label).toBe(
-			"Binge in 1 day",
-		);
+		expect(formatBingeChip(prediction({ bingeableAt: "2026-02-02" }), now).label).toBe("Binge in 1 day");
 	});
 
 	it("marks a finished season as bingeable, in the reserved success tone", () => {
-		const chip = formatBingeChip(
-			prediction({ status: "BingeableNow", bingeableAt: "2026-01-20" }),
-			now,
-		);
+		const chip = formatBingeChip(prediction({ status: "BingeableNow", bingeableAt: "2026-01-20" }), now);
 
 		expect(chip.label).toBe("Bingeable");
 		expect(chip.tone).toBe("success");
 	});
 
 	it("treats an estimate that has come due as bingeable", () => {
-		expect(formatBingeChip(prediction({ bingeableAt: "2026-01-30" }), now).label).toBe(
-			"Bingeable",
-		);
+		expect(formatBingeChip(prediction({ bingeableAt: "2026-01-30" }), now).label).toBe("Bingeable");
 	});
 
 	it("says the end is unknown rather than inventing a number", () => {
-		const chip = formatBingeChip(
-			prediction({ status: "UnknownEnd", bingeableAt: null, totalEpisodes: null }),
-			now,
-		);
+		const chip = formatBingeChip(prediction({ status: "UnknownEnd", bingeableAt: null, totalEpisodes: null }), now);
 
 		expect(chip.label).toBe("No end announced");
 		expect(chip.tone).toBe("default");
@@ -125,9 +106,7 @@ describe("matchesStatus", () => {
 	const unknown = anime({ binge: prediction({ status: "UnknownEnd", bingeableAt: null }) });
 
 	it("keeps everything on 'all'", () => {
-		expect(
-			[bingeable, soon, later, unknown].every((item) => matchesStatus(item, "all", now)),
-		).toBe(true);
+		expect([bingeable, soon, later, unknown].every((item) => matchesStatus(item, "all", now))).toBe(true);
 	});
 
 	it("selects only finished seasons on 'bingeable'", () => {
@@ -159,10 +138,7 @@ describe("matchesGenres", () => {
 
 describe("collectGenres", () => {
 	it("deduplicates and sorts the genres of the loaded season", () => {
-		const animes = [
-			anime({ genres: ["Adventure", "Action"] }),
-			anime({ genres: ["Action", "Comedy"] }),
-		];
+		const animes = [anime({ genres: ["Adventure", "Action"] }), anime({ genres: ["Action", "Comedy"] })];
 
 		expect(collectGenres(animes)).toEqual(["Action", "Adventure", "Comedy"]);
 	});

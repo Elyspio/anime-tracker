@@ -25,14 +25,8 @@ export function isRunActive(run: RefreshRun): boolean {
 }
 
 /** The run refreshing a given season, if one is. */
-export function findRunFor(
-	runs: readonly RefreshRun[] | undefined,
-	year: number,
-	season: string,
-): RefreshRun | undefined {
-	return runs?.find(
-		(run) => isRunActive(run) && run.date.year === year && run.date.season === season,
-	);
+export function findRunFor(runs: readonly RefreshRun[] | undefined, year: number, season: string): RefreshRun | undefined {
+	return runs?.find((run) => isRunActive(run) && run.date.year === year && run.date.season === season);
 }
 
 /** Formatted in the reader's own locale — the app has no opinion on date order. */
