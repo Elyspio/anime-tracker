@@ -27,14 +27,18 @@ Mesuré sur les 50 animes les plus populaires de l'automne 2026 (requête AniLis
 | HIDIVE      | 3                  |
 | ADN         | 0                  |
 
-**Correction, après relecture des données.** Ce tableau comptait des liens que AniList a lui-même
-désactivés (`isDisabled`, sa façon de retirer un lien mort sans le supprimer) : 25 des 37 liens de
-streaming de cette saison en cours le sont, dont les 9 pages d'accueil nues. Une fois ceux-là écartés,
-**5 shows sur 50** ont un lien Crunchyroll actif, tous avec un `/series/<id>` ; aucun lien actif n'est
-une page d'accueil nue. Un mapping « lien AniList seul » couvre donc ~10 % d'une saison **en cours**.
-Sur une saison **terminée** (été 2026), les liens sont riches et actifs : les 10 premiers shows en
-portent de 1 à 5 chacun, sans un seul désactivé. Le mapping par recherche reste nécessaire pour la
-saison en cours, là où le filtre sert le plus. ADN n'apparaît jamais dans les liens AniList.
+**À propos de `isDisabled`.** AniList a marqué 25 des 37 liens de streaming de cette saison, dont les 9
+pages d'accueil nues. Une première lecture l'a pris pour « lien mort » et a ramené la couverture à
+5 shows sur 50. **C'était faux pour Crunchyroll** : les 7 liens profonds désactivés pointent tous vers
+une série qui existe et correspond au show (7 sur 7 vérifiés), le vérificateur d'AniList étant
+vraisemblablement refusé par la plateforme. Le drapeau est donc ignoré, et seul compte le critère
+« lien vers une page plutôt que vers la page d'accueil nue ». Reste la couverture du tableau ci-dessus :
+12 shows sur 50 avec un lien profond, 23 chez Crunchyroll d'après AniList. Sur une saison **terminée**
+(été 2026) 36 des 50 premiers ont un lien exploitable. Le mapping par recherche reste nécessaire pour
+la saison à venir. ADN n'apparaît jamais dans les liens AniList.
+
+Le [rapport du spike](../research/french-dub-spike.md) mesure ensuite ce que les plateformes publient
+réellement ; ses conclusions modifient l'alignement des épisodes, le rôle du solveur et le mapping.
 
 ## Décisions verrouillées
 
@@ -65,7 +69,8 @@ saison en cours, là où le filtre sert le plus. ADN n'apparaît jamais dans les
 - Netflix, Prime Video, Disney+ : hors v1 (pas d'API publique connue d'audio par épisode).
 - **Nautiljon reste exclu** (ADR 0002).
 - **Le solver est assumé par le propriétaire**, et le déploiement passe par NordVPN (voir
-  « Déploiement »). Cela contredit
+  « Déploiement »). **Le spike ne le justifie pas** : il n'apporte rien à Crunchyroll (son cookie est
+  inutilisable par un client HTTP), et le retirer allègerait le pod ; à reprendre. Cela contredit
   l'ADR 0002 (« aucun solver, aucun navigateur ») : l'ADR 0003 amende ce point, limité aux sources
   VF ; **AniList reste sans solver.** Les conditions d'utilisation de Crunchyroll interdisent
   l'extraction automatisée et le contournement des protections d'accès : c'est un **risque assumé
@@ -85,6 +90,10 @@ Un mauvais appariement est **pire** qu'une absence : c'est le poison silencieux 
 **Alignement des épisodes.** Une série de plateforme regroupe souvent plusieurs saisons, et l'entrée
 AniList est un cour. Le mapping ne s'arrête pas à la série : il **résout la saison ou la partie
 précise**, puis conserve une **correspondance explicite « numéro AniList vers épisode de plateforme »**.
+Le spike a tranché la clé : **la date du premier épisode** (`episode_air_date` de la plateforme contre le
+premier créneau AniList en heure japonaise, à un jour près) lève 7 cas ambigus sur 7 là où le nombre
+d'épisodes en laissait 7 sur 36 ; et les épisodes se numérotent par `sequence_number`, relatif à la saison,
+pas par `episode_number`, qui continue d'une saison à l'autre (13, 25…).
 Cas refusés (VF inconnue) : numérotation absolue, saisons regroupées non séparables, épisodes
 fractionnés, spéciaux et récapitulatifs. Un **surplus** d'épisodes côté plateforme (24 contre 12) est
 un **signal à examiner**, pas une preuve de couverture.
@@ -186,9 +195,14 @@ Le produit est anglophone (ADR 0002) ; seuls ces documents sont en français.
 
 ## Déploiement
 
-- **Pod dédié « solveur + VPN »** : un Deployment séparé dans le cluster, contenant le solveur et le
-  client NordVPN, sortie **France**. **Tout le trafic VF** (Crunchyroll et ADN) passe par lui : une
-  seule région mesurée, un seul chemin.
+- **Le solveur et un proxy sortant sont deux conteneurs du pod qBittorrent existant**, dont le client
+  NordVPN sort par la **Suisse** (choix du propriétaire ; l'option d'un pod France séparé a été écartée).
+  **Tout le trafic VF** (Crunchyroll et ADN) passe par eux : une seule région mesurée, un seul chemin.
+  Ils attendent l'interface `nordlynx` avant de servir et ne sont prêts que tant qu'elle existe ; le
+  proxy n'accepte que les domaines des plateformes et le port 443 en `CONNECT`.
+- Le Service `dub-solver` (8191 solveur, 8888 proxy) sert l'application dans le namespace `apps`, et une
+  route Traefik interne `solver.apps.elylan`, sans authentification comme le collecteur de télémétrie,
+  sert les tests depuis un poste. **Une panne du solveur ou du VPN rend le pod qBittorrent non prêt.**
 - **Le pod de l'app reste direct.** AniList, la validation des tokens Keycloak, MongoDB et le trafic
   entrant ne passent pas par le tunnel. Raison : tous les conteneurs d'un pod partagent le même réseau,
   donc un client VPN en sidecar de l'app mettrait tout le pod derrière le tunnel, et la limite d'AniList
@@ -198,8 +212,8 @@ Le produit est anglophone (ADR 0002) ; seuls ces documents sont en français.
   run : ni le refresh AniList ni l'affichage ne sont touchés.
 - **Le pod de l'app reste en réplique unique, `Recreate`** (le serveur Hangfire et le refresher sont des
   singletons). Le pod solveur est indépendant de cette contrainte.
-- Le chart vit dans le **dépôt d'infrastructure**, pas ici : il faut y ajouter le Deployment solveur +
-  VPN, son Service, et le secret NordVPN. **Ce dépôt ne reçoit jamais d'identifiant NordVPN.**
+- Le chart vit dans le **dépôt d'infrastructure**, pas ici (`kubernetes/apps/torrent`). **Ce dépôt ne
+  reçoit jamais d'identifiant NordVPN.**
 - En développement, l'AppHost lance un solveur local sans VPN : la région mesurée n'y est pas garantie
   française, ce que la région enregistrée avec chaque mesure rend visible.
 - Les identifiants et jetons de plateforme obtenus par la synchro ne sont pas persistés au-delà de la
@@ -229,8 +243,10 @@ et aucune tranche suivante ne fusionne avant.** `CONTEXT.md` gagne : VF, platefo
 La PR #3 (mise à jour de la stack) est fusionnée : `main` porte déjà la stack à jour. **Ordre révisé** :
 les outils de correction du mauvais appariement existent avant que la synchro ne soit visible.
 
-Avancement : la tranche 2 est écrite (branche `feat/streaming-links`, deux commits, `Back` et `Front`) ;
-la tranche 1 attend le spike, qui attend un serveur NordVPN France.
+Avancement : la tranche 2 est écrite (PR #5, `feat/streaming-links`). Le spike est fait, avec le
+[rapport](../research/french-dub-spike.md) : quatre critères sur sept sont atteints, le recoupement humain,
+la stabilité dans le temps et la VF « annoncée mais non lisible » restent ouverts. Le solveur et le proxy
+sont déployés dans le pod qBittorrent. La tranche 3 attend le recoupement humain.
 
 1. **Spike + ADR 0003 + amendements** d'`AGENTS.md` et `CONTEXT.md`. Sonde jetable Crunchyroll puis
    ADN. **Critères de sortie, bloquants pour la source concernée :**
@@ -241,8 +257,9 @@ la tranche 1 attend le spike, qui attend un serveur NordVPN France.
    - le **besoin d'un solver ou d'un navigateur** est documenté, avec les conditions d'utilisation
      citées, et accepté explicitement par le propriétaire dans l'ADR ;
    - la **couverture** mesurée sur une vraie saison (part des 50 premiers résolue par le mapping) ;
-   - la **région vue** depuis un serveur **NordVPN France** est confirmée (le spike ne part **pas** de
-     l'IP résidentielle : le résultat serait trop optimiste) ;
+   - la **région vue** depuis la sortie retenue (**Suisse**) est confirmée, et comparée à ce que voit un
+     spectateur français par une passe courte (le spike ne part **pas** de l'IP résidentielle : le résultat
+     serait trop optimiste face à l'anti-bot) ;
    - la **stabilité** : la sonde est rejouée plusieurs jours, sur plusieurs IP de sortie, pour savoir
      si une IP de VPN partagée est bloquée ou signalée de façon récurrente ;
    - une VF **annoncée mais non lisible** est identifiable.
