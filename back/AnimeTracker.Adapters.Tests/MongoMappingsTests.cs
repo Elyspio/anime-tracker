@@ -1,4 +1,5 @@
 using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Base.Dub;
 using AnimeTracker.Abstractions.Models.Base.Refresh;
 using AnimeTracker.Abstractions.Models.Entities;
 using AnimeTracker.Adapters.MongoDB.Technical;
@@ -72,6 +73,73 @@ public class MongoMappingsTests
 
 		document["Status"].AsString.ShouldBe("Running");
 		document["Date"]["Season"].AsString.ShouldBe("Summer");
+	}
+
+	[Fact]
+	public void Reads_a_run_stored_before_kinds_existed_as_a_season_refresh()
+	{
+		var document = Serialize(Run());
+		document.Remove("Kind");
+
+		BsonSerializer.Deserialize<RefreshRunEntity>(document).Kind.ShouldBe(RefreshKind.Season);
+	}
+
+	[Fact]
+	public void Stores_the_kind_of_a_run_by_name()
+	{
+		var run = Run();
+		run.Kind = RefreshKind.Dub;
+
+		Serialize(run)["Kind"].AsString.ShouldBe("Dub");
+	}
+
+	[Fact]
+	public void Round_trips_a_dub_match()
+	{
+		var match = new DubMatchEntity
+		{
+			SourceId = 178789,
+			Date = new AnimeDate(2026, AnimeSeason.Summer),
+			Platform = DubPlatform.Crunchyroll,
+			Status = DubMatchStatus.Matched,
+			Method = DubMatchMethod.Link,
+			SeriesId = "G24H1N3MP",
+			SeriesTitle = "Mushoku Tensei: Jobless Reincarnation",
+			Url = "https://www.crunchyroll.com/series/G24H1N3MP",
+			AvailableEpisodes = [1, 2, 3],
+			FrenchEpisodes = [1, 2],
+			CheckedAt = new DateTimeOffset(2026, 9, 29, 3, 0, 0, TimeSpan.Zero)
+		};
+
+		var document = Serialize(match);
+		var restored = BsonSerializer.Deserialize<DubMatchEntity>(document);
+
+		// Enums as names: a reordered enum must not turn a stored Crunchyroll match into an ADN one.
+		document["Platform"].AsString.ShouldBe("Crunchyroll");
+		document["Status"].AsString.ShouldBe("Matched");
+		document["Method"].AsString.ShouldBe("Link");
+		restored.FrenchEpisodes.ShouldBe([1, 2]);
+		restored.AvailableEpisodes.ShouldBe([1, 2, 3]);
+		restored.CheckedAt.ShouldBe(match.CheckedAt);
+		restored.Date.ShouldBe(new AnimeDate(2026, AnimeSeason.Summer));
+	}
+
+	[Fact]
+	public void Leaves_the_id_out_of_a_dub_document_saved_without_one()
+	{
+		// A replacement carrying an empty _id would try to rewrite the stored document's id and fail.
+		var document = Serialize(new DubOverrideEntity
+		{
+			SourceId = 1,
+			Platform = DubPlatform.Adn,
+			Mode = DubOverrideMode.Blocked,
+			SeriesId = null,
+			UpdatedAt = new DateTimeOffset(2026, 9, 29, 3, 0, 0, TimeSpan.Zero)
+		});
+
+		document.Contains("_id").ShouldBeFalse();
+		document["Mode"].AsString.ShouldBe("Blocked");
+		BsonSerializer.Deserialize<DubOverrideEntity>(document).Platform.ShouldBe(DubPlatform.Adn);
 	}
 
 	[Fact]

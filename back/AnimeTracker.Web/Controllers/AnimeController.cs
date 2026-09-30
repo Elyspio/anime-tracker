@@ -14,8 +14,11 @@ namespace AnimeTracker.Web.Controllers;
 public class AnimeController(IAnimeService animeService, TimeProvider timeProvider, ILogger<AnimeController> logger)
 	: TracingController(logger)
 {
-	/// <summary>Enough to see yesterday's run and why it stopped, not an audit log.</summary>
-	private const int RecentRunsLimit = 20;
+	/// <summary>
+	///     Enough to see the last few nights and why they stopped, not an audit log. Every successful refresh
+	///     is followed by a dub sync, so this is about fifteen of each.
+	/// </summary>
+	private const int RecentRunsLimit = 30;
 
 	/// <summary>Every anime of a season, soonest bingeable first. Defaults to the current season.</summary>
 	[HttpGet]
@@ -28,8 +31,8 @@ public class AnimeController(IAnimeService animeService, TimeProvider timeProvid
 	}
 
 	/// <summary>
-	///     Queues a season re-scrape and returns straight away. The walk itself takes tens of
-	///     minutes at the pace Nautiljon is polled, so it runs on the scheduler, not in the request.
+	///     Queues a season refresh and returns straight away. The fetch takes about a second, but it goes
+	///     through the scheduler like the nightly job, and a successful one queues the season's dub sync.
 	/// </summary>
 	[HttpPost("refresh")]
 	[Authorize(AuthModule.AdminPolicy)]

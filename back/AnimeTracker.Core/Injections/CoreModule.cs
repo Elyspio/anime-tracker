@@ -1,6 +1,7 @@
 using AnimeTracker.Abstractions.Interfaces.Services;
 using AnimeTracker.Core.Hosted;
 using AnimeTracker.Core.Services;
+using AnimeTracker.Core.Services.Dub;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AnimeTracker.Core.Injections;
@@ -11,6 +12,8 @@ public static class CoreModule
 	{
 		services.AddSingleton<IAnimeService, AnimeService>();
 		services.AddSingleton<AnimeRefreshJob>();
+		services.AddSingleton<IDubService, DubService>();
+		services.AddSingleton<DubSyncJob>();
 		services.AddHostedService<AnimeHostedService>();
 
 		return services;

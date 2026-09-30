@@ -31,6 +31,8 @@ public static class DbModule
 
 		services.AddSingleton<IAnimeRepository, AnimeRepository>();
 		services.AddSingleton<IRefreshRunRepository, RefreshRunRepository>();
+		services.AddSingleton<IDubMatchRepository, DubMatchRepository>();
+		services.AddSingleton<IDubOverrideRepository, DubOverrideRepository>();
 
 		return services;
 	}

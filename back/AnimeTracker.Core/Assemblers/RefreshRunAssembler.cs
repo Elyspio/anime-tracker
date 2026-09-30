@@ -14,6 +14,7 @@ public static class RefreshRunAssembler
 			Id = entity.Id.AsGuid(),
 			RunId = entity.RunId,
 			Date = entity.Date,
+			Kind = entity.Kind,
 			Status = entity.Status,
 			Total = entity.Total,
 			StartedAt = entity.StartedAt,

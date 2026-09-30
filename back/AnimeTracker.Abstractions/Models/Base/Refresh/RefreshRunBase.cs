@@ -3,10 +3,10 @@ using AnimeTracker.Abstractions.Models.Base.Anime;
 namespace AnimeTracker.Abstractions.Models.Base.Refresh;
 
 /// <summary>
-///     One execution of a season refresh, from the moment it is queued to the moment it stops.
-///     A refresh is now a single fetch and lasts about a second, so this is a record of what
-///     happened rather than a progress report — which is exactly what a job running unattended
-///     every night needs to leave behind.
+///     One execution of a season refresh or of the French dub sync that follows it, from the moment it
+///     is queued to the moment it stops. A season refresh is a single fetch and lasts about a second, so
+///     this is mostly a record of what happened rather than a progress report — which is exactly what a
+///     job running unattended every night needs to leave behind.
 /// </summary>
 public class RefreshRunBase
 {
@@ -19,9 +19,15 @@ public class RefreshRunBase
 
 	public required AnimeDate Date { get; set; }
 
+	/// <summary>Not required: runs stored before the field existed were all season refreshes.</summary>
+	public RefreshKind Kind { get; set; } = RefreshKind.Season;
+
 	public required RefreshStatus Status { get; set; }
 
-	/// <summary>Animes stored for the season. Zero until the run has finished successfully.</summary>
+	/// <summary>
+	///     Animes stored for the season, or matched on a platform for a dub run. A dub run counts up while it
+	///     works; a season refresh stays at zero until it has finished successfully.
+	/// </summary>
 	public required int Total { get; set; }
 
 	public required DateTimeOffset StartedAt { get; set; }
