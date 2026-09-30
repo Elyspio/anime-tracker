@@ -94,6 +94,20 @@ public class CrunchyrollAdapterTests
 	}
 
 	[Fact]
+	public async Task Sends_everything_to_the_gateway_when_there_is_one_but_links_to_the_public_site()
+	{
+		var options = Options.Create(new CrunchyrollOptions { RequestDelayMs = 0, Gateway = "http://10.0.1.123:8889" });
+		var client = new CrunchyrollClient(new FakeHttpClientFactory(Recorded()), options, TimeProvider.System, NullLogger<CrunchyrollClient>.Instance);
+		var adapter = new CrunchyrollAdapter(client, options, NullLogger<CrunchyrollAdapter>.Instance);
+
+		var series = await adapter.GetSeries(Series, TestContext.Current.CancellationToken);
+
+		_requests.ShouldAllBe(request => request.RequestUri!.Scheme == "http" && request.RequestUri.Authority == "10.0.1.123:8889");
+		// The reader is sent to Crunchyroll itself, never to the gateway.
+		series!.Url.ShouldStartWith("https://www.crunchyroll.com/series/");
+	}
+
+	[Fact]
 	public async Task Keeps_its_token_until_it_expires()
 	{
 		var adapter = Build(Recorded());

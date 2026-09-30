@@ -11,8 +11,21 @@ public sealed class CrunchyrollOptions
 {
 	public const string SectionName = "Crunchyroll";
 
+	/// <summary>The public site: where series pages are, and where requests go when there is no gateway.</summary>
 	[Required]
 	public string BaseUrl { get; set; } = "https://www.crunchyroll.com";
+
+	/// <summary>
+	///     The gateway in the qBittorrent pod, spoken to in plain HTTP; nginx there opens the TLS connection
+	///     to Crunchyroll from the VPN exit. Preferred to <c>Dub:Proxy</c> when set: Cloudflare judges the
+	///     client by its TLS handshake, and .NET's is always challenged on Windows and challenged on Linux
+	///     as soon as a session is resumed — nginx's passes. Blank: straight to <see cref="BaseUrl" />
+	///     through the proxy.
+	/// </summary>
+	public string Gateway { get; set; } = "";
+
+	/// <summary>Where requests actually go.</summary>
+	public string ApiRoot => string.IsNullOrWhiteSpace(Gateway) ? BaseUrl : Gateway;
 
 	/// <summary>
 	///     The language of titles and descriptions. It changes nothing about audio: every episode lists

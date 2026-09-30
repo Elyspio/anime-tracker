@@ -21,9 +21,10 @@ namespace AnimeTracker.Adapters.Crunchyroll.Http;
 ///         Measured from .NET 10 on Linux: HTTP/2 is challenged and HTTP/1.1 is not, the default .NET user
 ///         agent is challenged and a browser's is not, and a resumed TLS session is challenged (the handler
 ///         turns resumption off, see the module). From Windows every request is challenged whatever the
-///         settings — the TLS handshake gives it away — so the sync only works from a Linux host, which the
-///         deployment is. A challenge is reported as the platform being unavailable: the caller keeps what
-///         it knew instead of reading a refusal as an empty catalogue.
+///         settings — the TLS handshake gives it away. Hence <c>Crunchyroll:Gateway</c>: an nginx beside the
+///         egress proxy that this client talks plain HTTP to, and that opens the TLS connection itself;
+///         through it, Windows gets through too. A challenge is reported as the platform being
+///         unavailable: the caller keeps what it knew instead of reading a refusal as an empty catalogue.
 ///     </para>
 ///     <para>
 ///         One request at a time, spaced out: a season is a few hundred of them, and getting the egress
@@ -103,7 +104,7 @@ internal partial class CrunchyrollClient(
 
 			var clientId = await ClientId(cancellationToken);
 
-			using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(new Uri(options.Value.BaseUrl), "/auth/v1/token"))
+			using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(new Uri(options.Value.ApiRoot), "/auth/v1/token"))
 			{
 				Content = new FormUrlEncodedContent(new Dictionary<string, string>
 				{
@@ -137,7 +138,7 @@ internal partial class CrunchyrollClient(
 	/// </summary>
 	private async Task<string> ClientId(CancellationToken cancellationToken)
 	{
-		using var response = await Send(new HttpRequestMessage(HttpMethod.Get, new Uri(options.Value.BaseUrl)), cancellationToken);
+		using var response = await Send(new HttpRequestMessage(HttpMethod.Get, new Uri(options.Value.ApiRoot)), cancellationToken);
 		response.EnsureSuccessStatusCode();
 
 		var page = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -208,7 +209,7 @@ internal partial class CrunchyrollClient(
 
 	private Uri Url(string path, IReadOnlyDictionary<string, string> query)
 	{
-		var builder = new UriBuilder(new Uri(new Uri(options.Value.BaseUrl), path))
+		var builder = new UriBuilder(new Uri(new Uri(options.Value.ApiRoot), path))
 		{
 			Query = string.Join('&', query.Select(pair => $"{Uri.EscapeDataString(pair.Key)}={Uri.EscapeDataString(pair.Value)}"))
 		};
