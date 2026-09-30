@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Box, Link, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, Tooltip } from "@mui/material";
 import { formatBingeChip } from "@/core/binge";
 import { bingeDotColor } from "@/view/animes/BingeBadge";
+import { useDestinationsPopover } from "@/view/animes/useDestinationsPopover";
 import { Mono } from "@/view/components/Mono";
 import type { Anime } from "@/core/api/types";
 
@@ -100,6 +101,7 @@ export function AnimeTable({ animes, now }: Props) {
 	// Opens on the rating, like the grid: a season is triaged by reputation before it is by date.
 	const [sortKey, setSortKey] = useState<SortKey>("score");
 	const [descending, setDescending] = useState(false);
+	const destinations = useDestinationsPopover();
 
 	const sorted = useMemo(() => {
 		const rows = [...animes].sort((a, b) => compare(a, b, sortKey));
@@ -136,7 +138,7 @@ export function AnimeTable({ animes, now }: Props) {
 						const chip = formatBingeChip(anime.binge, now);
 
 						return (
-							<TableRow key={anime.id} hover>
+							<TableRow key={anime.id} hover onClick={(event) => destinations.open(anime, event.currentTarget)} sx={{ cursor: "pointer" }}>
 								<TableCell>
 									<Mono sx={{ color: "text.disabled" }}>{String(index + 1).padStart(2, "0")}</Mono>
 								</TableCell>
@@ -160,7 +162,8 @@ export function AnimeTable({ animes, now }: Props) {
 									</Tooltip>
 								</TableCell>
 								<TableCell sx={{ fontWeight: 500 }}>
-									<Link href={anime.url} target="_blank" rel="noopener" underline="hover" color="inherit">
+									{/* A button rather than a link: the row opens the popover, and this is the keyboard's way in. */}
+									<Link component="button" type="button" aria-haspopup="true" underline="hover" color="inherit" sx={{ font: "inherit", textAlign: "left" }}>
 										{anime.title}
 									</Link>
 								</TableCell>
@@ -182,6 +185,8 @@ export function AnimeTable({ animes, now }: Props) {
 					})}
 				</TableBody>
 			</Table>
+			{/* Portaled by MUI, so it does not matter that it hangs off the table's container. */}
+			{destinations.popover}
 		</TableContainer>
 	);
 }

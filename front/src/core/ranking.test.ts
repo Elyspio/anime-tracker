@@ -21,6 +21,7 @@ function anime(title: string, votesCount: number | null, score: number | null, o
 		episodesCount: 12,
 		genres: [],
 		episodes: [],
+		streamingLinks: [],
 		binge: {
 			status: "Announced",
 			bingeableAt: "2026-09-20",

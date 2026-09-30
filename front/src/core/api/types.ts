@@ -31,6 +31,13 @@ export interface Episode {
 	releaseDate: string;
 }
 
+/** A place the source lists the anime on. Always an absolute http(s) link to a page, never a home page. */
+export interface StreamingLink {
+	/** The platform's name as the source spells it. */
+	site: string;
+	url: string;
+}
+
 export type AnimeFormat = "Unknown" | "Tv" | "TvShort" | "Ona" | "Ova" | "Movie" | "Special" | "Music";
 
 export const animeFormats = membersOf<AnimeFormat>({
@@ -109,5 +116,7 @@ export interface Anime {
 	episodesCount: number | null;
 	genres: string[];
 	episodes: Episode[];
+	/** One per platform. Empty until the season is refreshed. */
+	streamingLinks: StreamingLink[];
 	binge: BingePrediction;
 }

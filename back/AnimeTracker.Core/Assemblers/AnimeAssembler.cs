@@ -29,6 +29,7 @@ public static class AnimeAssembler
 			EpisodesCount = entity.EpisodesCount,
 			Genres = entity.Genres,
 			Episodes = entity.Episodes,
+			StreamingLinks = entity.StreamingLinks,
 			Binge = BingePredictor.Predict(entity.Episodes, entity.EpisodesCount, today)
 		};
 	}

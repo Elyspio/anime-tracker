@@ -133,6 +133,77 @@ public class MediaAssemblerTests
 	}
 
 	[Fact]
+	public void Keeps_only_the_streaming_links()
+	{
+		var anime = Convert("""
+			{"id":1,"externalLinks":[
+			  {"site":"Twitter","type":"SOCIAL","isDisabled":false,"url":"https://x.com/frieren_pr"},
+			  {"site":"Official Site","type":"INFO","isDisabled":false,"url":"https://frieren-anime.jp/"},
+			  {"site":"Crunchyroll","type":"STREAMING","isDisabled":false,"url":"https://www.crunchyroll.com/series/GG5H5XQMD/frieren"}]}
+			""");
+
+		anime.StreamingLinks.ShouldBe([new StreamingLink("Crunchyroll", "https://www.crunchyroll.com/series/GG5H5XQMD/frieren")]);
+	}
+
+	[Fact]
+	public void Keeps_a_link_the_source_has_flagged_as_disabled()
+	{
+		// AniList sets isDisabled on links its checker could not fetch. On a recent season most of the
+		// Crunchyroll ones carry it, yet every one that named a series pointed at a series that exists.
+		var anime = Convert("""
+			{"id":1,"externalLinks":[
+			  {"site":"Crunchyroll","type":"STREAMING","isDisabled":true,"url":"https://www.crunchyroll.com/series/G3KHEVDJ7/the-apothecary-diaries"},
+			  {"site":"Netflix","type":"STREAMING","isDisabled":false,"url":"https://www.netflix.com/title/82760630"}]}
+			""");
+
+		anime.StreamingLinks.Select(link => link.Site).ShouldBe(["Crunchyroll", "Netflix"]);
+	}
+
+	[Theory]
+	[InlineData("https://www.crunchyroll.com/")]
+	[InlineData("https://Crunchyroll.com")]
+	[InlineData("http://www.netflix.com")]
+	public void Drops_a_link_to_the_bare_home_page_of_a_platform(string url)
+	{
+		// A home page does not say which show it was meant for.
+		Convert($$"""{"id":1,"externalLinks":[{"site":"Platform","type":"STREAMING","isDisabled":false,"url":"{{url}}"}]}""")
+			.StreamingLinks.ShouldBeEmpty();
+	}
+
+	[Theory]
+	[InlineData("javascript:alert(document.cookie)")]
+	[InlineData("data:text/html,<script>alert(1)</script>")]
+	[InlineData("ftp://files.example.com/frieren")]
+	[InlineData("/series/frieren")]
+	[InlineData("not a link")]
+	[InlineData("")]
+	public void Drops_a_link_that_is_not_an_absolute_http_address(string url)
+	{
+		// The link is rendered as an href, and anyone with an account can edit the source.
+		Convert($$"""{"id":1,"externalLinks":[{"site":"Platform","type":"STREAMING","isDisabled":false,"url":"{{url}}"}]}""")
+			.StreamingLinks.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void Keeps_the_first_link_of_a_platform_named_twice_whatever_the_casing()
+	{
+		var anime = Convert("""
+			{"id":1,"externalLinks":[
+			  {"site":"OceanVeil","type":"STREAMING","isDisabled":false,"url":"https://oceanveil.net/anime_titles/461"},
+			  {"site":"oceanveil","type":"STREAMING","isDisabled":false,"url":"https://oceanveil.net/anime_titles/462"}]}
+			""");
+
+		anime.StreamingLinks.Single().Url.ShouldBe("https://oceanveil.net/anime_titles/461");
+	}
+
+	[Fact]
+	public void Drops_a_link_with_no_platform_name()
+	{
+		Convert("""{"id":1,"externalLinks":[{"site":null,"type":"STREAMING","isDisabled":false,"url":"https://example.com/frieren"}]}""")
+			.StreamingLinks.ShouldBeEmpty();
+	}
+
+	[Fact]
 	public void Survives_a_node_with_nothing_but_an_id()
 	{
 		// Announced-but-empty entries appear in every season and must not break the walk.
@@ -143,6 +214,7 @@ public class MediaAssemblerTests
 		anime.AlternativeTitles.ShouldBeEmpty();
 		anime.Genres.ShouldBeEmpty();
 		anime.Episodes.ShouldBeEmpty();
+		anime.StreamingLinks.ShouldBeEmpty();
 		anime.Popularity.ShouldBe(0);
 	}
 }

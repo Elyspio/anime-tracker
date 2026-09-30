@@ -94,7 +94,8 @@ public class MongoMappingsTests
 			VotesCount = 9119,
 			EpisodesCount = 14,
 			Genres = ["Adventure", "Drama"],
-			Episodes = [new Episode(1, new DateOnly(2026, 7, 4))]
+			Episodes = [new Episode(1, new DateOnly(2026, 7, 4))],
+			StreamingLinks = [new StreamingLink("Crunchyroll", "https://www.crunchyroll.com/series/G24H1N3MP/mushoku-tensei")]
 		};
 
 		var restored = BsonSerializer.Deserialize<AnimeEntity>(Serialize(anime));
@@ -106,6 +107,34 @@ public class MongoMappingsTests
 		restored.AlternativeTitles.ShouldBe(["Mushoku Tensei: Jobless Reincarnation Season 3", "無職転生 Ⅲ"]);
 		restored.Genres.ShouldBe(["Adventure", "Drama"]);
 		restored.Episodes.Single().ReleaseDate.ShouldBe(new DateOnly(2026, 7, 4));
+		restored.StreamingLinks.ShouldBe([new StreamingLink("Crunchyroll", "https://www.crunchyroll.com/series/G24H1N3MP/mushoku-tensei")]);
+	}
+
+	[Fact]
+	public void Reads_an_anime_stored_before_streaming_links_existed_as_having_none()
+	{
+		// Same story as the alternative titles: a season nobody refreshed since keeps the old shape.
+		var document = Serialize(new AnimeEntity
+		{
+			SourceId = 1,
+			Date = new AnimeDate(2026, AnimeSeason.Summer),
+			Title = "",
+			Description = "",
+			Studio = "",
+			ImageUrl = "",
+			Url = "",
+			Format = AnimeFormat.Unknown,
+			IsAdult = false,
+			Score = null,
+			Popularity = 0,
+			VotesCount = null,
+			EpisodesCount = null,
+			Genres = [],
+			Episodes = []
+		});
+		document.Remove("StreamingLinks");
+
+		BsonSerializer.Deserialize<AnimeEntity>(document).StreamingLinks.ShouldBeEmpty();
 	}
 
 	[Fact]
