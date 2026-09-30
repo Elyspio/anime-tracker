@@ -78,18 +78,100 @@ export const refreshStatuses = membersOf<RefreshStatus>({
 	Interrupted: true,
 });
 
-/** One execution of a season refresh. `POST /api/animes/refresh` answers with one, 202 or 409. */
+/** A season refresh from AniList, or the French dub sync that follows every successful one. */
+export type RefreshKind = "Season" | "Dub";
+
+export const refreshKinds = membersOf<RefreshKind>({
+	Season: true,
+	Dub: true,
+});
+
+/** One execution of a season refresh or dub sync. `POST /api/animes/refresh` answers with one, 202 or 409. */
 export interface RefreshRun {
 	id: string;
 	runId: string;
 	date: AnimeDate;
+	kind: RefreshKind;
 	status: RefreshStatus;
-	/** Animes stored for the season. Zero until the run has finished successfully. */
+	/** Animes stored for the season; for a dub sync, animes matched on a platform so far. */
 	total: number;
 	/** ISO timestamps. */
 	startedAt: string;
 	updatedAt: string;
 	finishedAt: string | null;
+	error: string | null;
+}
+
+export type DubPlatform = "Crunchyroll" | "Adn";
+
+export const dubPlatforms = membersOf<DubPlatform>({
+	Crunchyroll: true,
+	Adn: true,
+});
+
+export type DubMatchStatus = "Matched" | "NotFound" | "Unaligned";
+
+export const dubMatchStatuses = membersOf<DubMatchStatus>({
+	Matched: true,
+	NotFound: true,
+	Unaligned: true,
+});
+
+export type DubMatchMethod = "Link" | "Search" | "Pinned";
+
+export const dubMatchMethods = membersOf<DubMatchMethod>({
+	Link: true,
+	Search: true,
+	Pinned: true,
+});
+
+export type DubOverrideMode = "Auto" | "Pinned" | "Blocked";
+
+export const dubOverrideModes = membersOf<DubOverrideMode>({
+	Auto: true,
+	Pinned: true,
+	Blocked: true,
+});
+
+/** The French dub on one platform, computed by the API as of today. */
+export interface DubAvailability {
+	platform: DubPlatform;
+	/** The series page on the platform. */
+	url: string;
+	/** Episodes out in French, among the announced ones when the total is known. */
+	frenchEpisodes: number;
+	totalEpisodes: number | null;
+	/** At least one episode aired, and every aired one is out in French here. */
+	upToDate: boolean;
+	/** Every announced episode is out in French here. */
+	complete: boolean;
+	/** ISO timestamp of the sync that measured it. */
+	checkedAt: string;
+}
+
+/** A match worth an admin's look, from `GET /api/dubs/cases`. */
+export interface DubCase {
+	sourceId: number;
+	title: string;
+	platform: DubPlatform;
+	/** Null when the anime was never matched on this platform. */
+	status: DubMatchStatus | null;
+	method: DubMatchMethod | null;
+	seriesTitle: string | null;
+	seriesUrl: string | null;
+	frenchEpisodes: number;
+	override: DubOverrideMode;
+	checkedAt: string | null;
+}
+
+export interface DubOverrideRequest {
+	mode: DubOverrideMode;
+	url?: string;
+}
+
+/** The case once the override is saved. `error` says why it could not be applied yet. */
+export interface DubOverrideResult {
+	case: DubCase;
 	error: string | null;
 }
 
@@ -119,4 +201,6 @@ export interface Anime {
 	/** One per platform. Empty until the season is refreshed. */
 	streamingLinks: StreamingLink[];
 	binge: BingePrediction;
+	/** Every platform the anime was matched on, best first. Empty: the dub is unknown, not missing. */
+	dubs: DubAvailability[];
 }

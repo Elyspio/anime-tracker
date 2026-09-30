@@ -21,6 +21,7 @@ import {
 } from "@mui/material";
 import { useAnimes } from "@/core/api/queries";
 import { collectGenres, matchesGenres, matchesStatus, type StatusFilter } from "@/core/binge";
+import { dubFilterLabels, matchesDub, type DubFilter } from "@/core/dub";
 import {
 	collectStudios,
 	episodicFormats,
@@ -51,6 +52,8 @@ const statusFilters: { value: StatusFilter; label: string }[] = [
 ];
 
 const sortKeys: SortKey[] = ["score", "votes", "binge"];
+
+const dubFilters: DubFilter[] = ["any", "upToDate", "complete"];
 
 /** Thresholds worth offering. Finer steps would be precision nobody triages on. */
 const minScoreOptions = [0, 5, 6, 7, 8, 9];
@@ -87,6 +90,7 @@ export function AnimesPage({ year, season }: Props) {
 	const [sort, setSort] = useState<SortKey>("score");
 	const [formats, setFormats] = useState<AnimeFormat[]>([...episodicFormats]);
 	const [includeAdult, setIncludeAdult] = useState(false);
+	const [dub, setDub] = useState<DubFilter>("any");
 
 	// Pinned per render pass so every countdown in the list is measured from the same instant.
 	const now = useMemo(() => new Date(), [data]);
@@ -105,11 +109,12 @@ export function AnimesPage({ year, season }: Props) {
 						matchesStudio(anime, studio) &&
 						matchesRange(anime, range) &&
 						matchesFormat(anime, formats) &&
-						matchesAdult(anime, includeAdult)
+						matchesAdult(anime, includeAdult) &&
+						matchesDub(anime, dub)
 				),
 				sort
 			),
-		[animes, title, status, genres, studio, range, sort, formats, includeAdult, now]
+		[animes, title, status, genres, studio, range, sort, formats, includeAdult, dub, now]
 	);
 
 	if (isPending) {
@@ -221,6 +226,16 @@ export function AnimesPage({ year, season }: Props) {
 						{minVotesOptions.map((value) => (
 							<MenuItem key={value} value={value}>
 								{value === 0 ? "Any" : `${value.toLocaleString()}+`}
+							</MenuItem>
+						))}
+					</Select>
+				</FilterField>
+
+				<FilterField label="French dub">
+					<Select value={dub} onChange={(event) => setDub(event.target.value as DubFilter)} sx={bareSelect}>
+						{dubFilters.map((filter) => (
+							<MenuItem key={filter} value={filter}>
+								{dubFilterLabels[filter]}
 							</MenuItem>
 						))}
 					</Select>

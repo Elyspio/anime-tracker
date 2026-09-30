@@ -34,6 +34,7 @@ function anime(overrides: Partial<Anime> = {}): Anime {
 		genres: [],
 		episodes: [],
 		streamingLinks: [],
+		dubs: [],
 		binge: prediction(),
 		...overrides,
 	};

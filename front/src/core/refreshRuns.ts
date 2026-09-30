@@ -1,4 +1,4 @@
-import type { RefreshRun, RefreshStatus } from "@/core/api/types";
+import type { RefreshKind, RefreshRun, RefreshStatus } from "@/core/api/types";
 
 export const statusLabels: Record<RefreshStatus, string> = {
 	Queued: "Queued",
@@ -20,13 +20,21 @@ export const statusTones: Record<RefreshStatus, "default" | "info" | "error" | "
 	Interrupted: "warning",
 };
 
+export const kindLabels: Record<RefreshKind, string> = {
+	Season: "Season",
+	Dub: "French dub",
+};
+
 export function isRunActive(run: RefreshRun): boolean {
 	return run.status === "Queued" || run.status === "Running";
 }
 
-/** The run refreshing a given season, if one is. */
+/**
+ * The season refresh in flight for a season, if one is. A dub sync of the season does not count: it
+ * runs for minutes after the refresh, and the refresh button stays usable meanwhile.
+ */
 export function findRunFor(runs: readonly RefreshRun[] | undefined, year: number, season: string): RefreshRun | undefined {
-	return runs?.find((run) => isRunActive(run) && run.date.year === year && run.date.season === season);
+	return runs?.find((run) => run.kind === "Season" && isRunActive(run) && run.date.year === year && run.date.season === season);
 }
 
 /** Formatted in the reader's own locale — the app has no opinion on date order. */
@@ -41,7 +49,7 @@ export function formatInstant(iso: string): string {
 
 /**
  * How long the run took, or has been going. A refresh is a single fetch and normally lands in
- * about a second, so seconds are the useful unit — minutes would read as zero every time.
+ * about a second, so seconds are the useful unit below a minute; a dub sync takes a few minutes.
  */
 export function formatDuration(run: RefreshRun): string {
 	const end = new Date(run.finishedAt ?? run.updatedAt).getTime();

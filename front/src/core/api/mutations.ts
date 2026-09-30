@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { http } from "./client";
 import { qk } from "./queries";
-import type { AnimeSeason, RefreshRun } from "./types";
+import type { AnimeDate, AnimeSeason, DubOverrideRequest, DubOverrideResult, DubPlatform, RefreshRun } from "./types";
 
 /** What the refresh button gets back: the run to follow, and whether it is the one it just started. */
 export interface RefreshOutcome {
@@ -38,6 +38,25 @@ export function useRefreshSeason() {
 			// Not the season: at 202 the fetch has not run, so the data on screen is still the
 			// freshest there is. The season is invalidated when the run reports it finished.
 			void queryClient.invalidateQueries({ queryKey: qk.refreshRuns() });
+		},
+	});
+}
+
+/**
+ * Pins an anime to a platform series, blocks the platform for it, or hands it back to the automatic
+ * match. The API applies it straight away and answers with the case as it now stands; `error` in that
+ * answer means saved but not applied yet — the platform could not be reached. Rejected with 403 for
+ * anyone without the admin role, 400 for a page that is not one of the platform's series.
+ */
+export function useSetDubOverride(date: AnimeDate) {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({ sourceId, platform, request }: { sourceId: number; platform: DubPlatform; request: DubOverrideRequest }) =>
+			(await http.put<DubOverrideResult>(`/api/dubs/${sourceId}/${platform}`, request)).data,
+		onSuccess: () => {
+			void queryClient.invalidateQueries({ queryKey: qk.dubCases(date.year, date.season) });
+			void queryClient.invalidateQueries({ queryKey: qk.animes(date.year, date.season) });
 		},
 	});
 }
