@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Base.Dub;
 using AnimeTracker.Abstractions.Models.Base.Refresh;
 using AnimeTracker.Abstractions.Models.Transports;
 using Shouldly;
@@ -72,6 +73,24 @@ public class EnumContractTests
 		Serialize(status).ShouldBe(expected);
 	}
 
+	[Theory]
+	[InlineData(RefreshKind.Season, "Season")]
+	[InlineData(RefreshKind.Dub, "Dub")]
+	public void Serialises_a_refresh_kind_by_name(RefreshKind kind, string expected)
+	{
+		Serialize(kind).ShouldBe(expected);
+	}
+
+	[Fact]
+	public void Serialises_the_dub_enums_by_name()
+	{
+		Serialize(DubPlatform.Crunchyroll).ShouldBe("Crunchyroll");
+		Serialize(DubPlatform.Adn).ShouldBe("Adn");
+		Serialize(DubMatchStatus.Unaligned).ShouldBe("Unaligned");
+		Serialize(DubMatchMethod.Pinned).ShouldBe("Pinned");
+		Serialize(DubOverrideMode.Blocked).ShouldBe("Blocked");
+	}
+
 	[Fact]
 	public void Declares_no_member_the_frontend_has_not_been_told_about()
 	{
@@ -81,5 +100,10 @@ public class EnumContractTests
 		Enum.GetNames<BingeStatus>().ShouldBe(["BingeableNow", "Announced", "Estimated", "UnknownEnd"]);
 		Enum.GetNames<RefreshStatus>().ShouldBe(["Queued", "Running", "Succeeded", "Failed", "Interrupted"]);
 		Enum.GetNames<AnimeFormat>().ShouldBe(["Unknown", "Tv", "TvShort", "Ona", "Ova", "Movie", "Special", "Music"]);
+		Enum.GetNames<RefreshKind>().ShouldBe(["Season", "Dub"]);
+		Enum.GetNames<DubPlatform>().ShouldBe(["Crunchyroll", "Adn"]);
+		Enum.GetNames<DubMatchStatus>().ShouldBe(["Matched", "NotFound", "Unaligned"]);
+		Enum.GetNames<DubMatchMethod>().ShouldBe(["Link", "Search", "Pinned"]);
+		Enum.GetNames<DubOverrideMode>().ShouldBe(["Auto", "Pinned", "Blocked"]);
 	}
 }

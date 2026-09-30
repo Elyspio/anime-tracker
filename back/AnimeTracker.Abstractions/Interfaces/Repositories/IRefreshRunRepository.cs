@@ -5,28 +5,34 @@ using AnimeTracker.Abstractions.Models.Entities;
 namespace AnimeTracker.Abstractions.Interfaces.Repositories;
 
 /// <summary>
-///     Records what each season refresh did. Hangfire knows a job ran; only this knows which season
-///     it touched, how many animes it stored, and what stopped it.
+///     Records what each season refresh and dub sync did. Hangfire knows a job ran; only this knows
+///     which season it touched, how many animes it stored or matched, and what stopped it.
 /// </summary>
 public interface IRefreshRunRepository
 {
 	/// <summary>Records a run accepted by the API, before any worker has picked it up.</summary>
-	Task<RefreshRunEntity> Queue(Guid runId, AnimeDate date, DateTimeOffset now, CancellationToken cancellationToken = default);
+	Task<RefreshRunEntity> Queue(Guid runId, AnimeDate date, RefreshKind kind, DateTimeOffset now, CancellationToken cancellationToken = default);
 
 	/// <summary>
 	///     Marks the run as running. Upserts, because the daily recurring job starts its own run
 	///     without ever passing through the API.
 	/// </summary>
-	Task Begin(Guid runId, AnimeDate date, DateTimeOffset now, CancellationToken cancellationToken = default);
+	Task Begin(Guid runId, AnimeDate date, RefreshKind kind, DateTimeOffset now, CancellationToken cancellationToken = default);
+
+	/// <summary>A sign of life from a run that takes minutes, with what it has done so far.</summary>
+	Task Progress(Guid runId, int total, DateTimeOffset now, CancellationToken cancellationToken = default);
 
 	/// <summary>Closes a run, recording how many animes it stored and why it stopped.</summary>
 	Task Finish(Guid runId, RefreshStatus status, int total, string? error, DateTimeOffset now,
 		CancellationToken cancellationToken = default);
 
-	/// <summary>The run queued or running for a season, if any. What makes a duplicate refresh a 409.</summary>
-	Task<RefreshRunEntity?> GetActive(AnimeDate date, CancellationToken cancellationToken = default);
+	/// <summary>
+	///     The run of that kind queued or running for a season, if any. What makes a duplicate refresh a
+	///     409 — and what lets a season refresh start while the season's dub sync is still going.
+	/// </summary>
+	Task<RefreshRunEntity?> GetActive(AnimeDate date, RefreshKind kind, CancellationToken cancellationToken = default);
 
-	/// <summary>Most recent runs first, all seasons.</summary>
+	/// <summary>Most recent runs first, all seasons and kinds.</summary>
 	Task<List<RefreshRunEntity>> GetRecent(int limit, CancellationToken cancellationToken = default);
 
 	/// <summary>

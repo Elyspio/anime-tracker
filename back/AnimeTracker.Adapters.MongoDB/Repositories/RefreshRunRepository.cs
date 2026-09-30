@@ -16,14 +16,15 @@ internal class RefreshRunRepository(IMongoDatabase database, ILogger<RefreshRunR
 
 	private static readonly UpdateDefinitionBuilder<RefreshRunEntity> Update = Builders<RefreshRunEntity>.Update;
 
-	public async Task<RefreshRunEntity> Queue(Guid runId, AnimeDate date, DateTimeOffset now, CancellationToken cancellationToken = default)
+	public async Task<RefreshRunEntity> Queue(Guid runId, AnimeDate date, RefreshKind kind, DateTimeOffset now, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(runId)} {Log.F(date)}");
+		using var trace = LogRepository($"{Log.F(runId)} {Log.F(date)} {Log.F(kind)}");
 
 		var entity = new RefreshRunEntity
 		{
 			RunId = runId,
 			Date = date,
+			Kind = kind,
 			Status = RefreshStatus.Queued,
 			Total = 0,
 			StartedAt = now,
@@ -37,15 +38,16 @@ internal class RefreshRunRepository(IMongoDatabase database, ILogger<RefreshRunR
 		return entity;
 	}
 
-	public async Task Begin(Guid runId, AnimeDate date, DateTimeOffset now, CancellationToken cancellationToken = default)
+	public async Task Begin(Guid runId, AnimeDate date, RefreshKind kind, DateTimeOffset now, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(runId)}");
+		using var trace = LogRepository($"{Log.F(runId)} {Log.F(kind)}");
 
 		var update = Update
 			.Set(run => run.Status, RefreshStatus.Running)
 			.Set(run => run.UpdatedAt, now)
 			.SetOnInsert(run => run.RunId, runId)
 			.SetOnInsert(run => run.Date, date)
+			.SetOnInsert(run => run.Kind, kind)
 			.SetOnInsert(run => run.Total, 0)
 			.SetOnInsert(run => run.StartedAt, now)
 			.SetOnInsert(run => run.FinishedAt, (DateTimeOffset?)null)
@@ -56,6 +58,16 @@ internal class RefreshRunRepository(IMongoDatabase database, ILogger<RefreshRunR
 			update,
 			new UpdateOptions { IsUpsert = true },
 			cancellationToken);
+	}
+
+	public async Task Progress(Guid runId, int total, DateTimeOffset now, CancellationToken cancellationToken = default)
+	{
+		using var trace = LogRepository($"{Log.F(runId)} {Log.F(total)}");
+
+		await EntityCollection.UpdateOneAsync(
+			Filter.Eq(run => run.RunId, runId),
+			Update.Set(run => run.Total, total).Set(run => run.UpdatedAt, now),
+			cancellationToken: cancellationToken);
 	}
 
 	public async Task Finish(Guid runId, RefreshStatus status, int total, string? error, DateTimeOffset now,
@@ -74,14 +86,15 @@ internal class RefreshRunRepository(IMongoDatabase database, ILogger<RefreshRunR
 			cancellationToken: cancellationToken);
 	}
 
-	public async Task<RefreshRunEntity?> GetActive(AnimeDate date, CancellationToken cancellationToken = default)
+	public async Task<RefreshRunEntity?> GetActive(AnimeDate date, RefreshKind kind, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(date)}");
+		using var trace = LogRepository($"{Log.F(date)} {Log.F(kind)}");
 
 		var filter = Filter.And(
 			Filter.In(run => run.Status, new[] { RefreshStatus.Queued, RefreshStatus.Running }),
 			Filter.Eq(run => run.Date.Year, date.Year),
-			Filter.Eq(run => run.Date.Season, date.Season));
+			Filter.Eq(run => run.Date.Season, date.Season),
+			KindIs(kind));
 
 		return await EntityCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
 	}
@@ -107,11 +120,19 @@ internal class RefreshRunRepository(IMongoDatabase database, ILogger<RefreshRunR
 			Filter.Eq(run => run.Status, RefreshStatus.Running),
 			Update
 				.Set(run => run.Status, RefreshStatus.Interrupted)
-				.Set(run => run.Error, "The process stopped while this refresh was running.")
+				.Set(run => run.Error, "The process stopped while this run was going.")
 				.Set(run => run.UpdatedAt, now)
 				.Set(run => run.FinishedAt, now),
 			cancellationToken: cancellationToken);
 
 		return result.ModifiedCount;
+	}
+
+	/// <summary>Runs written before the kind existed carry no field, and every one of them was a season refresh.</summary>
+	private static FilterDefinition<RefreshRunEntity> KindIs(RefreshKind kind)
+	{
+		return kind == RefreshKind.Season
+			? Filter.Or(Filter.Eq(run => run.Kind, RefreshKind.Season), Filter.Exists(run => run.Kind, false))
+			: Filter.Eq(run => run.Kind, kind);
 	}
 }

@@ -14,7 +14,9 @@ namespace AnimeTracker.Core.Services;
 public class AnimeService(
 	IAnimeRepository animeRepository,
 	IRefreshRunRepository refreshRunRepository,
+	IDubMatchRepository dubMatchRepository,
 	IAnimeSourceAdapter sourceAdapter,
+	IDubService dubService,
 	IHangfireJobAdapter hangfireJobAdapter,
 	TimeProvider timeProvider,
 	ILogger<AnimeService> logger
@@ -25,11 +27,12 @@ public class AnimeService(
 		using var _ = LogService($"{Log.F(date)}");
 
 		var entities = await animeRepository.GetBySeason(date, cancellationToken);
+		var dubs = (await dubMatchRepository.GetBySeason(date, cancellationToken)).ToLookup(match => match.SourceId);
 
 		var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
 
 		return entities
-			.Select(entity => AnimeAssembler.Convert(entity, today))
+			.Select(entity => AnimeAssembler.Convert(entity, dubs[entity.SourceId], today))
 			// Soonest bingeable first; anything without an end date sinks to the bottom. The grid
 			// re-sorts client-side, but an ordered payload is the honest default for the API.
 			.OrderBy(anime => anime.Binge.BingeableAt ?? DateOnly.MaxValue)
@@ -41,7 +44,8 @@ public class AnimeService(
 	{
 		using var _ = LogService($"{Log.F(date)}");
 
-		var active = await refreshRunRepository.GetActive(date, cancellationToken);
+		// A dub sync of the season may still be going. It does not block a refresh, which is what feeds it.
+		var active = await refreshRunRepository.GetActive(date, RefreshKind.Season, cancellationToken);
 
 		if (active is not null) return new RefreshQueueResult(true, RefreshRunAssembler.Convert(active));
 
@@ -49,7 +53,7 @@ public class AnimeService(
 		// type in this project, which knows nothing about how jobs are stored and should not start.
 		var runId = Guid.NewGuid();
 
-		var run = await refreshRunRepository.Queue(runId, date, timeProvider.GetUtcNow(), cancellationToken);
+		var run = await refreshRunRepository.Queue(runId, date, RefreshKind.Season, timeProvider.GetUtcNow(), cancellationToken);
 
 		hangfireJobAdapter.Enqueue<AnimeRefreshJob>(job => job.RefreshSeason(date.Year, date.Season, runId));
 
@@ -69,7 +73,7 @@ public class AnimeService(
 	{
 		using var _ = LogService($"{Log.F(date)} {Log.F(runId)}");
 
-		await refreshRunRepository.Begin(runId, date, timeProvider.GetUtcNow(), cancellationToken);
+		await refreshRunRepository.Begin(runId, date, RefreshKind.Season, timeProvider.GetUtcNow(), cancellationToken);
 
 		try
 		{
@@ -89,6 +93,25 @@ public class AnimeService(
 				timeProvider.GetUtcNow(), CancellationToken.None);
 
 			throw;
+		}
+
+		await QueueDubSync(date);
+	}
+
+	/// <summary>
+	///     The dub is measured against the season just stored, so it follows every successful refresh —
+	///     the button and the nightly job alike, with no trigger of its own. Whatever goes wrong here is
+	///     the dub sync's problem: the season is stored, and its run already says so.
+	/// </summary>
+	private async Task QueueDubSync(AnimeDate date)
+	{
+		try
+		{
+			await dubService.QueueSync(date, CancellationToken.None);
+		}
+		catch (Exception exception)
+		{
+			_logger.LogWarning(exception, "The dub sync of {Date} could not be queued", date);
 		}
 	}
 }

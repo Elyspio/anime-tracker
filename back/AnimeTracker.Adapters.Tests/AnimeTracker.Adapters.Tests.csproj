@@ -15,6 +15,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\AnimeTracker.Adapters.AniList\AnimeTracker.Adapters.AniList.csproj" />
+		<ProjectReference Include="..\AnimeTracker.Adapters.Crunchyroll\AnimeTracker.Adapters.Crunchyroll.csproj" />
 		<ProjectReference Include="..\AnimeTracker.Adapters.MongoDB\AnimeTracker.Adapters.MongoDB.csproj" />
 	</ItemGroup>
 

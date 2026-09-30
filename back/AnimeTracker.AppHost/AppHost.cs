@@ -33,15 +33,28 @@ var keycloak = builder.AddKeycloak("keycloak", 8080)
 var authority = ReferenceExpression.Create($"{keycloak.GetEndpoint("http")}/realms/anime-tracker");
 const string clientId = "anime-tracker";
 
-// No scraping infrastructure: AniList is a public API, so the only external dependency at runtime
-// is an outbound HTTPS call the API makes itself.
+// The egress proxy of the French dub sync, in the cluster's qBittorrent pod behind NordVPN, reached on
+// its LAN address. The streaming platforms are only ever asked through it: a sync run from here would
+// otherwise hit them from the home network's address, which is the one that must never get banned.
+// Blank it to run without a dub sync — the platforms are then not asked at all.
+var dubProxy = builder.AddParameter("dub-proxy", "http://10.0.1.123:8888");
+
+// Crunchyroll goes through the gateway beside that proxy instead: plain HTTP from here, TLS opened by
+// nginx from the VPN exit. Cloudflare challenges every TLS handshake .NET makes on Windows, so without
+// it the Crunchyroll half of a sync never gets through from a development machine.
+var crunchyrollGateway = builder.AddParameter("crunchyroll-gateway", "http://10.0.1.123:8889");
+
+// AniList is a public API: besides the proxy, the only external dependency at runtime is an outbound
+// HTTPS call the API makes itself.
 var api = builder.AddProject<AnimeTracker_Web>("api")
 	.WithReference(mongodb, "MongoDB")
 	.WaitFor(mongodb)
 	.WaitFor(keycloak)
 	.WithEnvironment("Auth__Authority", authority)
 	.WithEnvironment("Auth__Audience", clientId)
-	.WithEnvironment("Auth__AdminRole", "anime-tracker-admin");
+	.WithEnvironment("Auth__AdminRole", "anime-tracker-admin")
+	.WithEnvironment("Dub__Proxy", dubProxy)
+	.WithEnvironment("Crunchyroll__Gateway", crunchyrollGateway);
 
 // Vite dev server. Pinned to 5173 and un-proxied: a stable origin is what makes the OIDC
 // redirect URIs in the realm valid, and it keeps the HMR websocket working.
