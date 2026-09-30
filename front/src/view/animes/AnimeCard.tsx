@@ -2,6 +2,8 @@ import { Box, ButtonBase, Chip, LinearProgress, Stack, Typography } from "@mui/m
 import { useState } from "react";
 import { shadows } from "@/config/tokens";
 import { BingeBadge } from "@/view/animes/BingeBadge";
+import { DubBadge } from "@/view/animes/DubBadge";
+import { badgeDub } from "@/core/dub";
 import { Mono } from "@/view/components/Mono";
 import type { Anime } from "@/core/api/types";
 
@@ -16,6 +18,7 @@ export function AnimeCard({ anime, now, onOpen }: Props) {
 	const released = anime.binge.releasedEpisodes;
 	const progress = total && total > 0 ? Math.min(100, (released / total) * 100) : 100;
 	const bingeable = anime.binge.status === "BingeableNow";
+	const dub = badgeDub(anime);
 
 	// A source entry with no cover stores an empty string, and <img src=""> resolves to the current
 	// document — a broken image behind a src that looks fine. Fall back explicitly.
@@ -66,6 +69,12 @@ export function AnimeCard({ anime, now, onOpen }: Props) {
 				<Box sx={{ position: "absolute", top: 12, left: 12 }}>
 					<BingeBadge binge={anime.binge} now={now} size="small" />
 				</Box>
+
+				{dub && (
+					<Box sx={{ position: "absolute", bottom: 12, left: 12 }}>
+						<DubBadge dub={dub} />
+					</Box>
+				)}
 
 				{anime.score !== null && (
 					<Chip

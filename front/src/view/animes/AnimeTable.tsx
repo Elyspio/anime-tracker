@@ -3,10 +3,12 @@ import { Box, Link, Stack, Table, TableBody, TableCell, TableContainer, TableHea
 import { formatBingeChip } from "@/core/binge";
 import { bingeDotColor } from "@/view/animes/BingeBadge";
 import { useDestinationsPopover } from "@/view/animes/useDestinationsPopover";
+import { DubBadge } from "@/view/animes/DubBadge";
+import { badgeDub } from "@/core/dub";
 import { Mono } from "@/view/components/Mono";
 import type { Anime } from "@/core/api/types";
 
-type SortKey = "binge" | "title" | "studio" | "score" | "votes" | "episodes" | "popularity";
+type SortKey = "binge" | "title" | "studio" | "score" | "votes" | "episodes" | "dub" | "popularity";
 
 interface Column {
 	key: SortKey;
@@ -19,6 +21,7 @@ const columns: Column[] = [
 	{ key: "title", label: "Title", numeric: false },
 	{ key: "studio", label: "Studio", numeric: false },
 	{ key: "episodes", label: "Episodes", numeric: false },
+	{ key: "dub", label: "French dub", numeric: false },
 	{ key: "score", label: "Rating", numeric: true },
 	{ key: "votes", label: "Ratings", numeric: true },
 	{ key: "popularity", label: "Popularity", numeric: true },
@@ -45,6 +48,8 @@ function compare(a: Anime, b: Anime, key: SortKey): number {
 			return (b.votesCount ?? -1) - (a.votesCount ?? -1);
 		case "episodes":
 			return b.binge.releasedEpisodes - a.binge.releasedEpisodes;
+		case "dub":
+			return (badgeDub(b)?.frenchEpisodes ?? -1) - (badgeDub(a)?.frenchEpisodes ?? -1);
 		case "popularity":
 			return b.popularity - a.popularity;
 	}
@@ -171,6 +176,7 @@ export function AnimeTable({ animes, now }: Props) {
 								<TableCell>
 									<EpisodeProgress anime={anime} />
 								</TableCell>
+								<TableCell>{badgeDub(anime) ? <DubBadge dub={badgeDub(anime)!} /> : <Mono sx={{ color: "text.disabled" }}>—</Mono>}</TableCell>
 								<TableCell align="right">
 									<Mono variant="body2">{anime.score?.toFixed(1) ?? "—"}</Mono>
 								</TableCell>

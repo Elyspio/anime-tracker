@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { animeFormats, animeSeasons, bingeStatuses, refreshStatuses } from "@/core/api/types";
+import { animeFormats, animeSeasons, bingeStatuses, dubMatchMethods, dubMatchStatuses, dubOverrideModes, dubPlatforms, refreshKinds, refreshStatuses } from "@/core/api/types";
 
 /**
  * The other half of a contract: the API serialises its enums by name, and these unions are written
@@ -21,5 +21,16 @@ describe("enum contract with the API", () => {
 
 	it("mirrors RefreshStatus", () => {
 		expect(refreshStatuses).toEqual(["Queued", "Running", "Succeeded", "Failed", "Interrupted"]);
+	});
+
+	it("mirrors RefreshKind", () => {
+		expect(refreshKinds).toEqual(["Season", "Dub"]);
+	});
+
+	it("mirrors the dub enums", () => {
+		expect(dubPlatforms).toEqual(["Crunchyroll", "Adn"]);
+		expect(dubMatchStatuses).toEqual(["Matched", "NotFound", "Unaligned"]);
+		expect(dubMatchMethods).toEqual(["Link", "Search", "Pinned"]);
+		expect(dubOverrideModes).toEqual(["Auto", "Pinned", "Blocked"]);
 	});
 });

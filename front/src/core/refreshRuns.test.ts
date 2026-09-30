@@ -7,6 +7,7 @@ function run(overrides: Partial<RefreshRun> = {}): RefreshRun {
 		id: "1",
 		runId: "run-1",
 		date: { year: 2026, season: "Summer" },
+		kind: "Season",
 		status: "Running",
 		total: 0,
 		startedAt: "2026-08-03T12:00:00Z",
@@ -34,6 +35,10 @@ describe("findRunFor", () => {
 		const other = run({ runId: "other", date: { year: 2026, season: "Fall" } });
 
 		expect(findRunFor([other, run()], 2026, "Summer")?.runId).toBe("run-1");
+	});
+
+	it("ignores the season's dub sync", () => {
+		expect(findRunFor([run({ kind: "Dub" })], 2026, "Summer")).toBeUndefined();
 	});
 
 	it("ignores a run that has already stopped", () => {

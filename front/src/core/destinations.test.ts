@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vite-plus/test";
 import { destinationsOf } from "@/core/destinations";
-import type { Anime, StreamingLink } from "@/core/api/types";
+import type { Anime, DubAvailability, StreamingLink } from "@/core/api/types";
 
-function anime(url: string, streamingLinks: StreamingLink[]): Anime {
+function anime(url: string, streamingLinks: StreamingLink[], dubs: DubAvailability[] = []): Anime {
 	return {
 		id: "1",
 		sourceId: 1,
@@ -22,6 +22,7 @@ function anime(url: string, streamingLinks: StreamingLink[]): Anime {
 		genres: [],
 		episodes: [],
 		streamingLinks,
+		dubs,
 		binge: { status: "UnknownEnd", bingeableAt: null, releasedEpisodes: 0, totalEpisodes: null },
 	};
 }
@@ -52,6 +53,32 @@ describe("destinationsOf", () => {
 		const destinations = destinationsOf(anime("https://anilist.co/anime/1", [{ site: "anilist", url: "https://anilist.co/anime/1" }]));
 
 		expect(destinations).toHaveLength(1);
+	});
+
+	it("puts the series the dub sync checked in place of AniList's link to the same platform", () => {
+		const destinations = destinationsOf(
+			anime(
+				"https://anilist.co/anime/1",
+				[
+					{ site: "Netflix", url: "https://www.netflix.com/title/1" },
+					{ site: "Crunchyroll", url: "https://www.crunchyroll.com/pt-pt/series/G1/old-slug" },
+				],
+				[
+					{
+						platform: "Crunchyroll",
+						url: "https://www.crunchyroll.com/series/G1/show",
+						frenchEpisodes: 8,
+						totalEpisodes: 12,
+						upToDate: false,
+						complete: false,
+						checkedAt: "2026-09-29T03:00:00Z",
+					},
+				]
+			)
+		);
+
+		expect(destinations.map((destination) => destination.site)).toEqual(["AniList", "Crunchyroll", "Netflix"]);
+		expect(destinations[1]).toEqual({ site: "Crunchyroll", url: "https://www.crunchyroll.com/series/G1/show", frenchEpisodes: 8 });
 	});
 
 	it("returns nothing for an anime with neither", () => {

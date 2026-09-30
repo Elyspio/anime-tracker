@@ -1,5 +1,5 @@
 import { Alert, Box, Chip, Divider, Drawer, LinearProgress, Stack, Typography } from "@mui/material";
-import { formatDuration, formatInstant, isRunActive, statusLabels, statusTones } from "@/core/refreshRuns";
+import { formatDuration, formatInstant, isRunActive, kindLabels, statusLabels, statusTones } from "@/core/refreshRuns";
 import { seasonLabels } from "@/core/binge";
 import { Mono } from "@/view/components/Mono";
 import type { RefreshRun } from "@/core/api/types";
@@ -23,7 +23,7 @@ function RunCard({ run }: { run: RefreshRun }) {
 		<Stack spacing={1}>
 			<Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
 				<Typography variant="subtitle2">
-					{seasonLabels[run.date.season]} {run.date.year}
+					{seasonLabels[run.date.season]} {run.date.year} · {kindLabels[run.kind]}
 				</Typography>
 				<Chip size="small" label={statusLabels[run.status]} color={statusTones[run.status]} variant={statusTones[run.status] === "default" ? "outlined" : "filled"} />
 			</Stack>
@@ -31,7 +31,9 @@ function RunCard({ run }: { run: RefreshRun }) {
 			{active && <LinearProgress />}
 
 			<Mono sx={{ color: "text.disabled" }}>
-				{active ? `Started ${formatInstant(run.startedAt)}` : `${formatInstant(run.startedAt)} · ${run.total} anime${run.total === 1 ? "" : "s"} · ${formatDuration(run)}`}
+				{active
+					? `Started ${formatInstant(run.startedAt)}${run.kind === "Dub" ? ` · ${run.total} matched so far` : ""}`
+					: `${formatInstant(run.startedAt)} · ${run.total} anime${run.total === 1 ? "" : "s"}${run.kind === "Dub" ? " matched" : ""} · ${formatDuration(run)}`}
 			</Mono>
 
 			{run.error && (

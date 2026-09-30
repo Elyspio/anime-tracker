@@ -9,6 +9,7 @@ import { findRunFor } from "@/core/refreshRuns";
 import { currentSeason } from "@/core/binge";
 import { AnimesPage } from "@/view/animes/AnimesPage";
 import { RefreshRunsDrawer } from "@/view/layout/RefreshRunsDrawer";
+import { DubCasesDrawer } from "@/view/layout/DubCasesDrawer";
 import { SeasonSelector } from "@/view/layout/SeasonSelector";
 import { SyncIndicator } from "@/view/layout/SyncIndicator";
 import { ThemeToggle } from "@/view/layout/ThemeToggle";
@@ -23,6 +24,7 @@ export function AppLayout() {
 
 	const [selected, setSelected] = useState(() => currentSeason(new Date()));
 	const [runsOpen, setRunsOpen] = useState(false);
+	const [dubCasesOpen, setDubCasesOpen] = useState(false);
 
 	// The 202 carries no new data — the grid fills in when the fetch itself lands, a moment later.
 	useSeasonRefetchOnRunCompletion(runs.data);
@@ -79,6 +81,12 @@ export function AppLayout() {
 							</Button>
 						)}
 
+						{auth.isAuthenticated && (
+							<Button onClick={() => setDubCasesOpen(true)} variant="outlined" size="small">
+								Dub matches
+							</Button>
+						)}
+
 						<ThemeToggle />
 
 						{auth.isAuthenticated ? (
@@ -108,6 +116,8 @@ export function AppLayout() {
 			<Container maxWidth="xl" sx={{ py: 3 }}>
 				<AnimesPage year={selected.year} season={selected.season} />
 			</Container>
+
+			<DubCasesDrawer open={dubCasesOpen} onClose={() => setDubCasesOpen(false)} year={selected.year} season={selected.season} />
 
 			<RefreshRunsDrawer open={runsOpen} onClose={() => setRunsOpen(false)} runs={runs.data} isPending={runs.isPending} error={runs.error} />
 		</Box>

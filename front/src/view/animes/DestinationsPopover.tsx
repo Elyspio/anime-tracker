@@ -43,7 +43,13 @@ export function DestinationsPopover({ target, onClose }: Props) {
 							<ListItemIcon sx={{ minWidth: 32 }}>
 								<PlatformLogo site={destination.site} />
 							</ListItemIcon>
-							<ListItemText primary={destination.site} />
+							<ListItemText
+								primary={destination.site}
+								// Only where the dub sync looked: an unchecked link says nothing about French audio.
+								secondary={
+									destination.frenchEpisodes ? `French dub · ${destination.frenchEpisodes} episode${destination.frenchEpisodes === 1 ? "" : "s"}` : undefined
+								}
+							/>
 							<OpenInNewIcon sx={{ fontSize: 14, color: "text.disabled", ml: 1 }} />
 						</ListItemButton>
 					))}
