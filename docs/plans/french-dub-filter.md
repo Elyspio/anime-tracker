@@ -49,9 +49,9 @@ françaises. » Et pouvoir filer vers le site de streaming depuis l'application,
 - **Proxy sortant** dans le pod qBittorrent (sortie NordVPN) : `dub-proxy.apps.svc.cluster.local:8888`
   dans le cluster, `10.0.1.123:8888` depuis le LAN (DNS interne suggéré : `dub-proxy.apps.elylan`).
   Configuré dans l'application par `Dub:Proxy` ; sans lui, aucune plateforme n'est interrogée.
-- **Linux seulement** pour Crunchyroll : Cloudflare défie .NET sous Windows quoi qu'on règle. L'AppHost
-  pointe le proxy, mais une synchro lancée depuis Windows finit en échec « anti-bot challenge » pour
-  Crunchyroll ; ADN, lui, répond.
+- **Passerelle Crunchyroll** : un nginx dans le même pod, port 8889, auquel l'application parle en HTTP
+  simple (`Crunchyroll:Gateway`). C'est lui qui ouvre la connexion TLS : celle de .NET est défiée par
+  Cloudflare sous Windows à chaque fois. Avec la passerelle, la synchro marche aussi depuis l'AppHost.
 
 ## Tranches
 
@@ -64,7 +64,7 @@ françaises. » Et pouvoir filer vers le site de streaming depuis l'application,
 |    | `feat/dub-adn`             | Adapter ADN (sur le front) |
 
 Ordre de fusion : #4, #5, puis la pile. Le chart `anime-tracker` du dépôt d'infrastructure doit porter
-`Dub:Proxy` avant le déploiement de la synchro.
+`Dub:Proxy` et `Crunchyroll:Gateway` avant le déploiement de la synchro.
 
 ## Reste ouvert
 

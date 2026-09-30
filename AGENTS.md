@@ -132,10 +132,12 @@ These are the properties the design rests on. Changing them is a product decisio
   Its only purpose is to keep the platforms from ever seeing — and banning — the local network's
   address; the exit country does not matter and is not modelled. Without `Dub:Proxy` an adapter is not
   registered at all: there is no fallback to the local address.
-- **Crunchyroll is behind Cloudflare, and the client's shape is what gets through.** Measured from
-  .NET 10 on Linux: a resumed TLS session, HTTP/2 and the .NET user agent are challenged, so the handler
-  disables TLS resumption and the client speaks HTTP/1.1 as a browser. **From Windows everything is
-  challenged**: the Crunchyroll half of a sync only works from Linux, which the deployment is.
+- **Crunchyroll is behind Cloudflare, which judges the client's TLS handshake.** .NET's is challenged
+  every time on Windows, and on Linux as soon as a session is resumed. So Crunchyroll is reached through
+  `Crunchyroll:Gateway`: an nginx beside the egress proxy that the client talks plain HTTP to, and that
+  opens the TLS connection itself (no session reuse) from the VPN exit. That works from any OS. Without a
+  gateway the client falls back to `Dub:Proxy` with TLS resumption off, HTTP/1.1 and a browser user
+  agent — which passes on Linux only.
 - **The dub sync is its own run**, of type `Dub`, queued by every successful AniList refresh — there is
   no separate trigger. One active dub run per season; a refresh stays possible while it goes. It prunes
   the matches of animes no longer in the season from a fresh read at the end, not from the list it
@@ -270,7 +272,7 @@ as `admin` and triggers a refresh — that button is the bootstrap path.
   unknown formats and empty nodes are covered. Every one of them appears in a real season.
 - French dub follows the same two layers. The replies under `Fixtures/crunchyroll` and `Fixtures/adn`
   pin each platform's *shape*, and are re-recorded with the `record.sh` beside them — through the
-  egress proxy, with curl, since Cloudflare challenges .NET on Windows. Hand-written nodes pin the
+  egress proxy, with curl, which Cloudflare lets through. Hand-written nodes pin the
   *rules*: `DubTitlesTests`, `DubAlignerTests` and `DubCoverageTests` in Core, the refusal and
   malformed-reply cases in the adapter tests. The sync's choreography — which series is tried, in what
   order, what is saved, what the run says — lives in `DubServiceTests`, every port substituted.
@@ -314,7 +316,8 @@ second live pod would apply to a run it does not own.
 The French dub egress proxy lives in the infrastructure repository, as a container of the qBittorrent
 pod (`kubernetes/apps/torrent`, `dubEgress` in its values): a tinyproxy limited to the platforms'
 domains, reached in the cluster at `dub-proxy.apps.svc.cluster.local:8888` and from the LAN at
-`10.0.1.123:8888`. The application gets it through `Dub:Proxy`. This repository never holds a
+`10.0.1.123:8888`, and the Crunchyroll gateway (nginx) on port 8889 of the same Service. The application
+gets them through `Dub:Proxy` and `Crunchyroll:Gateway`. This repository never holds a
 NordVPN credential.
 
 The deployed app is reachable at `https://binge.animes.elyspio.fr`, validates tokens against the

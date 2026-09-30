@@ -30,10 +30,12 @@ chaque épisode, ADN dans ses langues (`vf`).
 - **Pas de solveur.** Un FlareSolverr a été déployé puis retiré : le cookie qu'il obtient est lié à
   l'empreinte de son navigateur et fait échouer un client HTTP qui le présente, et il ne sait pas porter
   un en-tête d'autorisation. Ce qui passe Cloudflare, c'est la forme du client.
-- **Cloudflare, mesuré depuis .NET 10 sous Linux** : il défie une session TLS reprise, HTTP/2 et
-  l'user agent de .NET. Le client Crunchyroll coupe la reprise TLS, parle HTTP/1.1 et se présente comme
-  un navigateur. **Depuis Windows, tout est défié** quels que soient ces réglages : la synchro VF ne
-  fonctionne que sur un hôte Linux, ce qu'est le déploiement.
+- **Cloudflare juge la poignée de main TLS du client.** Celle de .NET est défiée à chaque fois sous
+  Windows, et sous Linux dès qu'une session est reprise ; celles de curl et de nginx (OpenSSL) passent.
+  Crunchyroll est donc joint par une **passerelle nginx** placée à côté du proxy, dans le pod VPN :
+  l'application lui parle en HTTP simple, nginx ouvre la connexion TLS sans reprise de session. Mesuré
+  depuis .NET sous Windows : 8 requêtes sur 8 passent. Sans passerelle, le client repasse par le proxy
+  (reprise TLS coupée, HTTP/1.1, user agent de navigateur), ce qui ne marche que sous Linux.
 - **Un défi, un refus, une panne ou un proxy injoignable rendent la plateforme indisponible** pour le
   reste du run : les mesures déjà stockées restent, le run finit en échec et le dit. Jamais une réponse
   de ce genre ne vaut « pas de VF ».
@@ -56,8 +58,9 @@ nature du risque.
 
 - **Un conteneur de plus dans le pod qBittorrent** (dépôt d'infrastructure, `kubernetes/apps/torrent`) :
   un tinyproxy qui n'accepte que les domaines des plateformes et `CONNECT` vers 443, joignable dans le
-  cluster en `dub-proxy.apps.svc.cluster.local:8888` et depuis le LAN en `10.0.1.123:8888`. Il attend
-  l'interface NordVPN avant de servir. Une panne du VPN rend le pod qBittorrent non prêt.
+  cluster en `dub-proxy.apps.svc.cluster.local:8888` et depuis le LAN en `10.0.1.123:8888`, plus la
+  passerelle nginx de Crunchyroll sur le port 8889. Tous deux attendent l'interface NordVPN avant de
+  servir. Une panne du VPN rend le pod qBittorrent non prêt.
 - **`RefreshRun` gagne un type** (`Season`, `Dub`). Un refresh AniList réussi met en file la synchro VF
   de la saison, qui a son propre run ; l'exclusion et le 409 se font par saison et par type.
 - **La VF est stockée à part** (`DubMatch`, `DubOverride`, clé id AniList + plateforme), parce que
