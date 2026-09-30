@@ -2,6 +2,7 @@
 	<Folder Name="/Adapters/">
 		<Project Path="AnimeTracker.Adapters.MongoDB/AnimeTracker.Adapters.MongoDB.csproj"/>
 		<Project Path="AnimeTracker.Adapters.AniList/AnimeTracker.Adapters.AniList.csproj"/>
+		<Project Path="AnimeTracker.Adapters.Adn/AnimeTracker.Adapters.Adn.csproj"/>
 		<Project Path="AnimeTracker.Adapters.Crunchyroll/AnimeTracker.Adapters.Crunchyroll.csproj"/>
 		<Project Path="AnimeTracker.Adapters.Hangfire/AnimeTracker.Adapters.Hangfire.csproj"/>
 	</Folder>
