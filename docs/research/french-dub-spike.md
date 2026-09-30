@@ -9,6 +9,25 @@ automatique sûr est possible. Mais Crunchyroll est protégé par Cloudflare d'u
 peu prévisible**, aucun repli par le solveur ne tient, et deux critères de l'ADR 0003 ne sont pas
 encore atteints (recoupement humain, stabilité dans le temps). L'ADR reste *proposé*.
 
+> **Suite, le 2026-09-30 — ce que ce rapport a mal lu, et ce qui a été mesuré depuis.**
+>
+> - **Cloudflare n'est pas instable, il défie la reprise de session TLS.** Mesuré depuis .NET 10 sous
+>   Linux : cinq connexions neuves passent sans reprise TLS, toutes celles qui suivent la première sont
+>   défiées avec. Les résultats « contradictoires » ci-dessous (`ParseAdd`, HTTP/2) venaient de là :
+>   chaque essai ouvrait un nouveau client, donc une session reprise. Une fois la reprise coupée,
+>   HTTP/2 et l'user agent .NET restent défiés ; la façon de poser l'en-tête ne compte plus. Depuis
+>   Windows, tout est défié : c'est l'empreinte TLS.
+> - **La région ne compte pas.** Les VF de 36 shows sont identiques depuis la France et la Suisse, le
+>   catalogue ADN aussi. Le propriétaire a précisé que le VPN sert à protéger l'adresse du réseau
+>   local d'un bannissement, pas à choisir un pays.
+> - **Le solveur a été retiré** du pod, sur décision du propriétaire.
+> - **Crunchyroll se trompe parfois de date** : l'épisode 1 de « The Oblivious Saint » est daté de
+>   2025. `premium_available_date`, juste, sert de seconde date d'alignement.
+> - **Deux synchros réelles de l'été 2026**, à un jour d'écart, ont donné les mêmes appariements et des
+>   VF qui avancent comme attendu (Clevatess II de 12/13 à 13/13).
+>
+> L'[ADR 0003](../adr/0003-vf-from-platforms-through-vpn-egress.md) est accepté sur cette base.
+
 ## Ce qui a été monté
 
 Le solveur (FlareSolverr 3.5.2) et un proxy sortant (tinyproxy, liste blanche de domaines) tournent
