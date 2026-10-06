@@ -14,6 +14,30 @@ Glossaire du domaine. Uniquement du vocabulaire — aucun détail d'implémentat
 - **Jour de diffusion** : le jour où l'épisode passe au Japon. Un créneau de fin de soirée appartient au jour japonais, pas au jour UTC.
 - **Format** : mode de sortie d'un anime — série TV, format court, série de plateforme, OVA, film, spécial. Seuls les formats épisodiques sont affichés par défaut : un film est bingeable le jour de sa sortie, le compte à rebours n'a rien à en dire.
 
+## Version française
+
+- **VF** : version doublée en français d'un épisode. Se mesure sur une plateforme, jamais sur AniList,
+  qui ne publie rien du doublage. À l'écran : *French dub*.
+- **Plateforme** : service de streaming qui publie l'audio disponible par épisode : Crunchyroll et ADN.
+- **Série de plateforme** : l'entrée du catalogue d'une plateforme que l'on a reconnue comme un anime
+  de saison. Elle regroupe souvent plusieurs saisons ; seule la saison ou la partie qui correspond à
+  l'anime est retenue.
+- **Appariement** : le lien entre un anime de saison et sa série de plateforme, avec la correspondance
+  numéro d'épisode AniList vers épisode de plateforme. Automatique, corrigeable à la main. Un mauvais
+  appariement est pire qu'une absence.
+- **Mesure VF** : l'ensemble des numéros d'épisodes dont la VF est disponible sur une plateforme, et la
+  date d'observation.
+- **VF à jour** (*Up to date*) : au moins un épisode est sorti, et une même plateforme a la VF de tous
+  les épisodes sortis.
+- **VF complète** (*Complete*) : le total annoncé est connu, et une même plateforme a la VF de tous les
+  épisodes, du premier au dernier. Incluse dans la VF à jour.
+- **VF inconnue** : aucune série reconnue, alignement non démontré, ou plateforme injoignable (blocage
+  anti-bot, refus, panne). Jamais présentée comme une VF absente.
+- **Override** : correction d'un appariement par l'admin — `Auto` (aucune), `Pinned` (série imposée),
+  `Blocked` (aucun appariement). Survit aux synchros.
+- **Run VF** : exécution de la synchro VF d'une saison, mise en file par un refresh AniList réussi.
+  Distinct du run de refresh, avec son propre statut.
+
 ## Appréciation
 
 - **Note** : moyenne des notes attribuées par les membres, sur 10. Absente tant que personne n'a noté l'anime.
