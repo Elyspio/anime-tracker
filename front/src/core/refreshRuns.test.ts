@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { findRunFor, formatDuration, isRunActive } from "@/core/refreshRuns";
+import { findRunFor, formatDuration, groupPasses, isRunActive } from "@/core/refreshRuns";
 import type { RefreshRun, RefreshStatus } from "@/core/api/types";
 
 function run(overrides: Partial<RefreshRun> = {}): RefreshRun {
@@ -66,5 +66,39 @@ describe("formatDuration", () => {
 
 	it("does not round a very fast run down to zero", () => {
 		expect(formatDuration(run({ finishedAt: "2026-08-03T12:00:00.200Z" }))).toBe("under a second");
+	});
+});
+
+describe("groupPasses", () => {
+	const season = (id: string, startedAt: string, year = 2026) => run({ runId: id, kind: "Season", startedAt, date: { year, season: "Summer" } });
+	const dub = (id: string, startedAt: string, year = 2026) => run({ runId: id, kind: "Dub", startedAt, date: { year, season: "Summer" } });
+
+	it("pairs a dub sync with the refresh that queued it", () => {
+		const passes = groupPasses([dub("d1", "2026-08-03T12:00:03Z"), season("s1", "2026-08-03T12:00:00Z")]);
+
+		expect(passes.map((pass) => [pass.season?.runId, pass.dub?.runId])).toEqual([["s1", "d1"]]);
+	});
+
+	it("leaves a refresh that queued nothing on its own", () => {
+		// A second refresh while the first one's dub sync still runs queues no dub of its own.
+		const passes = groupPasses([season("s2", "2026-08-03T12:01:00Z"), dub("d1", "2026-08-03T12:00:03Z"), season("s1", "2026-08-03T12:00:00Z")]);
+
+		expect(passes.map((pass) => [pass.season?.runId, pass.dub?.runId])).toEqual([
+			["s2", undefined],
+			["s1", "d1"],
+		]);
+	});
+
+	it("never pairs runs of different seasons", () => {
+		const passes = groupPasses([dub("d1", "2026-08-03T12:00:03Z", 2027), season("s1", "2026-08-03T12:00:00Z")]);
+
+		expect(passes.map((pass) => [pass.season?.runId, pass.dub?.runId])).toEqual([
+			[undefined, "d1"],
+			["s1", undefined],
+		]);
+	});
+
+	it("keeps a dub sync whose refresh fell past the page", () => {
+		expect(groupPasses([dub("d1", "2026-08-03T12:00:03Z")]).map((pass) => pass.dub?.runId)).toEqual(["d1"]);
 	});
 });
