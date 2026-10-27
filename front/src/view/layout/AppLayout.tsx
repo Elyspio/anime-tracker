@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppBar, Box, Button, Container, Divider, Stack, Toolbar, Typography } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { useSnackbar } from "notistack";
@@ -25,6 +25,20 @@ export function AppLayout() {
 	const [selected, setSelected] = useState(() => currentSeason(new Date()));
 	const [runsOpen, setRunsOpen] = useState(false);
 	const [dubCasesOpen, setDubCasesOpen] = useState(false);
+	const [headerHidden, setHeaderHidden] = useState(false);
+
+	useEffect(() => {
+		let previousY = window.scrollY;
+		const onScroll = () => {
+			const currentY = Math.max(0, window.scrollY);
+			if (currentY <= 0) setHeaderHidden(false);
+			else if (currentY > previousY) setHeaderHidden(true);
+			else if (currentY < previousY) setHeaderHidden(false);
+			previousY = currentY;
+		};
+		window.addEventListener("scroll", onScroll, { passive: true });
+		return () => window.removeEventListener("scroll", onScroll);
+	}, []);
 
 	// The 202 carries no new data — the grid fills in when the fetch itself lands, a moment later.
 	useSeasonRefetchOnRunCompletion(runs.data);
@@ -63,7 +77,15 @@ export function AppLayout() {
 
 	return (
 		<Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
-			<AppBar position="sticky">
+			<AppBar
+				position="sticky"
+				inert={headerHidden}
+				sx={{
+					transform: headerHidden ? "translateY(-100%)" : "translateY(0)",
+					transition: "transform 180ms ease",
+					"@media (prefers-reduced-motion: reduce)": { transition: "none" },
+				}}
+			>
 				<Toolbar sx={{ gap: 2, flexWrap: "wrap" }}>
 					<Typography variant="h5" sx={{ whiteSpace: "nowrap" }}>
 						Anime Tracker

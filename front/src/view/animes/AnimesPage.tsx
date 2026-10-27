@@ -140,10 +140,8 @@ export function AnimesPage({ year, season }: Props) {
 		dub !== "any",
 	].filter(Boolean).length;
 
-	// Pinned per render pass so every countdown in the list is measured from the same instant.
-	const now = useMemo(() => new Date(), [data]);
-
-	const animes = data ?? [];
+	// Pin the countdown time and the empty list until the season data changes.
+	const { animes, now } = useMemo(() => ({ animes: data ?? [], now: new Date() }), [data]);
 	const availableGenres = useMemo(() => collectGenres(animes), [animes]);
 	const availableStudios = useMemo(() => collectStudios(animes), [animes]);
 	const visible = useMemo(
