@@ -24,6 +24,14 @@ public class MediaAssemblerTests
 		return new MediaAssembler().Convert(Summer2026, media);
 	}
 
+	[Fact]
+	public void Prefers_the_highest_resolution_cover_and_falls_back_to_large()
+	{
+		Convert("""{"id":1,"coverImage":{"extraLarge":"high","large":"medium"}}""").ImageUrl.ShouldBe("high");
+		Convert("""{"id":1,"coverImage":{"extraLarge":null,"large":"medium"}}""").ImageUrl.ShouldBe("medium");
+		Convert("""{"id":1}""").ImageUrl.ShouldBeEmpty();
+	}
+
 	[Theory]
 	[InlineData("TV", AnimeFormat.Tv)]
 	[InlineData("TV_SHORT", AnimeFormat.TvShort)]
