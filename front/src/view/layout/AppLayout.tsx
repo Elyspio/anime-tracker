@@ -71,7 +71,7 @@ export function AppLayout() {
 
 					<SeasonSelector year={selected.year} season={selected.season} onChange={change} />
 
-					<Stack direction="row" spacing={1.5} sx={{ ml: "auto", alignItems: "center" }}>
+					<Stack direction="row" sx={{ ml: "auto", width: { xs: "100%", md: "auto" }, minWidth: 0, flexWrap: "wrap", gap: 1.5, alignItems: "center" }}>
 						{/* Anonymous too: an empty grid is explained by whether a run has ever succeeded. */}
 						<SyncIndicator runs={runs.data} onOpen={() => setRunsOpen(true)} />
 
@@ -93,7 +93,7 @@ export function AppLayout() {
 							<>
 								<Divider orientation="vertical" flexItem sx={{ my: 1.25 }} />
 								{auth.name && (
-									<Stack direction="row" spacing={1} sx={{ alignItems: "center", minWidth: 0 }}>
+									<Stack direction="row" spacing={1} sx={{ alignItems: "center", minWidth: 0, maxWidth: "100%" }}>
 										<UserAvatar name={auth.name} />
 										<Typography variant="body2" noWrap sx={{ color: "text.secondary" }}>
 											{auth.name}
