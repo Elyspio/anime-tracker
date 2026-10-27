@@ -68,6 +68,7 @@ public class AniListAdapterTests
 		body.ShouldContain("\"season\":\"WINTER\"");
 		body.ShouldContain("\"year\":2027");
 		body.ShouldContain("\"page\":1");
+		body.ShouldContain("extraLarge");
 	}
 
 	[Fact]

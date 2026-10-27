@@ -24,7 +24,7 @@ internal static class SeasonQuery
 		      description(asHtml: false)
 		      title { romaji english native }
 		      synonyms
-		      coverImage { large }
+		      coverImage { extraLarge large }
 		      genres
 		      studios(isMain: true) { nodes { name } }
 		      stats { scoreDistribution { amount } }

@@ -37,7 +37,7 @@ internal sealed record Media(
 
 internal sealed record MediaTitle(string? Romaji, string? English, string? Native);
 
-internal sealed record CoverImage(string? Large);
+internal sealed record CoverImage(string? ExtraLarge, string? Large);
 
 internal sealed record StudioConnection(IReadOnlyList<Studio>? Nodes);
 

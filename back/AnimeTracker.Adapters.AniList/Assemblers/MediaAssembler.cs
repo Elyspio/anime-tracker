@@ -26,7 +26,7 @@ internal class MediaAssembler
 			AlternativeTitles = AlternativeTitles(media, title),
 			Description = media.Description?.Trim() ?? "",
 			Studio = media.Studios?.Nodes?.FirstOrDefault()?.Name ?? "",
-			ImageUrl = media.CoverImage?.Large ?? "",
+			ImageUrl = media.CoverImage?.ExtraLarge ?? media.CoverImage?.Large ?? "",
 			Url = media.SiteUrl ?? "",
 			Format = Format(media.Format),
 			IsAdult = media.IsAdult,
