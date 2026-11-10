@@ -3,7 +3,7 @@ namespace AnimeTracker.Abstractions.Models.Base.Anime;
 public record AnimeDate(int Year, AnimeSeason Season)
 {
 	/// <summary>
-	///     The season a given day belongs to, following the broadcast calendar Nautiljon indexes by:
+	///     The season a given day belongs to, following the broadcast calendar AniList indexes by:
 	///     three-month blocks starting in January.
 	/// </summary>
 	public static AnimeDate Current(DateOnly today)

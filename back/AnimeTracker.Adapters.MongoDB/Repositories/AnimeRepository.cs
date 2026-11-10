@@ -12,6 +12,13 @@ namespace AnimeTracker.Adapters.MongoDB.Repositories;
 internal class AnimeRepository(IMongoDatabase database, ILogger<AnimeRepository> logger)
 	: CrudRepository<AnimeEntity, AnimeBase>(database, logger), IAnimeRepository
 {
+	/// <summary>
+	///     Set once the indexes exist. Every read is by season or by studio, and without them each one
+	///     scans every anime of every season stored. Built on the write path, so a store nobody has
+	///     refreshed into is never asked to index anything. Not a Lazy: a failed attempt is retried.
+	/// </summary>
+	private volatile bool _indexed;
+
 	public async Task<List<AnimeEntity>> GetBySeason(AnimeDate date, CancellationToken cancellationToken = default)
 	{
 		using var trace = LogRepository($"{Log.F(date)}");
@@ -39,6 +46,8 @@ internal class AnimeRepository(IMongoDatabase database, ILogger<AnimeRepository>
 
 		if (animes.Count == 0) return;
 
+		await EnsureIndexes(cancellationToken);
+
 		var existing = (await EntityCollection.Find(SeasonFilter(date)).ToListAsync(cancellationToken))
 			.ToDictionary(anime => anime.SourceId);
 
@@ -56,6 +65,15 @@ internal class AnimeRepository(IMongoDatabase database, ILogger<AnimeRepository>
 		});
 
 		await EntityCollection.BulkWriteAsync(operations, new BulkWriteOptions { IsOrdered = false }, cancellationToken);
+	}
+
+	private async Task EnsureIndexes(CancellationToken cancellationToken)
+	{
+		if (_indexed) return;
+
+		await CreateIndexIfMissing([$"{nameof(AnimeBase.Date)}.{nameof(AnimeDate.Year)}", $"{nameof(AnimeBase.Date)}.{nameof(AnimeDate.Season)}"], false, cancellationToken);
+		await CreateIndexIfMissing([nameof(AnimeBase.StudioId)], false, cancellationToken);
+		_indexed = true;
 	}
 
 	private static FilterDefinition<AnimeEntity> SeasonFilter(AnimeDate date)
