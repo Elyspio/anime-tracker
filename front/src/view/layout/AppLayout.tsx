@@ -1,28 +1,51 @@
-import { useEffect, useState } from "react";
-import { AppBar, Box, Button, Container, Divider, Stack, Toolbar, Typography } from "@mui/material";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AppBar, Box, Button, Container, Divider, Link, Stack, Toolbar, Typography } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import { Link as RouterLink, Outlet, ScrollRestoration, useNavigate, useParams } from "react-router";
 import { useSnackbar } from "notistack";
 import { useAppAuth } from "@/core/auth/AuthProvider";
+import { apiErrorMessage } from "@/core/api/errors";
 import { useRefreshSeason } from "@/core/api/mutations";
 import { useRefreshRuns, useSeasonRefetchOnRunCompletion } from "@/core/api/queries";
 import { findRunFor } from "@/core/refreshRuns";
 import { currentSeason } from "@/core/binge";
-import { AnimesPage } from "@/view/animes/AnimesPage";
+import { defaultSeasonFilters, type SeasonFilters } from "@/core/filters";
+import { homePath, parseSeasonPath, seasonPath } from "@/core/routes";
 import { RefreshRunsDrawer } from "@/view/layout/RefreshRunsDrawer";
 import { DubCasesDrawer } from "@/view/layout/DubCasesDrawer";
 import { SeasonSelector } from "@/view/layout/SeasonSelector";
 import { SyncIndicator } from "@/view/layout/SyncIndicator";
 import { ThemeToggle } from "@/view/layout/ThemeToggle";
 import { UserAvatar } from "@/view/layout/UserAvatar";
-import type { AnimeSeason } from "@/core/api/types";
+import type { LayoutContext } from "@/view/layout/layoutContext";
+import type { AnimeDate, AnimeSeason } from "@/core/api/types";
+
+function sameSeason(left: AnimeDate, right: AnimeDate): boolean {
+	return left.year === right.year && left.season === right.season;
+}
 
 export function AppLayout() {
 	const auth = useAppAuth();
 	const refresh = useRefreshSeason();
 	const { enqueueSnackbar } = useSnackbar();
 	const runs = useRefreshRuns();
+	const navigate = useNavigate();
+	const params = useParams();
 
-	const [selected, setSelected] = useState(() => currentSeason(new Date()));
+	const [today] = useState(() => currentSeason(new Date()));
+	const onStudio = params.studioId !== undefined;
+
+	// The address names the season. A studio's address names none, so the selector keeps showing the
+	// one the reader came from — which is also where it takes them back to.
+	const routed = onStudio ? null : (parseSeasonPath(params.year, params.season) ?? today);
+	const [lastSeason, setLastSeason] = useState(routed ?? today);
+	if (routed && !sameSeason(routed, lastSeason)) setLastSeason(routed);
+	const selected = routed ?? lastSeason;
+
+	const [filters, setFiltersState] = useState<SeasonFilters>(defaultSeasonFilters);
+	const setFilters = useCallback((patch: Partial<SeasonFilters>) => setFiltersState((previous) => ({ ...previous, ...patch })), []);
+	const resetFilters = useCallback(() => setFiltersState(defaultSeasonFilters), []);
+
 	const [runsOpen, setRunsOpen] = useState(false);
 	const [dubCasesOpen, setDubCasesOpen] = useState(false);
 	const [headerHidden, setHeaderHidden] = useState(false);
@@ -58,22 +81,21 @@ export function AppLayout() {
 					return;
 				}
 
-				enqueueSnackbar("Refresh queued — the season will update in a moment", {
+				enqueueSnackbar("Refresh queued. The season will update in a moment", {
 					variant: "info",
 				});
 			},
 			// The API is the authority on who may refresh: render its refusal rather than
 			// deciding from the token what to show.
-			onError: (error) =>
-				enqueueSnackbar(error instanceof Error ? error.message : "Refresh failed", {
-					variant: "error",
-				}),
+			onError: (error) => enqueueSnackbar(apiErrorMessage(error, "Refresh failed"), { variant: "error" }),
 		});
 
-	const change = (year: number, season: AnimeSeason) => setSelected({ year, season });
+	const change = (year: number, season: AnimeSeason) => void navigate(seasonPath({ year, season }));
 
 	// No N-of-M any more: one fetch has no halfway point, so the button just says it is busy.
 	const refreshLabel = currentRun ? "Refreshing…" : "Refresh";
+
+	const context = useMemo<LayoutContext>(() => ({ season: selected, filters, setFilters, resetFilters }), [selected, filters, setFilters, resetFilters]);
 
 	return (
 		<Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
@@ -87,9 +109,11 @@ export function AppLayout() {
 				}}
 			>
 				<Toolbar sx={{ gap: 2, flexWrap: "wrap" }}>
-					<Typography variant="h5" sx={{ whiteSpace: "nowrap" }}>
-						Anime Tracker
-					</Typography>
+					<Link component={RouterLink} to={homePath} underline="none" color="inherit" aria-label="Anime Tracker, current season" sx={{ borderRadius: 0.5 }}>
+						<Typography variant="h5" component="span" sx={{ whiteSpace: "nowrap" }}>
+							Anime Tracker
+						</Typography>
+					</Link>
 
 					<SeasonSelector year={selected.year} season={selected.season} onChange={change} />
 
@@ -97,13 +121,14 @@ export function AppLayout() {
 						{/* Anonymous too: an empty grid is explained by whether a run has ever succeeded. */}
 						<SyncIndicator runs={runs.data} onOpen={() => setRunsOpen(true)} />
 
-						{auth.isAuthenticated && (
+						{/* Both act on a season, and a studio's page is not one: it carries its own refresh. */}
+						{auth.isAuthenticated && !onStudio && (
 							<Button startIcon={<RefreshIcon fontSize="small" />} onClick={runRefresh} loading={refresh.isPending} variant="outlined" size="small">
 								{refreshLabel}
 							</Button>
 						)}
 
-						{auth.isAuthenticated && (
+						{auth.isAuthenticated && !onStudio && (
 							<Button onClick={() => setDubCasesOpen(true)} variant="outlined" size="small">
 								Dub matches
 							</Button>
@@ -135,13 +160,16 @@ export function AppLayout() {
 				</Toolbar>
 			</AppBar>
 
-			<Container maxWidth="xl" sx={{ py: 3 }}>
-				<AnimesPage year={selected.year} season={selected.season} />
+			<Container maxWidth="xl" component="main" sx={{ py: 3 }}>
+				<Outlet context={context} />
 			</Container>
 
 			<DubCasesDrawer open={dubCasesOpen} onClose={() => setDubCasesOpen(false)} year={selected.year} season={selected.season} />
 
 			<RefreshRunsDrawer open={runsOpen} onClose={() => setRunsOpen(false)} runs={runs.data} isPending={runs.isPending} error={runs.error} />
+
+			{/* Back from a studio lands where the reader left the season, not at its top. */}
+			<ScrollRestoration />
 		</Box>
 	);
 }

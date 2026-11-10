@@ -20,7 +20,8 @@ export function SyncIndicator({ runs, onOpen }: Props) {
 		.sort()
 		.at(-1);
 
-	const label = active ? "Refreshing" : lastFinished ? formatInstant(lastFinished) : "Never";
+	// One statement, not a prefix and a value: "Synced Refreshing" was two half-sentences.
+	const label = active ? "Refreshing" : lastFinished ? `Synced ${formatInstant(lastFinished)}` : "Never synced";
 
 	return (
 		<Tooltip title="Refreshes">
@@ -40,7 +41,7 @@ export function SyncIndicator({ runs, onOpen }: Props) {
 							}}
 						/>
 					)}
-					<Eyebrow>Synced {label}</Eyebrow>
+					<Eyebrow>{label}</Eyebrow>
 				</Stack>
 			</ButtonBase>
 		</Tooltip>

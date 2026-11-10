@@ -1,6 +1,9 @@
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { List, ListItemButton, ListItemIcon, ListItemText, Popover, Typography } from "@mui/material";
+import VideoLibraryOutlinedIcon from "@mui/icons-material/VideoLibraryOutlined";
+import { Divider, List, ListItemButton, ListItemIcon, ListItemText, Popover, Typography } from "@mui/material";
+import { Link as RouterLink } from "react-router";
 import { destinationsOf } from "@/core/destinations";
+import { studioPath } from "@/core/routes";
 import { PlatformLogo } from "@/view/components/PlatformLogo";
 import type { Anime } from "@/core/api/types";
 
@@ -16,10 +19,12 @@ interface Props {
 
 /**
  * What a click on an anime opens. A card used to be one link to the source; it is now a choice
- * between the source and each platform the anime can be watched on, so the choice sits here.
+ * between the source and each platform the anime can be watched on, so the choice sits here — and
+ * below it, the one destination that stays in the app: everything else its studio made.
  */
 export function DestinationsPopover({ target, onClose }: Props) {
 	const destinations = target ? destinationsOf(target.anime) : [];
+	const studio = target && target.anime.studioId !== null && target.anime.studio !== "" ? { id: target.anime.studioId, name: target.anime.studio } : null;
 
 	return (
 		<Popover
@@ -54,6 +59,21 @@ export function DestinationsPopover({ target, onClose }: Props) {
 						</ListItemButton>
 					))}
 				</List>
+			)}
+
+			{/* Absent until the season is refreshed: a studio stored by name alone has no page to go to. */}
+			{studio && (
+				<>
+					<Divider />
+					<List dense disablePadding sx={{ py: 0.5 }}>
+						<ListItemButton component={RouterLink} to={studioPath(studio.id)} onClick={onClose}>
+							<ListItemIcon sx={{ minWidth: 32 }}>
+								<VideoLibraryOutlinedIcon sx={{ fontSize: 20, color: "text.primary" }} />
+							</ListItemIcon>
+							<ListItemText primary={`More from ${studio.name}`} slotProps={{ primary: { noWrap: true } }} />
+						</ListItemButton>
+					</List>
+				</>
 			)}
 		</Popover>
 	);
