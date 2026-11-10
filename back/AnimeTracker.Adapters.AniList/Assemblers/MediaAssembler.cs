@@ -72,7 +72,8 @@ internal class MediaAssembler
 	{
 		if (SeasonQuery.ParseSeason(media.Season) is { } season && media.SeasonYear is { } seasonYear) return new AnimeDate(seasonYear, season);
 
-		return start is { Month: >= 1 and <= 12 } ? AnimeDate.Current(new DateOnly(start.Year, start.Month.Value, 1)) : null;
+		// The source is edited by hand: a year no calendar holds must not cost the studio its whole filmography.
+		return start is { Year: >= 1 and <= 9999, Month: >= 1 and <= 12 } ? AnimeDate.Current(new DateOnly(start.Year, start.Month.Value, 1)) : null;
 	}
 
 	/// <summary>
