@@ -38,6 +38,20 @@ Glossaire du domaine. Uniquement du vocabulaire — aucun détail d'implémentat
 - **Run VF** : exécution de la synchro VF d'une saison, mise en file par un refresh AniList réussi.
   Distinct du run de refresh, avec son propre statut.
 
+## Studio
+
+- **Studio principal** : le studio crédité en premier comme producteur principal d'un anime. Un anime
+  n'en a qu'un ici, même en co-production.
+- **Filmographie** : toutes les œuvres dont un studio est le studio principal, de la plus récente à la
+  plus ancienne. Lue chez AniList à la première consultation, puis conservée telle quelle : seul un
+  admin la rafraîchit.
+- **Œuvre** : une entrée de filmographie — série, film, OVA, spécial. Plus légère qu'un anime de
+  saison : ni calendrier ni compte à rebours. Les clips musicaux n'en font pas partie.
+- **Œuvre non datée** : œuvre annoncée sans date de début. Placée en tête de filmographie, avant
+  l'année la plus récente : c'est ce que le studio a de plus neuf.
+- **Date partielle** : date de début dont AniList ne publie que l'année, ou l'année et le mois. Jamais
+  complétée par un 1er supposé.
+
 ## Appréciation
 
 - **Note** : moyenne des notes attribuées par les membres, sur 10. Absente tant que personne n'a noté l'anime.
