@@ -1,4 +1,5 @@
 using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Base.Studios;
 using AnimeTracker.Adapters.AniList.GraphQL;
 
 namespace AnimeTracker.Adapters.AniList.Assemblers;
@@ -16,7 +17,8 @@ internal class MediaAssembler
 
 	public AnimeBase Convert(AnimeDate date, Media media)
 	{
-		var title = Title(media);
+		var title = Title(media.Title);
+		var studio = media.Studios?.Nodes?.FirstOrDefault();
 
 		return new AnimeBase
 		{
@@ -25,8 +27,9 @@ internal class MediaAssembler
 			Title = title,
 			AlternativeTitles = AlternativeTitles(media, title),
 			Description = media.Description?.Trim() ?? "",
-			Studio = media.Studios?.Nodes?.FirstOrDefault()?.Name ?? "",
-			ImageUrl = media.CoverImage?.ExtraLarge ?? media.CoverImage?.Large ?? "",
+			Studio = studio?.Name ?? "",
+			StudioId = studio?.Id,
+			ImageUrl = Cover(media.CoverImage),
 			Url = media.SiteUrl ?? "",
 			Format = Format(media.Format),
 			IsAdult = media.IsAdult,
@@ -41,16 +44,52 @@ internal class MediaAssembler
 		};
 	}
 
+	/// <summary>One entry of a studio's filmography: what it takes to list the work, and no schedule.</summary>
+	public StudioWork ConvertWork(StudioMedia media)
+	{
+		var start = media.StartDate?.Year is { } year ? new StudioWorkDate(year, media.StartDate.Month, media.StartDate.Day) : null;
+
+		return new StudioWork
+		{
+			SourceId = media.Id,
+			Title = Title(media.Title),
+			ImageUrl = Cover(media.CoverImage),
+			Url = media.SiteUrl ?? "",
+			Format = Format(media.Format),
+			IsAdult = media.IsAdult,
+			Score = media.AverageScore is { } average ? average / 10d : null,
+			EpisodesCount = media.Episodes,
+			StartDate = start,
+			Season = Season(media, start)
+		};
+	}
+
+	/// <summary>
+	///     The source's own season when it names one. It leaves it out for a fair share of specials and
+	///     films, and those still started in a month — which is all a season is.
+	/// </summary>
+	private static AnimeDate? Season(StudioMedia media, StudioWorkDate? start)
+	{
+		if (SeasonQuery.ParseSeason(media.Season) is { } season && media.SeasonYear is { } seasonYear) return new AnimeDate(seasonYear, season);
+
+		return start is { Month: >= 1 and <= 12 } ? AnimeDate.Current(new DateOnly(start.Year, start.Month.Value, 1)) : null;
+	}
+
 	/// <summary>
 	///     Romaji first: it is how the community and every simulcast catalogue name a show, and many
 	///     anime never get an English title at all.
 	/// </summary>
-	private static string Title(Media media)
+	private static string Title(MediaTitle? title)
 	{
-		var romaji = media.Title?.Romaji;
+		var romaji = title?.Romaji;
 		if (!string.IsNullOrWhiteSpace(romaji)) return romaji.Trim();
 
-		return media.Title?.English?.Trim() ?? "";
+		return title?.English?.Trim() ?? "";
+	}
+
+	private static string Cover(CoverImage? cover)
+	{
+		return cover?.ExtraLarge ?? cover?.Large ?? "";
 	}
 
 	/// <summary>

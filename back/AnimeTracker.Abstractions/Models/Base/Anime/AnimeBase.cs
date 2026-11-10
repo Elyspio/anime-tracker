@@ -24,7 +24,14 @@ public class AnimeBase
 
 	public required string Description { get; set; }
 
+	/// <summary>The name of the first main studio. Empty when none was credited.</summary>
 	public required string Studio { get; set; }
+
+	/// <summary>
+	///     That studio's id on the source, which is what its filmography is keyed by. Not required:
+	///     documents stored before the field existed read back null until their season is refreshed.
+	/// </summary>
+	public int? StudioId { get; set; }
 
 	public required string ImageUrl { get; set; }
 

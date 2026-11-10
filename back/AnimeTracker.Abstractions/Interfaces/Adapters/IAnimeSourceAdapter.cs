@@ -1,4 +1,5 @@
 using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Base.Studios;
 
 namespace AnimeTracker.Abstractions.Interfaces.Adapters;
 
@@ -9,4 +10,10 @@ namespace AnimeTracker.Abstractions.Interfaces.Adapters;
 public interface IAnimeSourceAdapter
 {
 	Task<AnimeBase[]> GetSeason(AnimeDate date, CancellationToken cancellationToken = default);
+
+	/// <summary>
+	///     Everything a studio was the main studio of, in whatever order the source pages them. Null
+	///     when the source knows no studio by that id.
+	/// </summary>
+	Task<StudioFilmographyBase?> GetStudio(int studioId, CancellationToken cancellationToken = default);
 }

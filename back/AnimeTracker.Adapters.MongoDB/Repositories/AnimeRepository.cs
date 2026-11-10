@@ -26,6 +26,13 @@ internal class AnimeRepository(IMongoDatabase database, ILogger<AnimeRepository>
 		return await EntityCollection.Find(Filter.Eq(anime => anime.SourceId, sourceId)).FirstOrDefaultAsync(cancellationToken);
 	}
 
+	public async Task<bool> HasStudio(int studioId, CancellationToken cancellationToken = default)
+	{
+		using var trace = LogRepository($"{Log.F(studioId)}");
+
+		return await EntityCollection.Find(Filter.Eq(anime => anime.StudioId, studioId)).AnyAsync(cancellationToken);
+	}
+
 	public async Task Refresh(AnimeDate date, IReadOnlyCollection<AnimeBase> animes, CancellationToken cancellationToken = default)
 	{
 		using var trace = LogRepository($"{Log.F(date)} {Log.F(animes.Count)}");

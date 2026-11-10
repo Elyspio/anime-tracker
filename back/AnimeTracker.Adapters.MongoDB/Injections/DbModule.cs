@@ -33,6 +33,7 @@ public static class DbModule
 		services.AddSingleton<IRefreshRunRepository, RefreshRunRepository>();
 		services.AddSingleton<IDubMatchRepository, DubMatchRepository>();
 		services.AddSingleton<IDubOverrideRepository, DubOverrideRepository>();
+		services.AddSingleton<IStudioFilmographyRepository, StudioFilmographyRepository>();
 
 		return services;
 	}

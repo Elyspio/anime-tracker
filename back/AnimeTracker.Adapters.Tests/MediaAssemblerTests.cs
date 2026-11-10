@@ -1,5 +1,6 @@
 using System.Text.Json;
 using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Base.Studios;
 using AnimeTracker.Adapters.AniList.Assemblers;
 using AnimeTracker.Adapters.AniList.GraphQL;
 using Shouldly;
@@ -224,5 +225,80 @@ public class MediaAssemblerTests
 		anime.Episodes.ShouldBeEmpty();
 		anime.StreamingLinks.ShouldBeEmpty();
 		anime.Popularity.ShouldBe(0);
+	}
+
+	[Fact]
+	public void Keeps_the_id_of_the_first_main_studio_beside_its_name()
+	{
+		var anime = Convert("""{"id":1,"studios":{"nodes":[{"id":6309,"name":"Studio Bind"},{"id":11,"name":"MADHOUSE"}]}}""");
+
+		anime.Studio.ShouldBe("Studio Bind");
+		anime.StudioId.ShouldBe(6309);
+	}
+
+	[Fact]
+	public void Leaves_the_studio_id_null_when_no_studio_is_credited()
+	{
+		// Without an id there is no filmography to link to, and the card says "Unknown studio".
+		Convert("""{"id":1,"studios":{"nodes":[]}}""").StudioId.ShouldBeNull();
+		Convert("""{"id":1}""").StudioId.ShouldBeNull();
+	}
+
+	private static StudioWork Work(string node)
+	{
+		return new MediaAssembler().ConvertWork(JsonSerializer.Deserialize<StudioMedia>(node, Json)!);
+	}
+
+	[Fact]
+	public void A_work_nobody_dated_has_no_start_date_and_no_season()
+	{
+		var work = Work("""{"id":1,"startDate":{"year":null,"month":null,"day":null}}""");
+
+		work.StartDate.ShouldBeNull();
+		work.Season.ShouldBeNull();
+		Work("""{"id":1}""").StartDate.ShouldBeNull();
+	}
+
+	[Fact]
+	public void A_month_without_a_year_is_not_a_date()
+	{
+		Work("""{"id":1,"startDate":{"year":null,"month":7,"day":4}}""").StartDate.ShouldBeNull();
+	}
+
+	[Fact]
+	public void Prefers_the_season_the_source_names_over_the_start_month()
+	{
+		// A show that premieres in the last days of December is listed under the winter it runs in.
+		var work = Work("""{"id":1,"startDate":{"year":2024,"month":12,"day":28},"season":"WINTER","seasonYear":2025}""");
+
+		work.Season.ShouldBe(new AnimeDate(2025, AnimeSeason.Winter));
+	}
+
+	[Theory]
+	[InlineData(1, AnimeSeason.Winter)]
+	[InlineData(4, AnimeSeason.Spring)]
+	[InlineData(9, AnimeSeason.Summer)]
+	[InlineData(10, AnimeSeason.Fall)]
+	public void Derives_a_missing_season_from_the_start_month(int month, AnimeSeason expected)
+	{
+		Work($$$"""{"id":1,"startDate":{"year":2020,"month":{{{month}}},"day":null}}""").Season.ShouldBe(new AnimeDate(2020, expected));
+	}
+
+	[Fact]
+	public void Names_no_season_for_a_month_that_is_not_one()
+	{
+		Work("""{"id":1,"startDate":{"year":2020,"month":13,"day":null}}""").Season.ShouldBeNull();
+	}
+
+	[Fact]
+	public void Maps_a_work_with_nothing_but_an_id()
+	{
+		var work = Work("""{"id":1}""");
+
+		work.Title.ShouldBeEmpty();
+		work.ImageUrl.ShouldBeEmpty();
+		work.Url.ShouldBeEmpty();
+		work.Format.ShouldBe(AnimeFormat.Unknown);
+		work.Score.ShouldBeNull();
 	}
 }

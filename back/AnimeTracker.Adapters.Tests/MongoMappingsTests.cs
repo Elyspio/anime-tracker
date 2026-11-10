@@ -1,6 +1,7 @@
 using AnimeTracker.Abstractions.Models.Base.Anime;
 using AnimeTracker.Abstractions.Models.Base.Dub;
 using AnimeTracker.Abstractions.Models.Base.Refresh;
+using AnimeTracker.Abstractions.Models.Base.Studios;
 using AnimeTracker.Abstractions.Models.Entities;
 using AnimeTracker.Adapters.MongoDB.Technical;
 using MongoDB.Bson;
@@ -153,6 +154,7 @@ public class MongoMappingsTests
 			AlternativeTitles = ["Mushoku Tensei: Jobless Reincarnation Season 3", "無職転生 Ⅲ"],
 			Description = "",
 			Studio = "Studio Bind",
+			StudioId = 6309,
 			ImageUrl = "https://s4.anilist.co/cover.jpg",
 			Url = "https://anilist.co/anime/178789",
 			Format = AnimeFormat.Tv,
@@ -169,6 +171,7 @@ public class MongoMappingsTests
 		var restored = BsonSerializer.Deserialize<AnimeEntity>(Serialize(anime));
 
 		restored.SourceId.ShouldBe(178789);
+		restored.StudioId.ShouldBe(6309);
 		restored.Format.ShouldBe(AnimeFormat.Tv);
 		restored.Score.ShouldBe(8.5);
 		restored.VotesCount.ShouldBe(9119);
@@ -259,5 +262,121 @@ public class MongoMappingsTests
 		restored.Score.ShouldBeNull();
 		restored.VotesCount.ShouldBeNull();
 		restored.EpisodesCount.ShouldBeNull();
+	}
+
+	[Fact]
+	public void Reads_an_anime_stored_before_studio_ids_existed_as_having_none()
+	{
+		// No id, no link to a filmography — until the season is refreshed and brings one.
+		var document = Serialize(new AnimeEntity
+		{
+			SourceId = 1,
+			Date = new AnimeDate(2026, AnimeSeason.Summer),
+			Title = "",
+			Description = "",
+			Studio = "Studio Bind",
+			StudioId = 6309,
+			ImageUrl = "",
+			Url = "",
+			Format = AnimeFormat.Unknown,
+			IsAdult = false,
+			Score = null,
+			Popularity = 0,
+			VotesCount = null,
+			EpisodesCount = null,
+			Genres = [],
+			Episodes = []
+		});
+		document.Remove("StudioId");
+
+		var restored = BsonSerializer.Deserialize<AnimeEntity>(document);
+
+		restored.Studio.ShouldBe("Studio Bind");
+		restored.StudioId.ShouldBeNull();
+	}
+
+	private static StudioFilmographyEntity Filmography()
+	{
+		return new StudioFilmographyEntity
+		{
+			StudioId = 6309,
+			Name = "Studio Bind",
+			Url = "https://anilist.co/studio/6309",
+			FetchedAt = new DateTimeOffset(2026, 11, 10, 12, 0, 0, TimeSpan.Zero),
+			Works =
+			[
+				new StudioWork
+				{
+					SourceId = 217434,
+					Title = "Announced",
+					ImageUrl = "",
+					Url = "https://anilist.co/anime/217434",
+					Format = AnimeFormat.Tv,
+					IsAdult = false,
+					Score = null,
+					EpisodesCount = null,
+					StartDate = new StudioWorkDate(2027, null, null),
+					Season = null
+				},
+				new StudioWork
+				{
+					SourceId = 178789,
+					Title = "Mushoku Tensei III",
+					ImageUrl = "https://s4.anilist.co/cover.jpg",
+					Url = "https://anilist.co/anime/178789",
+					Format = AnimeFormat.Movie,
+					IsAdult = true,
+					Score = 8.6,
+					EpisodesCount = 14,
+					StartDate = new StudioWorkDate(2026, 7, 4),
+					Season = new AnimeDate(2026, AnimeSeason.Summer)
+				},
+				new StudioWork
+				{
+					SourceId = 3,
+					Title = "Undated",
+					ImageUrl = "",
+					Url = "",
+					Format = AnimeFormat.Unknown,
+					IsAdult = false,
+					Score = null,
+					EpisodesCount = null,
+					StartDate = null,
+					Season = null
+				}
+			]
+		};
+	}
+
+	[Fact]
+	public void Round_trips_a_studio_filmography()
+	{
+		var document = Serialize(Filmography());
+		var restored = BsonSerializer.Deserialize<StudioFilmographyEntity>(document);
+
+		restored.StudioId.ShouldBe(6309);
+		restored.Name.ShouldBe("Studio Bind");
+		restored.FetchedAt.ShouldBe(Filmography().FetchedAt);
+
+		var works = restored.Works.ToArray();
+
+		works[0].StartDate.ShouldBe(new StudioWorkDate(2027, null, null));
+		works[0].Season.ShouldBeNull();
+		works[0].Score.ShouldBeNull();
+		works[1].StartDate.ShouldBe(new StudioWorkDate(2026, 7, 4));
+		works[1].Season.ShouldBe(new AnimeDate(2026, AnimeSeason.Summer));
+		works[1].Score.ShouldBe(8.6);
+		works[1].IsAdult.ShouldBeTrue();
+		works[2].StartDate.ShouldBeNull();
+	}
+
+	[Fact]
+	public void Stores_the_enums_of_a_work_as_names_and_no_id_before_the_store_gives_one()
+	{
+		var document = Serialize(Filmography());
+
+		document.Contains("_id").ShouldBeFalse();
+		document["Works"][1]["Format"].AsString.ShouldBe("Movie");
+		document["Works"][1]["Season"]["Season"].AsString.ShouldBe("Summer");
 	}
 }

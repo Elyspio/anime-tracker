@@ -41,7 +41,34 @@ internal sealed record CoverImage(string? ExtraLarge, string? Large);
 
 internal sealed record StudioConnection(IReadOnlyList<Studio>? Nodes);
 
-internal sealed record Studio(string? Name);
+internal sealed record Studio(int? Id, string? Name);
+
+internal sealed record StudioData([property: JsonPropertyName("Studio")] StudioDetails? Studio);
+
+internal sealed record StudioDetails(int Id, string? Name, string? SiteUrl, StudioMediaConnection? Media);
+
+internal sealed record StudioMediaConnection(PageInfo? PageInfo, IReadOnlyList<StudioMedia>? Nodes);
+
+/// <summary>
+///     A media node as the studio query asks for it: enough to list a work, not to predict anything.
+///     <paramref name="Type" /> is ANIME or MANGA — a studio's media is not filtered by type upstream.
+/// </summary>
+internal sealed record StudioMedia(
+	int Id,
+	string? SiteUrl,
+	string? Type,
+	string? Format,
+	bool IsAdult,
+	int? Episodes,
+	int? AverageScore,
+	MediaTitle? Title,
+	CoverImage? CoverImage,
+	FuzzyDate? StartDate,
+	string? Season,
+	int? SeasonYear);
+
+/// <summary>AniList's date: each part is published on its own, and any of them can be missing.</summary>
+internal sealed record FuzzyDate(int? Year, int? Month, int? Day);
 
 internal sealed record MediaStats(IReadOnlyList<ScoreBucket>? ScoreDistribution);
 

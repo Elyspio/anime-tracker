@@ -21,6 +21,7 @@ public static class AnimeAssembler
 			AlternativeTitles = entity.AlternativeTitles,
 			Description = entity.Description,
 			Studio = entity.Studio,
+			StudioId = entity.StudioId,
 			ImageUrl = entity.ImageUrl,
 			Url = entity.Url,
 			Format = entity.Format,

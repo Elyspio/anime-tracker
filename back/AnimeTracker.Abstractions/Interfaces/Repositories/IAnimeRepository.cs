@@ -10,6 +10,9 @@ public interface IAnimeRepository : ICrudRepository<AnimeEntity, AnimeBase>
 	/// <summary>The anime with this AniList id, whatever its season.</summary>
 	Task<AnimeEntity?> GetBySourceId(int sourceId, CancellationToken cancellationToken = default);
 
+	/// <summary>Whether any stored anime credits this studio as its main one.</summary>
+	Task<bool> HasStudio(int studioId, CancellationToken cancellationToken = default);
+
 	/// <summary>
 	///     Replaces a season with what the source just returned, keyed by the source's own id.
 	///     Nothing is merged with what was stored: the fetch carries every field, episodes included,
