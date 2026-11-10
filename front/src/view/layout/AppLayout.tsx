@@ -33,7 +33,7 @@ export function AppLayout() {
 	const params = useParams();
 
 	const [today] = useState(() => currentSeason(new Date()));
-	const onStudio = params.studioId !== undefined;
+	const onStudio = params.studioId !== undefined || params.sourceId !== undefined;
 
 	// The address names the season. A studio's address names none, so the selector keeps showing the
 	// one the reader came from — which is also where it takes them back to.

@@ -10,6 +10,7 @@ export const qk = {
 	refreshRuns: () => ["refresh-runs"] as const,
 	dubCases: (year: number, season: AnimeSeason) => ["dub-cases", year, season] as const,
 	studio: (studioId: number) => ["studio", studioId] as const,
+	studioOfAnime: (sourceId: number) => ["studio-of-anime", sourceId] as const,
 };
 
 export function useAnimes(year: number, season: AnimeSeason) {
@@ -33,6 +34,31 @@ export function useStudio(studioId: number | null) {
 		enabled: studioId !== null,
 		staleTime: Infinity,
 		// A 404 is an answer: asking again would only ask AniList again.
+		retry: false,
+	});
+}
+
+/**
+ * The filmography of the studio an anime credits, for an anime stored without its studio's id. The
+ * API names the studio and keeps it on the anime, so the answer also goes into the studio's own cache
+ * entry — the page moves to the studio's address without asking twice — and the seasons are marked
+ * stale, since one of their animes just gained an id.
+ */
+export function useStudioOfAnime(sourceId: number | null) {
+	const queryClient = useQueryClient();
+
+	return useQuery({
+		queryKey: qk.studioOfAnime(sourceId ?? 0),
+		queryFn: async () => {
+			const studio = (await http.get<StudioFilmography>(`/api/animes/${sourceId}/studio`)).data;
+
+			queryClient.setQueryData(qk.studio(studio.studioId), studio);
+			void queryClient.invalidateQueries({ queryKey: ["animes"] });
+
+			return studio;
+		},
+		enabled: sourceId !== null,
+		staleTime: Infinity,
 		retry: false,
 	});
 }

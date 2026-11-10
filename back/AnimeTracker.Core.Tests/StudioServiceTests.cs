@@ -224,6 +224,91 @@ public class StudioServiceTests
 		studio.Works.Select(work => work.SourceId).ShouldBe([1]);
 	}
 
+	private static AnimeEntity Anime(int sourceId, int? studioId)
+	{
+		return new AnimeEntity
+		{
+			SourceId = sourceId,
+			Date = new AnimeDate(2026, AnimeSeason.Summer),
+			Title = "Mushoku Tensei III",
+			Description = "",
+			Studio = "Studio Bind",
+			StudioId = studioId,
+			ImageUrl = "",
+			Url = "",
+			Format = AnimeFormat.Tv,
+			IsAdult = false,
+			Score = null,
+			Popularity = 0,
+			VotesCount = null,
+			EpisodesCount = null,
+			Genres = [],
+			Episodes = []
+		};
+	}
+
+	[Fact]
+	public async Task Resolves_the_studio_of_an_anime_stored_without_one_and_keeps_it()
+	{
+		_animes.GetBySourceId(178789, Arg.Any<CancellationToken>()).Returns(Anime(178789, null));
+		_source.GetMainStudio(178789, Arg.Any<CancellationToken>()).Returns(new StudioReference(StudioId, "Studio Bind"));
+		// Once written on the anime, the studio is one a stored anime credits.
+		_animes.When(animes => animes.SetStudio(178789, Arg.Any<StudioReference>(), Arg.Any<CancellationToken>())).Do(_ => Credited());
+		_source.GetStudio(StudioId, Arg.Any<CancellationToken>()).Returns(Source(Work(1, new StudioWorkDate(2024, 4, 8))));
+
+		var studio = await _service.GetByAnime(178789, TestContext.Current.CancellationToken);
+
+		studio.StudioId.ShouldBe(StudioId);
+		studio.Works.Single().SourceId.ShouldBe(1);
+		await _animes.Received(1).SetStudio(178789, new StudioReference(StudioId, "Studio Bind"), Arg.Any<CancellationToken>());
+	}
+
+	[Fact]
+	public async Task Does_not_ask_the_source_which_studio_when_the_anime_already_says()
+	{
+		_animes.GetBySourceId(178789, Arg.Any<CancellationToken>()).Returns(Anime(178789, StudioId));
+		Stored(Work(1, new StudioWorkDate(2024, 4, 8)));
+
+		var studio = await _service.GetByAnime(178789, TestContext.Current.CancellationToken);
+
+		studio.StudioId.ShouldBe(StudioId);
+		await _source.DidNotReceiveWithAnyArgs().GetMainStudio(default, TestContext.Current.CancellationToken);
+		await _animes.DidNotReceiveWithAnyArgs().SetStudio(default, default!, TestContext.Current.CancellationToken);
+	}
+
+	[Fact]
+	public async Task Refuses_an_anime_that_is_not_stored_without_asking_the_source()
+	{
+		var error = await Should.ThrowAsync<HttpException>(() => _service.GetByAnime(42, TestContext.Current.CancellationToken));
+
+		error.Code.ShouldBe(HttpStatusCode.NotFound);
+		await _source.DidNotReceiveWithAnyArgs().GetMainStudio(default, TestContext.Current.CancellationToken);
+	}
+
+	[Fact]
+	public async Task Answers_404_for_an_anime_the_source_credits_no_main_studio()
+	{
+		_animes.GetBySourceId(178789, Arg.Any<CancellationToken>()).Returns(Anime(178789, null));
+		_source.GetMainStudio(178789, Arg.Any<CancellationToken>()).Returns((StudioReference?)null);
+
+		var error = await Should.ThrowAsync<HttpException>(() => _service.GetByAnime(178789, TestContext.Current.CancellationToken));
+
+		error.Code.ShouldBe(HttpStatusCode.NotFound);
+		error.Message.ShouldContain("Mushoku Tensei III");
+		await _animes.DidNotReceiveWithAnyArgs().SetStudio(default, default!, TestContext.Current.CancellationToken);
+	}
+
+	[Fact]
+	public async Task Reports_a_failure_to_name_the_studio_as_a_bad_gateway()
+	{
+		_animes.GetBySourceId(178789, Arg.Any<CancellationToken>()).Returns(Anime(178789, null));
+		_source.GetMainStudio(178789, Arg.Any<CancellationToken>()).ThrowsAsync(new HttpRequestException("down"));
+
+		var error = await Should.ThrowAsync<HttpException>(() => _service.GetByAnime(178789, TestContext.Current.CancellationToken));
+
+		error.Code.ShouldBe(HttpStatusCode.BadGateway);
+	}
+
 	private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
 	{
 		public override DateTimeOffset GetUtcNow()

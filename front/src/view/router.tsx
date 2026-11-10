@@ -19,6 +19,8 @@ export const router = createBrowserRouter([
 			{ path: "login/callback", element: <SeasonRoute /> },
 			{ path: ":year/:season", element: <SeasonRoute /> },
 			{ path: "studios/:studioId", element: <StudioPage /> },
+			// An anime stored without its studio's id: the page names the studio, then moves to it.
+			{ path: "animes/:sourceId/studio", element: <StudioPage /> },
 			{ path: "*", element: <Navigate to={homePath} replace /> },
 		],
 	},

@@ -24,6 +24,17 @@ export function studioPath(studioId: number): string {
 	return `/studios/${studioId}`;
 }
 
+/**
+ * Where an anime's studio is found. An anime stored before studios had an id carries only a name:
+ * its link goes through the anime instead, and the API names the studio on the way. An anime that
+ * credits no studio at all has nowhere to go.
+ */
+export function studioPathOf(anime: { sourceId: number; studio: string; studioId: number | null }): string | null {
+	if (anime.studio.trim() === "") return null;
+
+	return anime.studioId !== null ? studioPath(anime.studioId) : `/animes/${anime.sourceId}/studio`;
+}
+
 /** AniList ids are positive integers; nothing else is worth a request. */
 export function parseStudioId(raw: string | undefined): number | null {
 	if (raw === undefined || !/^[1-9]\d{0,9}$/.test(raw)) return null;

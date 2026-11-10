@@ -1,5 +1,6 @@
 using AnimeTracker.Abstractions.Interfaces.Repositories;
 using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Base.Studios;
 using AnimeTracker.Abstractions.Models.Entities;
 using AnimeTracker.Adapters.MongoDB.Repositories.Base;
 using Elyspio.Utils.Telemetry.Technical.Helpers;
@@ -31,6 +32,16 @@ internal class AnimeRepository(IMongoDatabase database, ILogger<AnimeRepository>
 		using var trace = LogRepository($"{Log.F(sourceId)}");
 
 		return await EntityCollection.Find(Filter.Eq(anime => anime.SourceId, sourceId)).FirstOrDefaultAsync(cancellationToken);
+	}
+
+	public async Task SetStudio(int sourceId, StudioReference studio, CancellationToken cancellationToken = default)
+	{
+		using var trace = LogRepository($"{Log.F(sourceId)} {Log.F(studio.Id)}");
+
+		await EntityCollection.UpdateManyAsync(
+			Filter.Eq(anime => anime.SourceId, sourceId),
+			Update.Set(anime => anime.StudioId, studio.Id).Set(anime => anime.Studio, studio.Name),
+			cancellationToken: cancellationToken);
 	}
 
 	public async Task<bool> HasStudio(int studioId, CancellationToken cancellationToken = default)

@@ -158,14 +158,17 @@ These are the properties the design rests on. Changing them is a product decisio
 ### Studio filmography
 
 - A studio's identity is its **AniList id**, stored beside the name of an anime's first main studio
-  (`StudioId`). Never its name. An anime stored before the field existed has none until its season is
-  refreshed, and shows no link until then.
+  (`StudioId`). Never its name. An anime stored before the field existed has none, and **does not
+  need its season refreshed to get one**: its link goes through `GET /api/animes/{sourceId}/studio`,
+  which asks AniList for that one anime's main studio (one small request), writes the id on the stored
+  anime, and answers with the filmography. The first main studio, as on a season refresh — the two
+  paths must name the same studio for the same anime.
 - A filmography is **fetched the first time it is read, then never again on its own**. It lives in its
   own collection, `StudioFilmography`, keyed by studio id with a unique index. The only thing that
   replaces it is `POST /api/studios/{id}/refresh` — admin-only, and **synchronous**: it is the same few
   requests the first read already makes inline, and nothing follows from it, so it leaves no run.
-- **Only a studio some stored anime credits is ever asked of AniList** (or one already fetched). The read
-  is anonymous; without that guard, walking the ids would spend the 30 requests a minute the nightly
+- **Only a studio some stored anime credits is ever asked of AniList** (or one already fetched), and
+  only a **stored anime** is ever asked its studio. Both reads are anonymous; without that guard, walking the ids would spend the 30 requests a minute the nightly
   refresh shares. `StudioService` also lets **one fetch per studio** run at a time.
 - A filmography costs **one request per fifty works**, and uses its own, lighter query: no airing
   schedule, so **no countdown**. A work is not an anime of a season, and is never run through
@@ -182,7 +185,8 @@ These are the properties the design rests on. Changing them is a product decisio
 ### Routing
 
 - Three addresses: `/` is **the current season, whichever it is**; `/2026/fall` is that season;
-  `/studios/{id}` is a filmography. Anything else goes to `/`. The API's SPA fallback serves all of them.
+  `/studios/{id}` is a filmography. `/animes/{sourceId}/studio` is only a way in: it names the studio
+  and replaces itself with the studio's address. Anything else goes to `/`. The API's SPA fallback serves all of them.
 - `/login/callback` is a route that renders the current season and **must not redirect**: the one-time
   code is still in the query string when it mounts. The sign-in restores the real path through the
   router (`onSignedIn`), never by rewriting `window.history` behind its back.
@@ -241,8 +245,8 @@ These are the properties the design rests on. Changing them is a product decisio
   so new mutating routes must opt in explicitly.
 - A refresh run is served anonymously, so its `Error` carries `exception.Message` and never a stack
   trace. A dub run is no different.
-- `GET /api/studios/{id}` is `[AllowAnonymous]` and may reach AniList on its first read, which is why
-  it is guarded by the stored animes. `POST /api/studios/{id}/refresh` carries the admin policy.
+- `GET /api/studios/{id}` and `GET /api/animes/{sourceId}/studio` are `[AllowAnonymous]` and may reach
+  AniList on their first read, which is why both are guarded by the stored animes. `POST /api/studios/{id}/refresh` carries the admin policy.
 - `PUT /api/dubs/{sourceId}/{platform}`, the override of a French dub match, carries
   `[Authorize(AuthModule.AdminPolicy)]` like the refresh. `GET /api/dubs/cases` is public: which series
   an anime was matched to is a fact about a public schedule.

@@ -166,4 +166,33 @@ public class AniListStudioTests
 
 		handler.Requests.Count.ShouldBe(3);
 	}
+
+	[Fact]
+	public async Task Names_the_first_main_studio_of_one_anime()
+	{
+		var handler = new FakeHttpMessageHandler(_ => FakeHttpMessageHandler.Json(Fixtures.Read("media-studio-178789.json")));
+
+		var studio = await Build(handler).GetMainStudio(178789, TestContext.Current.CancellationToken);
+
+		studio.ShouldBe(new StudioReference(StudioBind, "Studio Bind"));
+		handler.Requests.Single().Body.ShouldContain("\"id\":178789");
+		handler.Requests.Single().Body.ShouldContain("isMain: true");
+	}
+
+	[Fact]
+	public async Task Names_no_studio_for_an_anime_that_credits_none()
+	{
+		var handler = new FakeHttpMessageHandler(_ => FakeHttpMessageHandler.Json("""{"data":{"Media":{"id":1,"studios":{"nodes":[]}}}}"""));
+
+		(await Build(handler).GetMainStudio(1, TestContext.Current.CancellationToken)).ShouldBeNull();
+	}
+
+	[Fact]
+	public async Task Names_no_studio_for_an_anime_the_source_does_not_know()
+	{
+		var handler = new FakeHttpMessageHandler(_ =>
+			FakeHttpMessageHandler.Json("""{"errors":[{"message":"Not Found.","status":404}],"data":{"Media":null}}""", HttpStatusCode.NotFound));
+
+		(await Build(handler).GetMainStudio(99999999, TestContext.Current.CancellationToken)).ShouldBeNull();
+	}
 }

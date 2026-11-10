@@ -16,4 +16,10 @@ public interface IAnimeSourceAdapter
 	///     when the source knows no studio by that id.
 	/// </summary>
 	Task<StudioFilmographyBase?> GetStudio(int studioId, CancellationToken cancellationToken = default);
+
+	/// <summary>
+	///     The first main studio of one anime, asked for on its own. Null when the source knows no
+	///     anime by that id, or credits it no main studio.
+	/// </summary>
+	Task<StudioReference?> GetMainStudio(int sourceId, CancellationToken cancellationToken = default);
 }

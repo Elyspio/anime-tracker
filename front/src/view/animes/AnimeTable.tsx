@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Box, Link, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, Tooltip } from "@mui/material";
 import { Link as RouterLink } from "react-router";
 import { formatBingeChip } from "@/core/binge";
-import { studioPath } from "@/core/routes";
+import { studioPathOf } from "@/core/routes";
 import { bingeDotColor } from "@/view/animes/BingeBadge";
 import { useDestinationsPopover } from "@/view/animes/useDestinationsPopover";
 import { DubBadge } from "@/view/animes/DubBadge";
@@ -165,6 +165,7 @@ export function AnimeTable({ animes, now }: Props) {
 					{sorted.map((anime, index) => {
 						const chip = formatBingeChip(anime.binge, now);
 						const dub = badgeDub(anime);
+						const studioPath = studioPathOf(anime);
 
 						return (
 							<TableRow key={anime.id} hover onClick={(event) => destinations.open(anime, event.currentTarget)} sx={{ cursor: "pointer" }}>
@@ -197,9 +198,9 @@ export function AnimeTable({ animes, now }: Props) {
 									</Link>
 								</TableCell>
 								<TableCell sx={{ color: "text.disabled" }}>
-									{anime.studio !== "" && anime.studioId !== null ? (
+									{studioPath ? (
 										// Its own destination: the row opens the popover, this goes straight to the filmography.
-										<Link component={RouterLink} to={studioPath(anime.studioId)} underline="hover" color="inherit" onClick={(event) => event.stopPropagation()}>
+										<Link component={RouterLink} to={studioPath} underline="hover" color="inherit" onClick={(event) => event.stopPropagation()}>
 											{anime.studio}
 										</Link>
 									) : (

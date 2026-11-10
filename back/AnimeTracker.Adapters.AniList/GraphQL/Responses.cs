@@ -43,6 +43,10 @@ internal sealed record StudioConnection(IReadOnlyList<Studio>? Nodes);
 
 internal sealed record Studio(int? Id, string? Name);
 
+internal sealed record MediaStudioData([property: JsonPropertyName("Media")] MediaStudios? Media);
+
+internal sealed record MediaStudios(int Id, StudioConnection? Studios);
+
 internal sealed record StudioData([property: JsonPropertyName("Studio")] StudioDetails? Studio);
 
 internal sealed record StudioDetails(int Id, string? Name, string? SiteUrl, StudioMediaConnection? Media);

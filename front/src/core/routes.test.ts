@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { parseSeasonPath, parseStudioId, seasonPath, studioPath } from "@/core/routes";
+import { parseSeasonPath, parseStudioId, seasonPath, studioPath, studioPathOf } from "@/core/routes";
 import { animeSeasons } from "@/core/api/types";
 
 describe("seasonPath", () => {
@@ -44,6 +44,21 @@ describe("studioPath", () => {
 	it("is read back by parseStudioId", () => {
 		expect(studioPath(6309)).toBe("/studios/6309");
 		expect(parseStudioId("6309")).toBe(6309);
+	});
+});
+
+describe("studioPathOf", () => {
+	it("goes straight to the studio when its id is known", () => {
+		expect(studioPathOf({ sourceId: 178789, studio: "Studio Bind", studioId: 6309 })).toBe("/studios/6309");
+	});
+
+	it("goes through the anime when only the studio's name was stored", () => {
+		expect(studioPathOf({ sourceId: 178789, studio: "Studio Bind", studioId: null })).toBe("/animes/178789/studio");
+	});
+
+	it("goes nowhere for an anime that credits no studio", () => {
+		expect(studioPathOf({ sourceId: 1, studio: "", studioId: null })).toBeNull();
+		expect(studioPathOf({ sourceId: 1, studio: "  ", studioId: null })).toBeNull();
 	});
 });
 

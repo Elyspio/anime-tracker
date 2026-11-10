@@ -102,4 +102,26 @@ internal class AniListAdapter(
 			Works = works.DistinctBy(work => work.SourceId).ToArray()
 		};
 	}
+
+	public async Task<StudioReference?> GetMainStudio(int sourceId, CancellationToken cancellationToken = default)
+	{
+		using var trace = LogAdapter($"{Log.F(sourceId)}");
+
+		MediaStudioData data;
+
+		try
+		{
+			data = await client.Query<MediaStudioData>(MediaStudioQuery.Document, new { id = sourceId }, cancellationToken);
+		}
+		// An unknown anime is a 404, like an unknown studio.
+		catch (HttpRequestException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
+		{
+			return null;
+		}
+
+		// The first one, as on a season refresh: the two must name the same studio for the same anime.
+		var studio = data.Media?.Studios?.Nodes?.FirstOrDefault();
+
+		return studio?.Id is { } id ? new StudioReference(id, studio.Name?.Trim() ?? "") : null;
+	}
 }

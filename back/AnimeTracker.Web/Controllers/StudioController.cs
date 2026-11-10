@@ -30,6 +30,23 @@ public class StudioController(IStudioService studioService, ILogger<StudioContro
 	}
 
 	/// <summary>
+	///     The filmography of the studio a stored anime credits. This is the way in for an anime stored
+	///     before studios had an id: its studio is asked of the source on its own, then kept, so the
+	///     season does not have to be refreshed first. Anonymous, and bounded by the stored animes.
+	/// </summary>
+	[HttpGet("~/api/animes/{sourceId:int}/studio")]
+	[AllowAnonymous]
+	[ProducesResponseType<StudioFilmography>(StatusCodes.Status200OK)]
+	[ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+	[ProducesResponseType<ProblemDetails>(StatusCodes.Status502BadGateway)]
+	public async Task<StudioFilmography> GetStudioOfAnime(int sourceId, CancellationToken cancellationToken)
+	{
+		using var trace = LogController($"{Log.F(sourceId)}");
+
+		return await studioService.GetByAnime(sourceId, cancellationToken);
+	}
+
+	/// <summary>
 	///     Fetches the filmography again and answers with it. Synchronous, unlike a season refresh: it is
 	///     the same few requests the first read already made inline, and nothing else follows from it.
 	/// </summary>

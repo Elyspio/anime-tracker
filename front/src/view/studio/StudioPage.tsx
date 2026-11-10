@@ -2,16 +2,16 @@ import { useMemo, useState } from "react";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Alert, Box, Button, CircularProgress, FormControlLabel, Link, Stack, Switch, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
-import { Link as RouterLink, useParams } from "react-router";
+import { Link as RouterLink, Navigate, useParams } from "react-router";
 import { useSnackbar } from "notistack";
 import { useViewMode } from "@/config/viewMode";
 import { apiErrorMessage } from "@/core/api/errors";
 import { useRefreshStudio } from "@/core/api/mutations";
-import { useStudio } from "@/core/api/queries";
+import { useStudio, useStudioOfAnime } from "@/core/api/queries";
 import { useAppAuth } from "@/core/auth/AuthProvider";
 import { seasonLabels } from "@/core/binge";
 import { formatLabels } from "@/core/ranking";
-import { homePath, parseStudioId, seasonPath } from "@/core/routes";
+import { homePath, parseStudioId, seasonPath, studioPath } from "@/core/routes";
 import { countFormats, firstYear, formatFetchedAt, formatWorkCount, groupByYear, matchesWorkAdult, matchesWorkFormat } from "@/core/studio";
 import { ChoiceChip } from "@/view/components/ChoiceChip";
 import { Mono } from "@/view/components/Mono";
@@ -162,10 +162,19 @@ function Filmography({ studio }: { studio: StudioFilmography }) {
 /** Everything a studio made as main studio, newest first, reached from any of its anime. */
 export function StudioPage() {
 	const { season } = useLayoutContext();
-	const studioId = parseStudioId(useParams().studioId);
-	const { data, isPending, error } = useStudio(studioId);
+	const params = useParams();
+
+	// Two ways in: by the studio's own id, or through an anime stored before studios had one. The
+	// second names the studio, then hands over to the first at the studio's own address.
+	const viaAnime = params.sourceId !== undefined;
+	const studioId = parseStudioId(viaAnime ? params.sourceId : params.studioId);
+	const byStudio = useStudio(viaAnime ? null : studioId);
+	const byAnime = useStudioOfAnime(viaAnime ? studioId : null);
+	const { data, isPending, error } = viaAnime ? byAnime : byStudio;
 
 	useDocumentTitle(data?.name ?? null);
+
+	if (viaAnime && data) return <Navigate to={studioPath(data.studioId)} replace />;
 
 	return (
 		<Stack sx={{ gap: 2.5 }}>

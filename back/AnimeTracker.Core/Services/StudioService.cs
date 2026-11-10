@@ -36,6 +36,26 @@ public class StudioService(
 		return stored is not null ? StudioAssembler.Convert(stored) : await Fetch(studioId, false, cancellationToken);
 	}
 
+	public async Task<StudioFilmography> GetByAnime(int sourceId, CancellationToken cancellationToken = default)
+	{
+		using var _ = LogService($"{Log.F(sourceId)}");
+
+		// Only a stored anime: like a studio, an id nobody stored is never asked of the source.
+		var anime = await animeRepository.GetBySourceId(sourceId, cancellationToken)
+			?? throw new HttpException(HttpStatusCode.NotFound, $"No anime is stored with id {sourceId}.");
+
+		if (anime.StudioId is { } known) return await Get(known, cancellationToken);
+
+		var studio = await MainStudio(sourceId, cancellationToken)
+			?? throw new HttpException(HttpStatusCode.NotFound, $"AniList credits no main studio for {anime.Title}.");
+
+		// Kept on the anime: the next click costs the source nothing, and the studio is now one a
+		// stored anime credits, which is what lets its filmography be fetched.
+		await animeRepository.SetStudio(sourceId, studio, cancellationToken);
+
+		return await Get(studio.Id, cancellationToken);
+	}
+
 	public async Task<StudioFilmography> Refresh(int studioId, CancellationToken cancellationToken = default)
 	{
 		using var _ = LogService($"{Log.F(studioId)}");
@@ -90,6 +110,18 @@ public class StudioService(
 		catch (HttpRequestException exception)
 		{
 			// Served anonymously like a refresh run's error: the message, never the stack trace.
+			throw new HttpException(HttpStatusCode.BadGateway, $"The studio could not be fetched from AniList: {exception.Message}", exception);
+		}
+	}
+
+	private async Task<StudioReference?> MainStudio(int sourceId, CancellationToken cancellationToken)
+	{
+		try
+		{
+			return await sourceAdapter.GetMainStudio(sourceId, cancellationToken);
+		}
+		catch (HttpRequestException exception)
+		{
 			throw new HttpException(HttpStatusCode.BadGateway, $"The studio could not be fetched from AniList: {exception.Message}", exception);
 		}
 	}
