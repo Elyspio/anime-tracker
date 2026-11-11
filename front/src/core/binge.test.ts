@@ -23,6 +23,7 @@ function anime(overrides: Partial<Anime> = {}): Anime {
 		alternativeTitles: [],
 		description: "",
 		studio: "Studio",
+		studioId: null,
 		imageUrl: "",
 		url: "",
 		format: "Tv",

@@ -184,7 +184,10 @@ export interface Anime {
 	/** English, native and synonym titles, for search only. Empty until the season is refreshed. */
 	alternativeTitles: string[];
 	description: string;
+	/** The first main studio's name. Empty when none was credited. */
 	studio: string;
+	/** Its AniList id, which its filmography is keyed by. Null until the season is refreshed. */
+	studioId: number | null;
 	imageUrl: string;
 	url: string;
 	format: AnimeFormat;
@@ -203,4 +206,40 @@ export interface Anime {
 	binge: BingePrediction;
 	/** Every platform the anime was matched on, best first. Empty: the dub is unknown, not missing. */
 	dubs: DubAvailability[];
+}
+
+/** As much of a start date as the source published. A missing month or day is unknown, not the 1st. */
+export interface StudioWorkDate {
+	year: number;
+	month: number | null;
+	day: number | null;
+}
+
+/** One entry of a studio's filmography. No schedule and no countdown: those live on its season. */
+export interface StudioWork {
+	/** The AniList id of the work. */
+	sourceId: number;
+	title: string;
+	imageUrl: string;
+	url: string;
+	format: AnimeFormat;
+	isAdult: boolean;
+	/** Average grade out of 10. Null until somebody has graded it. */
+	score: number | null;
+	episodesCount: number | null;
+	/** Null for a work announced without a date. */
+	startDate: StudioWorkDate | null;
+	/** The season the work is listed under, when there is one to name. */
+	season: AnimeDate | null;
+}
+
+/** From `GET /api/studios/{id}`: newest first, the undated works ahead, music videos left out. */
+export interface StudioFilmography {
+	studioId: number;
+	name: string;
+	/** The studio's page on AniList. */
+	url: string;
+	works: StudioWork[];
+	/** ISO timestamp of the last fetch from AniList. Nothing refreshes it but an admin. */
+	fetchedAt: string;
 }

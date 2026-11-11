@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { http } from "./client";
 import { qk } from "./queries";
-import type { AnimeDate, AnimeSeason, DubOverrideRequest, DubOverrideResult, DubPlatform, RefreshRun } from "./types";
+import type { AnimeDate, AnimeSeason, DubOverrideRequest, DubOverrideResult, DubPlatform, RefreshRun, StudioFilmography } from "./types";
 
 /** What the refresh button gets back: the run to follow, and whether it is the one it just started. */
 export interface RefreshOutcome {
@@ -58,5 +58,19 @@ export function useSetDubOverride(date: AnimeDate) {
 			void queryClient.invalidateQueries({ queryKey: qk.dubCases(date.year, date.season) });
 			void queryClient.invalidateQueries({ queryKey: qk.animes(date.year, date.season) });
 		},
+	});
+}
+
+/**
+ * Fetches a studio's filmography from AniList again. Unlike a season refresh this one is not queued:
+ * the API answers with the new filmography, which goes straight into the cache. Rejected with 403
+ * for anyone without the admin role, 502 when AniList could not be reached — the stored one is kept.
+ */
+export function useRefreshStudio(studioId: number) {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async () => (await http.post<StudioFilmography>(`/api/studios/${studioId}/refresh`)).data,
+		onSuccess: (studio) => queryClient.setQueryData(qk.studio(studioId), studio),
 	});
 }

@@ -17,6 +17,10 @@ about dubs. See [ADR 0003](docs/adr/0003-vf-from-platforms-through-vpn-egress.md
 [the plan](docs/plans/french-dub-filter.md). A click on an anime opens its destinations: AniList, the
 platform series the dub sync checked, and AniList's other streaming links.
 
+A third one leaves the season altogether: **what else did this studio make?** From any anime, `More from
+<studio>` opens the studio's filmography — every work it was the main studio of, newest first, as posters
+by year or as a list. A work there carries no countdown; its season label is the way to the season that does.
+
 There is no user state — no watchlist, no per-episode progress. Browsing is anonymous; the privileged
 actions are triggering a refresh and correcting a French dub match.
 
@@ -29,7 +33,7 @@ See [CONTEXT.md](CONTEXT.md) for the domain vocabulary.
 ```text
 back/
   AnimeTracker.Abstractions/       Models, transports, ports. Depends on nothing.
-  AnimeTracker.Core/               AnimeService, BingePredictor, AnimeRefreshJob, assemblers;
+  AnimeTracker.Core/               AnimeService, StudioService, BingePredictor, AnimeRefreshJob, assemblers;
                                    Services/Dub: DubService, the sync job, titles, alignment, coverage.
   AnimeTracker.Adapters.AniList/   Only project that knows AniList's GraphQL schema.
   AnimeTracker.Adapters.Crunchyroll/  French dub: Crunchyroll's website API, through the egress proxy.
@@ -43,15 +47,18 @@ front/
   src/core/api/  Axios client, TanStack Query hooks, hand-written API types
   src/core/      binge.ts — countdown formatting and filtering; ranking.ts — sort, thresholds,
                  format and adult filters; refreshRuns.ts — run labels and duration; dub.ts —
-                 French dub filter, badge and case labels; destinations.ts — where a click leads
-  src/view/      Layout, the refresh-runs and dub-matches drawers, and the two season views
+                 French dub filter, badge and case labels; destinations.ts — where a click leads;
+                 routes.ts — the addresses; filters.ts — the season toolbar's state; studio.ts — a
+                 filmography's years, formats and dates
+  src/view/      router.tsx, the layout, the refresh-runs and dub-matches drawers, the two season
+                 views, and studio/ — the filmography
 deploy/build/    Single-container image and deployment script
 ```
 
 Backend: .NET 10 (SDK pinned to 10.0.400 in `global.json`), ASP.NET Core, Aspire 13.5, MongoDB, Hangfire,
 xUnit v3 on Microsoft.Testing.Platform.
 Frontend: React 19, TypeScript 7, Vite+ (Oxlint, Oxfmt, Vitest via `vite-plus/test`), MUI 9, TanStack Query,
-Axios, `react-oidc-context`. Node 26, pnpm 12. Lint and format settings come from
+Axios, `react-oidc-context`, React Router 8 (data router, `createBrowserRouter`). Node 26, pnpm 12. Lint and format settings come from
 `@elyspio/vite-eslint-config` (`getDefaultConfig` in `front/vite.config.ts`).
 
 ## Invariants
@@ -148,6 +155,44 @@ These are the properties the design rests on. Changing them is a product decisio
   platform's own series pages.
 - **The badge is ink, never green**, and reads `FR dub 8/12 · Crunchyroll`.
 
+### Studio filmography
+
+- A studio's identity is its **AniList id**, stored beside the name of an anime's first main studio
+  (`StudioId`). Never its name. An anime stored before the field existed has none, and **does not
+  need its season refreshed to get one**: its link goes through `GET /api/animes/{sourceId}/studio`,
+  which asks AniList for that one anime's main studio (one small request), writes the id on the stored
+  anime, and answers with the filmography. The first main studio, as on a season refresh — the two
+  paths must name the same studio for the same anime.
+- A filmography is **fetched the first time it is read, then never again on its own**. It lives in its
+  own collection, `StudioFilmography`, keyed by studio id with a unique index. The only thing that
+  replaces it is `POST /api/studios/{id}/refresh` — admin-only, and **synchronous**: it is the same few
+  requests the first read already makes inline, and nothing follows from it, so it leaves no run.
+- **Only a studio some stored anime credits is ever asked of AniList** (or one already fetched), and
+  only a **stored anime** is ever asked its studio. Both reads are anonymous; without that guard, walking the ids would spend the 30 requests a minute the nightly
+  refresh shares. `StudioService` also lets **one fetch per studio** run at a time.
+- A filmography costs **one request per fifty works**, and uses its own, lighter query: no airing
+  schedule, so **no countdown**. A work is not an anime of a season, and is never run through
+  `BingePredictor`.
+- An unknown studio is the one failure AniList does **not** report inside a 200: the whole reply is a
+  **404**. The adapter reads it as "no such studio"; every other failure surfaces as a 502 carrying the
+  message.
+- **What is shown and in what order is decided on every read** (`StudioAssembler`), not when storing:
+  music videos are left out, and the order is newest first with **the undated works ahead** — and, for
+  the same reason, a missing month or day ahead of every known one in its year. A start date keeps only
+  the parts AniList published: "2027" is not the 1st of January.
+- A work's season is AniList's own when it names one, else the one its start month falls in, else none.
+
+### Routing
+
+- Three addresses: `/` is **the current season, whichever it is**; `/2026/fall` is that season;
+  `/studios/{id}` is a filmography. `/animes/{sourceId}/studio` is only a way in: it names the studio
+  and replaces itself with the studio's address. Anything else goes to `/`. The API's SPA fallback serves all of them.
+- `/login/callback` is a route that renders the current season and **must not redirect**: the one-time
+  code is still in the query string when it mounts. The sign-in restores the real path through the
+  router (`onSignedIn`), never by rewriting `window.history` behind its back.
+- The season toolbar's state lives in the layout (`SeasonFilters`), above the pages, so a detour through
+  a studio does not reset it.
+
 ### Scheduling and storage
 
 - Development runs MongoDB as a **one-member replica set**, built from
@@ -200,6 +245,8 @@ These are the properties the design rests on. Changing them is a product decisio
   so new mutating routes must opt in explicitly.
 - A refresh run is served anonymously, so its `Error` carries `exception.Message` and never a stack
   trace. A dub run is no different.
+- `GET /api/studios/{id}` and `GET /api/animes/{sourceId}/studio` are `[AllowAnonymous]` and may reach
+  AniList on their first read, which is why both are guarded by the stored animes. `POST /api/studios/{id}/refresh` carries the admin policy.
 - `PUT /api/dubs/{sourceId}/{platform}`, the override of a French dub match, carries
   `[Authorize(AuthModule.AdminPolicy)]` like the refresh. `GET /api/dubs/cases` is public: which series
   an anime was matched to is a fact about a public schedule.
@@ -270,6 +317,10 @@ as `admin` and triggers a refresh — that button is the bootstrap path.
   change upstream. Re-record a fixture by replaying the adapter's own query, never by editing it.
 - A fixture cannot express a field AniList has never returned, so the rules layer is where nulls,
   unknown formats and empty nodes are covered. Every one of them appears in a real season.
+- The studio query follows the same two layers: `Fixtures/studio-6309-page*.json` are Studio Bind's
+  filmography recorded five works a page, `MediaAssemblerTests` covers the dates and seasons no fixture
+  holds. `StudioServiceTests` is the choreography — when the store answers, when the source is asked,
+  what a refusal looks like — and the ordering rule.
 - French dub follows the same two layers. The replies under `Fixtures/crunchyroll` and `Fixtures/adn`
   pin each platform's *shape*, and are re-recorded with the `record.sh` beside them — through the
   egress proxy, with curl, which Cloudflare lets through. Hand-written nodes pin the
@@ -278,7 +329,9 @@ as `admin` and triggers a refresh — that button is the bootstrap path.
   order, what is saved, what the run says — lives in `DubServiceTests`, every port substituted.
 - Countdown formatting or filtering changes: extend `front/src/core/binge.test.ts`. Sort or
   threshold changes: `ranking.test.ts`. Run progress or duration: `refreshRuns.test.ts`. French dub
-  filter and badge: `dub.test.ts`; where a click leads: `destinations.test.ts`.
+  filter and badge: `dub.test.ts`; where a click leads: `destinations.test.ts`. Addresses:
+  `routes.test.ts`; the toolbar's active count: `filters.test.ts`; a filmography's grouping, formats and
+  dates: `studio.test.ts`.
 - The `AnimeSeason`, `BingeStatus`, `RefreshStatus`, `RefreshKind` and dub enum names are a contract between
   `JsonStringEnumConverter` and the hand-written TypeScript unions in
   `front/src/core/api/types.ts`. Both halves of the tripwire exist and must be edited together:

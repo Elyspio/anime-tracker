@@ -2,13 +2,15 @@ import { useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { http } from "./client";
 import { isRunActive } from "@/core/refreshRuns";
-import type { Anime, AnimeSeason, DubCase, RefreshRun } from "./types";
+import type { Anime, AnimeSeason, DubCase, RefreshRun, StudioFilmography } from "./types";
 
 /** Centralised query keys, so mutations can invalidate precisely. */
 export const qk = {
 	animes: (year: number, season: AnimeSeason) => ["animes", year, season] as const,
 	refreshRuns: () => ["refresh-runs"] as const,
 	dubCases: (year: number, season: AnimeSeason) => ["dub-cases", year, season] as const,
+	studio: (studioId: number) => ["studio", studioId] as const,
+	studioOfAnime: (sourceId: number) => ["studio-of-anime", sourceId] as const,
 };
 
 export function useAnimes(year: number, season: AnimeSeason) {
@@ -17,6 +19,47 @@ export function useAnimes(year: number, season: AnimeSeason) {
 		queryFn: async () => (await http.get<Anime[]>("/api/animes", { params: { year, season } })).data,
 		// A season's schedule changes at most once a day, when the refresh job runs.
 		staleTime: 5 * 60_000,
+	});
+}
+
+/**
+ * A studio's filmography. The API serves it from its own store, and nothing changes it there but an
+ * admin's refresh — which writes the answer straight into this cache — so it never goes stale on its
+ * own. The first read of a studio is the slow one: the API fetches it from AniList before answering.
+ */
+export function useStudio(studioId: number | null) {
+	return useQuery({
+		queryKey: qk.studio(studioId ?? 0),
+		queryFn: async () => (await http.get<StudioFilmography>(`/api/studios/${studioId}`)).data,
+		enabled: studioId !== null,
+		staleTime: Infinity,
+		// A 404 is an answer: asking again would only ask AniList again.
+		retry: false,
+	});
+}
+
+/**
+ * The filmography of the studio an anime credits, for an anime stored without its studio's id. The
+ * API names the studio and keeps it on the anime, so the answer also goes into the studio's own cache
+ * entry — the page moves to the studio's address without asking twice — and the seasons are marked
+ * stale, since one of their animes just gained an id.
+ */
+export function useStudioOfAnime(sourceId: number | null) {
+	const queryClient = useQueryClient();
+
+	return useQuery({
+		queryKey: qk.studioOfAnime(sourceId ?? 0),
+		queryFn: async () => {
+			const studio = (await http.get<StudioFilmography>(`/api/animes/${sourceId}/studio`)).data;
+
+			queryClient.setQueryData(qk.studio(studio.studioId), studio);
+			void queryClient.invalidateQueries({ queryKey: ["animes"] });
+
+			return studio;
+		},
+		enabled: sourceId !== null,
+		staleTime: Infinity,
+		retry: false,
 	});
 }
 

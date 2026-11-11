@@ -1,6 +1,9 @@
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { List, ListItemButton, ListItemIcon, ListItemText, Popover, Typography } from "@mui/material";
+import VideoLibraryOutlinedIcon from "@mui/icons-material/VideoLibraryOutlined";
+import { Divider, List, ListItemButton, ListItemIcon, ListItemText, Popover, Typography } from "@mui/material";
+import { Link as RouterLink } from "react-router";
 import { destinationsOf } from "@/core/destinations";
+import { studioPathOf } from "@/core/routes";
 import { PlatformLogo } from "@/view/components/PlatformLogo";
 import type { Anime } from "@/core/api/types";
 
@@ -16,10 +19,12 @@ interface Props {
 
 /**
  * What a click on an anime opens. A card used to be one link to the source; it is now a choice
- * between the source and each platform the anime can be watched on, so the choice sits here.
+ * between the source and each platform the anime can be watched on, so the choice sits here — and
+ * below it, the one destination that stays in the app: everything else its studio made.
  */
 export function DestinationsPopover({ target, onClose }: Props) {
 	const destinations = target ? destinationsOf(target.anime) : [];
+	const studioPath = target ? studioPathOf(target.anime) : null;
 
 	return (
 		<Popover
@@ -54,6 +59,21 @@ export function DestinationsPopover({ target, onClose }: Props) {
 						</ListItemButton>
 					))}
 				</List>
+			)}
+
+			{/* Absent only when no studio is credited: one stored by name alone is named on the way. */}
+			{target && studioPath && (
+				<>
+					<Divider />
+					<List dense disablePadding sx={{ py: 0.5 }}>
+						<ListItemButton component={RouterLink} to={studioPath} onClick={onClose}>
+							<ListItemIcon sx={{ minWidth: 32 }}>
+								<VideoLibraryOutlinedIcon sx={{ fontSize: 20, color: "text.primary" }} />
+							</ListItemIcon>
+							<ListItemText primary={`More from ${target.anime.studio}`} slotProps={{ primary: { noWrap: true } }} />
+						</ListItemButton>
+					</List>
+				</>
 			)}
 		</Popover>
 	);

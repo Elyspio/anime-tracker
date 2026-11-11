@@ -11,6 +11,7 @@ function anime(title: string, votesCount: number | null, score: number | null, o
 		alternativeTitles: [],
 		description: "",
 		studio: "",
+		studioId: null,
 		imageUrl: "",
 		url: "",
 		format: "Tv",

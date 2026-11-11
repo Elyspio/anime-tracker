@@ -1,5 +1,6 @@
 using AnimeTracker.Abstractions.Interfaces.Repositories;
 using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Base.Studios;
 using AnimeTracker.Abstractions.Models.Entities;
 using AnimeTracker.Adapters.MongoDB.Repositories.Base;
 using Elyspio.Utils.Telemetry.Technical.Helpers;
@@ -12,6 +13,13 @@ namespace AnimeTracker.Adapters.MongoDB.Repositories;
 internal class AnimeRepository(IMongoDatabase database, ILogger<AnimeRepository> logger)
 	: CrudRepository<AnimeEntity, AnimeBase>(database, logger), IAnimeRepository
 {
+	/// <summary>
+	///     Set once the indexes exist. Every read is by season or by studio, and without them each one
+	///     scans every anime of every season stored. Built on the write path, so a store nobody has
+	///     refreshed into is never asked to index anything. Not a Lazy: a failed attempt is retried.
+	/// </summary>
+	private volatile bool _indexed;
+
 	public async Task<List<AnimeEntity>> GetBySeason(AnimeDate date, CancellationToken cancellationToken = default)
 	{
 		using var trace = LogRepository($"{Log.F(date)}");
@@ -26,11 +34,30 @@ internal class AnimeRepository(IMongoDatabase database, ILogger<AnimeRepository>
 		return await EntityCollection.Find(Filter.Eq(anime => anime.SourceId, sourceId)).FirstOrDefaultAsync(cancellationToken);
 	}
 
+	public async Task SetStudio(int sourceId, StudioReference studio, CancellationToken cancellationToken = default)
+	{
+		using var trace = LogRepository($"{Log.F(sourceId)} {Log.F(studio.Id)}");
+
+		await EntityCollection.UpdateManyAsync(
+			Filter.Eq(anime => anime.SourceId, sourceId),
+			Update.Set(anime => anime.StudioId, studio.Id).Set(anime => anime.Studio, studio.Name),
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<bool> HasStudio(int studioId, CancellationToken cancellationToken = default)
+	{
+		using var trace = LogRepository($"{Log.F(studioId)}");
+
+		return await EntityCollection.Find(Filter.Eq(anime => anime.StudioId, studioId)).AnyAsync(cancellationToken);
+	}
+
 	public async Task Refresh(AnimeDate date, IReadOnlyCollection<AnimeBase> animes, CancellationToken cancellationToken = default)
 	{
 		using var trace = LogRepository($"{Log.F(date)} {Log.F(animes.Count)}");
 
 		if (animes.Count == 0) return;
+
+		await EnsureIndexes(cancellationToken);
 
 		var existing = (await EntityCollection.Find(SeasonFilter(date)).ToListAsync(cancellationToken))
 			.ToDictionary(anime => anime.SourceId);
@@ -49,6 +76,15 @@ internal class AnimeRepository(IMongoDatabase database, ILogger<AnimeRepository>
 		});
 
 		await EntityCollection.BulkWriteAsync(operations, new BulkWriteOptions { IsOrdered = false }, cancellationToken);
+	}
+
+	private async Task EnsureIndexes(CancellationToken cancellationToken)
+	{
+		if (_indexed) return;
+
+		await CreateIndexIfMissing([$"{nameof(AnimeBase.Date)}.{nameof(AnimeDate.Year)}", $"{nameof(AnimeBase.Date)}.{nameof(AnimeDate.Season)}"], false, cancellationToken);
+		await CreateIndexIfMissing([nameof(AnimeBase.StudioId)], false, cancellationToken);
+		_indexed = true;
 	}
 
 	private static FilterDefinition<AnimeEntity> SeasonFilter(AnimeDate date)

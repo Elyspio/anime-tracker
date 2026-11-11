@@ -14,6 +14,7 @@ public static class CoreModule
 		services.AddSingleton<AnimeRefreshJob>();
 		services.AddSingleton<IDubService, DubService>();
 		services.AddSingleton<DubSyncJob>();
+		services.AddSingleton<IStudioService, StudioService>();
 		services.AddHostedService<AnimeHostedService>();
 
 		return services;

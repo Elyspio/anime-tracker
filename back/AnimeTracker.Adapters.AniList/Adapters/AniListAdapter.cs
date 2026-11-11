@@ -1,5 +1,7 @@
 using AnimeTracker.Abstractions.Interfaces.Adapters;
+using System.Net;
 using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Base.Studios;
 using AnimeTracker.Adapters.AniList.Assemblers;
 using AnimeTracker.Adapters.AniList.Configs;
 using AnimeTracker.Adapters.AniList.GraphQL;
@@ -50,5 +52,76 @@ internal class AniListAdapter(
 		_logger.LogWarning("Stopped paging {Date} after {MaxPages} pages", date, options.Value.MaxPages);
 
 		return animes.ToArray();
+	}
+
+	public async Task<StudioFilmographyBase?> GetStudio(int studioId, CancellationToken cancellationToken = default)
+	{
+		using var trace = LogAdapter($"{Log.F(studioId)}");
+
+		StudioDetails? studio = null;
+		var works = new List<StudioWork>();
+
+		for (var page = 1; page <= options.Value.MaxPages; page++)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+
+			var variables = new { id = studioId, page, perPage = options.Value.PageSize };
+
+			StudioData data;
+
+			try
+			{
+				data = await client.Query<StudioData>(StudioQuery.Document, variables, cancellationToken);
+			}
+			// Unlike every other failure, an unknown id is not reported inside a 200: the whole reply is a 404.
+			catch (HttpRequestException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
+			{
+				return null;
+			}
+
+			if (data.Studio is null) return null;
+
+			studio ??= data.Studio;
+
+			// A studio's media is not filtered by type upstream, and a few studios are credited on manga.
+			works.AddRange((data.Studio.Media?.Nodes ?? [])
+				.Where(media => media.Type is null || string.Equals(media.Type, "ANIME", StringComparison.OrdinalIgnoreCase))
+				.Select(assembler.ConvertWork));
+
+			if (data.Studio.Media?.PageInfo?.HasNextPage != true) break;
+
+			if (page == options.Value.MaxPages) _logger.LogWarning("Stopped paging studio {StudioId} after {MaxPages} pages", studioId, page);
+		}
+
+		return new StudioFilmographyBase
+		{
+			StudioId = studio!.Id,
+			Name = studio.Name?.Trim() ?? "",
+			Url = studio.SiteUrl ?? "",
+			// A work that moves across a page boundary between two requests comes back twice.
+			Works = works.DistinctBy(work => work.SourceId).ToArray()
+		};
+	}
+
+	public async Task<StudioReference?> GetMainStudio(int sourceId, CancellationToken cancellationToken = default)
+	{
+		using var trace = LogAdapter($"{Log.F(sourceId)}");
+
+		MediaStudioData data;
+
+		try
+		{
+			data = await client.Query<MediaStudioData>(MediaStudioQuery.Document, new { id = sourceId }, cancellationToken);
+		}
+		// An unknown anime is a 404, like an unknown studio.
+		catch (HttpRequestException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
+		{
+			return null;
+		}
+
+		// The first one, as on a season refresh: the two must name the same studio for the same anime.
+		var studio = data.Media?.Studios?.Nodes?.FirstOrDefault();
+
+		return studio?.Id is { } id ? new StudioReference(id, studio.Name?.Trim() ?? "") : null;
 	}
 }

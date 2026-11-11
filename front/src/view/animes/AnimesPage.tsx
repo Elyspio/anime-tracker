@@ -6,7 +6,6 @@ import {
 	Autocomplete,
 	Box,
 	Button,
-	Chip,
 	CircularProgress,
 	Divider,
 	Dialog,
@@ -24,30 +23,21 @@ import {
 	useMediaQuery,
 	useTheme,
 } from "@mui/material";
+import { apiErrorMessage } from "@/core/api/errors";
 import { useAnimes } from "@/core/api/queries";
 import { collectGenres, matchesGenres, matchesStatus, type StatusFilter } from "@/core/binge";
 import { dubFilterLabels, matchesDub, type DubFilter } from "@/core/dub";
-import {
-	collectStudios,
-	episodicFormats,
-	formatLabels,
-	matchesAdult,
-	matchesFormat,
-	matchesRange,
-	matchesStudio,
-	matchesTitle,
-	noRangeFilter,
-	sortAnimes,
-	sortLabels,
-	type SortKey,
-} from "@/core/ranking";
+import { countActiveFilters } from "@/core/filters";
+import { collectStudios, formatLabels, matchesAdult, matchesFormat, matchesRange, matchesStudio, matchesTitle, sortAnimes, sortLabels, type SortKey } from "@/core/ranking";
 import { useViewMode } from "@/config/viewMode";
 import { AnimeCardGrid } from "@/view/animes/AnimeCardGrid";
 import { AnimeTable } from "@/view/animes/AnimeTable";
+import { ChoiceChip } from "@/view/components/ChoiceChip";
 import { FilterField } from "@/view/components/FilterField";
+import { useLayoutContext } from "@/view/layout/layoutContext";
 import { Mono } from "@/view/components/Mono";
 import { fonts } from "@/config/tokens";
-import { animeFormats, type AnimeFormat, type AnimeSeason } from "@/core/api/types";
+import { animeFormats, type AnimeSeason } from "@/core/api/types";
 
 const statusFilters: { value: StatusFilter; label: string }[] = [
 	{ value: "all", label: "All" },
@@ -87,15 +77,8 @@ interface Props {
 export function AnimesPage({ year, season }: Props) {
 	const { data, isPending, error } = useAnimes(year, season);
 	const [viewMode, setViewMode] = useViewMode();
-	const [title, setTitle] = useState("");
-	const [status, setStatus] = useState<StatusFilter>("all");
-	const [genres, setGenres] = useState<string[]>([]);
-	const [studio, setStudio] = useState("");
-	const [range, setRange] = useState(noRangeFilter);
-	const [sort, setSort] = useState<SortKey>("score");
-	const [formats, setFormats] = useState<AnimeFormat[]>([...episodicFormats]);
-	const [includeAdult, setIncludeAdult] = useState(false);
-	const [dub, setDub] = useState<DubFilter>("any");
+	const { filters, setFilters, resetFilters } = useLayoutContext();
+	const { title, status, genres, studio, range, sort, formats, includeAdult, dub } = filters;
 	const [filtersOpen, setFiltersOpen] = useState(false);
 	const isMobile = useMediaQuery(useTheme().breakpoints.down("md"));
 
@@ -116,29 +99,7 @@ export function AnimesPage({ year, season }: Props) {
 		else setFiltersOpen(false);
 	}
 
-	function resetFilters() {
-		setTitle("");
-		setStatus("all");
-		setGenres([]);
-		setStudio("");
-		setRange(noRangeFilter);
-		setSort("score");
-		setFormats([...episodicFormats]);
-		setIncludeAdult(false);
-		setDub("any");
-	}
-
-	const activeFilters = [
-		title !== "",
-		status !== "all",
-		genres.length > 0,
-		studio !== "",
-		range.minScore !== 0,
-		range.minVotes !== 0,
-		formats.length !== episodicFormats.length || episodicFormats.some((format) => !formats.includes(format)),
-		includeAdult,
-		dub !== "any",
-	].filter(Boolean).length;
+	const activeFilters = countActiveFilters(filters);
 
 	// Pin the countdown time and the empty list until the season data changes.
 	const { animes, now } = useMemo(() => ({ animes: data ?? [], now: new Date() }), [data]);
@@ -172,7 +133,7 @@ export function AnimesPage({ year, season }: Props) {
 	}
 
 	if (error) {
-		return <Alert severity="error">Could not load the season: {error.message}</Alert>;
+		return <Alert severity="error">Could not load the season: {apiErrorMessage(error)}</Alert>;
 	}
 
 	const filterControls = (
@@ -184,7 +145,7 @@ export function AnimesPage({ year, season }: Props) {
 				<TextField
 					size="small"
 					value={title}
-					onChange={(event) => setTitle(event.target.value)}
+					onChange={(event) => setFilters({ title: event.target.value })}
 					placeholder="Search…"
 					sx={{ flex: 1, ...bareInput }}
 					slotProps={{
@@ -192,7 +153,7 @@ export function AnimesPage({ year, season }: Props) {
 						input: {
 							endAdornment: title && (
 								<InputAdornment position="end">
-									<IconButton size="small" aria-label="Clear title search" onClick={() => setTitle("")}>
+									<IconButton size="small" aria-label="Clear title search" onClick={() => setFilters({ title: "" })}>
 										<ClearIcon fontSize="small" />
 									</IconButton>
 								</InputAdornment>
@@ -204,35 +165,14 @@ export function AnimesPage({ year, season }: Props) {
 
 			<Divider orientation={isMobile ? "horizontal" : "vertical"} flexItem sx={{ mx: isMobile ? 0 : 0.5, my: 0.5 }} />
 
-			{statusFilters.map((filter) => {
-				const selected = status === filter.value;
-
-				return (
-					<Chip
-						key={filter.value}
-						label={filter.label}
-						onClick={() => setStatus(filter.value)}
-						sx={{
-							height: 30,
-							fontFamily: fonts.sans,
-							fontSize: 13,
-							bgcolor: selected ? "text.primary" : "background.paper",
-							color: selected ? "background.paper" : "text.secondary",
-							borderColor: selected ? "text.primary" : "divider",
-							"&:hover": {
-								bgcolor: selected ? "text.primary" : "background.paper",
-								borderColor: selected ? "text.primary" : "text.disabled",
-								color: selected ? "background.paper" : "text.primary",
-							},
-						}}
-					/>
-				);
-			})}
+			{statusFilters.map((filter) => (
+				<ChoiceChip key={filter.value} label={filter.label} selected={status === filter.value} onClick={() => setFilters({ status: filter.value })} />
+			))}
 
 			<Divider orientation={isMobile ? "horizontal" : "vertical"} flexItem sx={{ mx: isMobile ? 0 : 0.5, my: 0.5 }} />
 
 			<FilterField label="Sort">
-				<Select value={sort} onChange={(event) => setSort(event.target.value as SortKey)} variant="outlined" sx={bareSelect}>
+				<Select value={sort} onChange={(event) => setFilters({ sort: event.target.value as SortKey })} variant="outlined" sx={bareSelect}>
 					{sortKeys.map((key) => (
 						<MenuItem key={key} value={key}>
 							{sortLabels[key]}
@@ -241,15 +181,10 @@ export function AnimesPage({ year, season }: Props) {
 				</Select>
 			</FilterField>
 
-			<FilterField label="Rating">
+			<FilterField label="Min rating">
 				<Select
 					value={range.minScore}
-					onChange={(event) =>
-						setRange((previous) => ({
-							...previous,
-							minScore: Number(event.target.value),
-						}))
-					}
+					onChange={(event) => setFilters({ range: { ...range, minScore: Number(event.target.value) } })}
 					sx={{ ...bareSelect, fontFamily: fonts.mono }}
 				>
 					{minScoreOptions.map((value) => (
@@ -260,15 +195,10 @@ export function AnimesPage({ year, season }: Props) {
 				</Select>
 			</FilterField>
 
-			<FilterField label="Ratings">
+			<FilterField label="Min ratings">
 				<Select
 					value={range.minVotes}
-					onChange={(event) =>
-						setRange((previous) => ({
-							...previous,
-							minVotes: Number(event.target.value),
-						}))
-					}
+					onChange={(event) => setFilters({ range: { ...range, minVotes: Number(event.target.value) } })}
 					sx={{ ...bareSelect, fontFamily: fonts.mono }}
 				>
 					{minVotesOptions.map((value) => (
@@ -280,7 +210,7 @@ export function AnimesPage({ year, season }: Props) {
 			</FilterField>
 
 			<FilterField label="French dub">
-				<Select value={dub} onChange={(event) => setDub(event.target.value as DubFilter)} sx={bareSelect}>
+				<Select value={dub} onChange={(event) => setFilters({ dub: event.target.value as DubFilter })} sx={bareSelect}>
 					{dubFilters.map((filter) => (
 						<MenuItem key={filter} value={filter}>
 							{dubFilterLabels[filter]}
@@ -290,7 +220,7 @@ export function AnimesPage({ year, season }: Props) {
 			</FilterField>
 
 			<FilterField label="Studio">
-				<Select value={studio} onChange={(event) => setStudio(event.target.value)} sx={{ ...bareSelect, maxWidth: 170 }}>
+				<Select value={studio} displayEmpty onChange={(event) => setFilters({ studio: event.target.value })} sx={{ ...bareSelect, maxWidth: 170 }}>
 					<MenuItem value="">All</MenuItem>
 					{availableStudios.map((name) => (
 						<MenuItem key={name} value={name}>
@@ -307,10 +237,11 @@ export function AnimesPage({ year, season }: Props) {
 					disableCloseOnSelect
 					options={[...animeFormats]}
 					value={formats}
-					onChange={(_event, next) => setFormats(next)}
+					onChange={(_event, next) => setFilters({ formats: next })}
 					getOptionLabel={(option) => formatLabels[option]}
 					sx={{ flex: 1, ...bareInput }}
-					renderInput={(params) => <TextField {...params} placeholder="All" />}
+					// Only while nothing is chosen: "All" beside three chosen formats says the opposite.
+					renderInput={(params) => <TextField {...params} placeholder={formats.length === 0 ? "All" : ""} />}
 				/>
 			</FilterField>
 
@@ -320,21 +251,27 @@ export function AnimesPage({ year, season }: Props) {
 					size="small"
 					options={availableGenres}
 					value={genres}
-					onChange={(_event, next) => setGenres(next)}
+					onChange={(_event, next) => setFilters({ genres: next })}
 					sx={{ flex: 1, ...bareInput }}
-					renderInput={(params) => <TextField {...params} placeholder="All" />}
+					renderInput={(params) => <TextField {...params} placeholder={genres.length === 0 ? "All" : ""} />}
 				/>
 			</FilterField>
 
 			<FormControlLabel
 				sx={{ ml: 0.5, mr: 0 }}
-				control={<Switch checked={includeAdult} onChange={(event) => setIncludeAdult(event.target.checked)} sx={{ mr: 1 }} />}
+				control={<Switch checked={includeAdult} onChange={(event) => setFilters({ includeAdult: event.target.checked })} sx={{ mr: 1 }} />}
 				label={
 					<Typography variant="body2" sx={{ color: "text.secondary" }}>
 						Adult
 					</Typography>
 				}
 			/>
+
+			{!isMobile && activeFilters > 0 && (
+				<Button size="small" onClick={resetFilters} startIcon={<ClearIcon fontSize="small" />}>
+					Reset filters
+				</Button>
+			)}
 		</Stack>
 	);
 

@@ -55,7 +55,17 @@ function AppAuthBridge({ children }: { children: ReactNode }) {
 	return <AppAuthContext.Provider value={value}>{children}</AppAuthContext.Provider>;
 }
 
-export function AppAuthProvider({ children }: { children: ReactNode }) {
+interface Props {
+	children: ReactNode;
+	/**
+	 * Called with the path to land on once the identity provider has sent the reader back. The
+	 * router owns the address bar: rewriting it behind its back would leave the app rendering the
+	 * callback route while the URL says otherwise.
+	 */
+	onSignedIn: (returnTo: string) => void;
+}
+
+export function AppAuthProvider({ children, onSignedIn }: Props) {
 	const oidc = runtimeConfig.oauth;
 
 	return (
@@ -72,8 +82,8 @@ export function AppAuthProvider({ children }: { children: ReactNode }) {
 				// The browser sits on redirect_uri here, code still in the query string.
 				// Restoring the pre-login path both drops that one-time code — replaying it on
 				// a refresh fails — and gets the address bar off /login/callback, a route the
-				// app has no view for.
-				window.history.replaceState({}, document.title, resolveReturnTo(user?.state));
+				// app has no view of its own for.
+				onSignedIn(resolveReturnTo(user?.state));
 			}}
 		>
 			<AppAuthBridge>{children}</AppAuthBridge>

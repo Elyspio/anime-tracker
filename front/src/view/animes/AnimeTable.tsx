@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { Box, Link, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, Tooltip } from "@mui/material";
+import { Link as RouterLink } from "react-router";
 import { formatBingeChip } from "@/core/binge";
+import { studioPathOf } from "@/core/routes";
 import { bingeDotColor } from "@/view/animes/BingeBadge";
 import { useDestinationsPopover } from "@/view/animes/useDestinationsPopover";
 import { DubBadge } from "@/view/animes/DubBadge";
@@ -26,6 +28,21 @@ const columns: Column[] = [
 	{ key: "votes", label: "Ratings", numeric: true },
 	{ key: "popularity", label: "Popularity", numeric: true },
 ];
+
+/**
+ * Which way each column runs before it is reversed. Numbers open on the largest, because that is
+ * the end anyone sorts a rating for; the header arrow has to say so rather than claim "ascending".
+ */
+const opensDescending: Record<SortKey, boolean> = {
+	binge: false,
+	title: false,
+	studio: false,
+	episodes: true,
+	dub: true,
+	score: true,
+	votes: true,
+	popularity: true,
+};
 
 /** Sorts undefined-last regardless of direction, so "no end announced" never crowds the top. */
 function compare(a: Anime, b: Anime, key: SortKey): number {
@@ -105,21 +122,23 @@ interface Props {
 export function AnimeTable({ animes, now }: Props) {
 	// Opens on the rating, like the grid: a season is triaged by reputation before it is by date.
 	const [sortKey, setSortKey] = useState<SortKey>("score");
-	const [descending, setDescending] = useState(false);
+	const [reversed, setReversed] = useState(false);
 	const destinations = useDestinationsPopover();
 
 	const sorted = useMemo(() => {
 		const rows = [...animes].sort((a, b) => compare(a, b, sortKey));
-		return descending ? rows.reverse() : rows;
-	}, [animes, sortKey, descending]);
+		return reversed ? rows.reverse() : rows;
+	}, [animes, sortKey, reversed]);
+
+	const direction = opensDescending[sortKey] !== reversed ? "desc" : "asc";
 
 	const toggle = (key: SortKey) => {
 		if (key === sortKey) {
-			setDescending((previous) => !previous);
+			setReversed((previous) => !previous);
 			return;
 		}
 		setSortKey(key);
-		setDescending(false);
+		setReversed(false);
 	};
 
 	return (
@@ -130,8 +149,12 @@ export function AnimeTable({ animes, now }: Props) {
 						<TableCell sx={{ width: 44 }} />
 						<TableCell sx={{ width: 56 }} />
 						{columns.map((column) => (
-							<TableCell key={column.key} align={column.numeric ? "right" : "left"} sortDirection={sortKey === column.key ? (descending ? "desc" : "asc") : false}>
-								<TableSortLabel active={sortKey === column.key} direction={descending ? "desc" : "asc"} onClick={() => toggle(column.key)}>
+							<TableCell key={column.key} align={column.numeric ? "right" : "left"} sortDirection={sortKey === column.key ? direction : false}>
+								<TableSortLabel
+									active={sortKey === column.key}
+									direction={sortKey === column.key ? direction : opensDescending[column.key] ? "desc" : "asc"}
+									onClick={() => toggle(column.key)}
+								>
 									{column.label}
 								</TableSortLabel>
 							</TableCell>
@@ -141,6 +164,8 @@ export function AnimeTable({ animes, now }: Props) {
 				<TableBody>
 					{sorted.map((anime, index) => {
 						const chip = formatBingeChip(anime.binge, now);
+						const dub = badgeDub(anime);
+						const studioPath = studioPathOf(anime);
 
 						return (
 							<TableRow key={anime.id} hover onClick={(event) => destinations.open(anime, event.currentTarget)} sx={{ cursor: "pointer" }}>
@@ -162,7 +187,7 @@ export function AnimeTable({ animes, now }: Props) {
 													flexShrink: 0,
 												}}
 											/>
-											<Mono sx={{ color: "text.secondary" }}>{chip.label}</Mono>
+											<Mono sx={{ color: "text.secondary", whiteSpace: "nowrap" }}>{chip.label}</Mono>
 										</Stack>
 									</Tooltip>
 								</TableCell>
@@ -172,11 +197,20 @@ export function AnimeTable({ animes, now }: Props) {
 										{anime.title}
 									</Link>
 								</TableCell>
-								<TableCell sx={{ color: "text.disabled" }}>{anime.studio || "—"}</TableCell>
+								<TableCell sx={{ color: "text.disabled" }}>
+									{studioPath ? (
+										// Its own destination: the row opens the popover, this goes straight to the filmography.
+										<Link component={RouterLink} to={studioPath} underline="hover" color="inherit" onClick={(event) => event.stopPropagation()}>
+											{anime.studio}
+										</Link>
+									) : (
+										anime.studio || "—"
+									)}
+								</TableCell>
 								<TableCell>
 									<EpisodeProgress anime={anime} />
 								</TableCell>
-								<TableCell>{badgeDub(anime) ? <DubBadge dub={badgeDub(anime)!} /> : <Mono sx={{ color: "text.disabled" }}>—</Mono>}</TableCell>
+								<TableCell>{dub ? <DubBadge dub={dub} /> : <Mono sx={{ color: "text.disabled" }}>—</Mono>}</TableCell>
 								<TableCell align="right">
 									<Mono variant="body2">{anime.score?.toFixed(1) ?? "—"}</Mono>
 								</TableCell>

@@ -24,6 +24,7 @@ function anime(dubs: DubAvailability[]): Anime {
 		alternativeTitles: [],
 		description: "",
 		studio: "",
+		studioId: null,
 		imageUrl: "",
 		url: "",
 		format: "Tv",

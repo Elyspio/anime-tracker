@@ -26,7 +26,7 @@ internal static class SeasonQuery
 		      synonyms
 		      coverImage { extraLarge large }
 		      genres
-		      studios(isMain: true) { nodes { name } }
+		      studios(isMain: true) { nodes { id name } }
 		      stats { scoreDistribution { amount } }
 		      airingSchedule { nodes { episode airingAt } }
 		      externalLinks { site type url }
@@ -45,6 +45,19 @@ internal static class SeasonQuery
 			AnimeSeason.Summer => "SUMMER",
 			AnimeSeason.Fall => "FALL",
 			_ => throw new ArgumentOutOfRangeException(nameof(season), season, null)
+		};
+	}
+
+	/// <summary>The way back. Null for a media the source lists under no season, or under a new one.</summary>
+	public static AnimeSeason? ParseSeason(string? season)
+	{
+		return season?.ToUpperInvariant() switch
+		{
+			"WINTER" => AnimeSeason.Winter,
+			"SPRING" => AnimeSeason.Spring,
+			"SUMMER" => AnimeSeason.Summer,
+			"FALL" => AnimeSeason.Fall,
+			_ => null
 		};
 	}
 }

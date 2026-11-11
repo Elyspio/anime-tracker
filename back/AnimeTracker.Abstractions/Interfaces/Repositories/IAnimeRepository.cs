@@ -1,4 +1,5 @@
 using AnimeTracker.Abstractions.Models.Base.Anime;
+using AnimeTracker.Abstractions.Models.Base.Studios;
 using AnimeTracker.Abstractions.Models.Entities;
 
 namespace AnimeTracker.Abstractions.Interfaces.Repositories;
@@ -9,6 +10,15 @@ public interface IAnimeRepository : ICrudRepository<AnimeEntity, AnimeBase>
 
 	/// <summary>The anime with this AniList id, whatever its season.</summary>
 	Task<AnimeEntity?> GetBySourceId(int sourceId, CancellationToken cancellationToken = default);
+
+	/// <summary>
+	///     Writes the studio's id on the stored anime, in whichever seasons hold it. Nothing else of the
+	///     anime is touched: the next refresh of its season rewrites the same value.
+	/// </summary>
+	Task SetStudio(int sourceId, StudioReference studio, CancellationToken cancellationToken = default);
+
+	/// <summary>Whether any stored anime credits this studio as its main one.</summary>
+	Task<bool> HasStudio(int studioId, CancellationToken cancellationToken = default);
 
 	/// <summary>
 	///     Replaces a season with what the source just returned, keyed by the source's own id.

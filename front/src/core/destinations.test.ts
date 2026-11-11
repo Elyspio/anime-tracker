@@ -11,6 +11,7 @@ function anime(url: string, streamingLinks: StreamingLink[], dubs: DubAvailabili
 		alternativeTitles: [],
 		description: "",
 		studio: "",
+		studioId: null,
 		imageUrl: "",
 		url,
 		format: "Tv",

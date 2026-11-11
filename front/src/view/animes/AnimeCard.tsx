@@ -1,10 +1,10 @@
 import { Box, ButtonBase, Chip, LinearProgress, Stack, Typography } from "@mui/material";
-import { useState } from "react";
 import { shadows } from "@/config/tokens";
 import { BingeBadge } from "@/view/animes/BingeBadge";
 import { DubBadge } from "@/view/animes/DubBadge";
 import { badgeDub } from "@/core/dub";
 import { Mono } from "@/view/components/Mono";
+import { Poster } from "@/view/components/Poster";
 import type { Anime } from "@/core/api/types";
 
 interface Props {
@@ -19,11 +19,6 @@ export function AnimeCard({ anime, now, onOpen }: Props) {
 	const progress = total && total > 0 ? Math.min(100, (released / total) * 100) : 100;
 	const bingeable = anime.binge.status === "BingeableNow";
 	const dub = badgeDub(anime);
-
-	// A source entry with no cover stores an empty string, and <img src=""> resolves to the current
-	// document — a broken image behind a src that looks fine. Fall back explicitly.
-	const [imageFailed, setImageFailed] = useState(false);
-	const showImage = anime.imageUrl !== "" && !imageFailed;
 
 	return (
 		<ButtonBase
@@ -47,23 +42,12 @@ export function AnimeCard({ anime, now, onOpen }: Props) {
 				sx={{
 					position: "relative",
 					width: "100%",
-					aspectRatio: "2 / 3",
 					borderRadius: 1.5,
 					overflow: "hidden",
-					bgcolor: "action.hover",
 					transition: (theme) => theme.transitions.create("box-shadow"),
 				}}
 			>
-				{showImage && (
-					<Box
-						component="img"
-						src={anime.imageUrl}
-						alt=""
-						loading="lazy"
-						onError={() => setImageFailed(true)}
-						sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-					/>
-				)}
+				<Poster src={anime.imageUrl} />
 
 				{/* The countdown sits on the art: it is the reason to look at the card at all. */}
 				<Box sx={{ position: "absolute", top: 12, left: 12 }}>
