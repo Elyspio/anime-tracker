@@ -62,9 +62,14 @@ describe("matchesWorkFormat", () => {
 
 describe("matchesWorkAdult", () => {
 	it("hides adult works until asked for", () => {
-		expect(matchesWorkAdult(work(1, null, { isAdult: true }), false)).toBe(false);
-		expect(matchesWorkAdult(work(1, null, { isAdult: true }), true)).toBe(true);
-		expect(matchesWorkAdult(work(1, null), false)).toBe(true);
+		expect(matchesWorkAdult(work(1, null, { isAdult: true }), "hide")).toBe(false);
+		expect(matchesWorkAdult(work(1, null, { isAdult: true }), "include")).toBe(true);
+		expect(matchesWorkAdult(work(1, null), "hide")).toBe(true);
+	});
+
+	it("keeps only adult works when only they are asked for", () => {
+		expect(matchesWorkAdult(work(1, null, { isAdult: true }), "only")).toBe(true);
+		expect(matchesWorkAdult(work(1, null), "only")).toBe(false);
 	});
 });
 

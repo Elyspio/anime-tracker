@@ -1,6 +1,6 @@
 import type { StatusFilter } from "@/core/binge";
 import type { DubFilter } from "@/core/dub";
-import { episodicFormats, noRangeFilter, type RangeFilter, type SortKey } from "@/core/ranking";
+import { episodicFormats, noRangeFilter, type AdultFilter, type RangeFilter, type SortKey } from "@/core/ranking";
 import type { AnimeFormat } from "@/core/api/types";
 
 /**
@@ -16,11 +16,11 @@ export interface SeasonFilters {
 	range: RangeFilter;
 	sort: SortKey;
 	formats: AnimeFormat[];
-	includeAdult: boolean;
+	adult: AdultFilter;
 	dub: DubFilter;
 }
 
-/** Highest-rated first, episodic formats only: the view the product opens on. */
+/** Highest-rated first, episodic formats only, adult entries hidden: the view the product opens on. */
 export const defaultSeasonFilters: SeasonFilters = {
 	title: "",
 	status: "all",
@@ -29,7 +29,7 @@ export const defaultSeasonFilters: SeasonFilters = {
 	range: noRangeFilter,
 	sort: "score",
 	formats: [...episodicFormats],
-	includeAdult: false,
+	adult: "hide",
 	dub: "any",
 };
 
@@ -47,7 +47,7 @@ export function countActiveFilters(filters: SeasonFilters): number {
 		filters.range.minScore !== 0,
 		filters.range.minVotes !== 0,
 		!sameFormats(filters.formats, episodicFormats),
-		filters.includeAdult,
+		filters.adult !== "hide",
 		filters.dub !== "any",
 	].filter(Boolean).length;
 }

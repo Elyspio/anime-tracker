@@ -9,13 +9,11 @@ import {
 	CircularProgress,
 	Divider,
 	Dialog,
-	FormControlLabel,
 	IconButton,
 	InputAdornment,
 	MenuItem,
 	Select,
 	Stack,
-	Switch,
 	TextField,
 	ToggleButton,
 	ToggleButtonGroup,
@@ -32,6 +30,7 @@ import { collectStudios, formatLabels, matchesAdult, matchesFormat, matchesRange
 import { useViewMode } from "@/config/viewMode";
 import { AnimeCardGrid } from "@/view/animes/AnimeCardGrid";
 import { AnimeTable } from "@/view/animes/AnimeTable";
+import { AdultSelect } from "@/view/components/AdultSelect";
 import { ChoiceChip } from "@/view/components/ChoiceChip";
 import { FilterField } from "@/view/components/FilterField";
 import { useLayoutContext } from "@/view/layout/layoutContext";
@@ -78,7 +77,7 @@ export function AnimesPage({ year, season }: Props) {
 	const { data, isPending, error } = useAnimes(year, season);
 	const [viewMode, setViewMode] = useViewMode();
 	const { filters, setFilters, resetFilters } = useLayoutContext();
-	const { title, status, genres, studio, range, sort, formats, includeAdult, dub } = filters;
+	const { title, status, genres, studio, range, sort, formats, adult, dub } = filters;
 	const [filtersOpen, setFiltersOpen] = useState(false);
 	const isMobile = useMediaQuery(useTheme().breakpoints.down("md"));
 
@@ -116,12 +115,12 @@ export function AnimesPage({ year, season }: Props) {
 						matchesStudio(anime, studio) &&
 						matchesRange(anime, range) &&
 						matchesFormat(anime, formats) &&
-						matchesAdult(anime, includeAdult) &&
+						matchesAdult(anime, adult) &&
 						matchesDub(anime, dub)
 				),
 				sort
 			),
-		[animes, title, status, genres, studio, range, sort, formats, includeAdult, dub, now]
+		[animes, title, status, genres, studio, range, sort, formats, adult, dub, now]
 	);
 
 	if (isPending) {
@@ -257,15 +256,7 @@ export function AnimesPage({ year, season }: Props) {
 				/>
 			</FilterField>
 
-			<FormControlLabel
-				sx={{ ml: 0.5, mr: 0 }}
-				control={<Switch checked={includeAdult} onChange={(event) => setFilters({ includeAdult: event.target.checked })} sx={{ mr: 1 }} />}
-				label={
-					<Typography variant="body2" sx={{ color: "text.secondary" }}>
-						Adult
-					</Typography>
-				}
-			/>
+			<AdultSelect value={adult} onChange={(next) => setFilters({ adult: next })} />
 
 			{!isMobile && activeFilters > 0 && (
 				<Button size="small" onClick={resetFilters} startIcon={<ClearIcon fontSize="small" />}>

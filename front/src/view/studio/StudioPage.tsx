@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { Alert, Box, Button, CircularProgress, FormControlLabel, Link, Stack, Switch, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Alert, Box, Button, CircularProgress, Link, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { Link as RouterLink, Navigate, useParams } from "react-router";
 import { useSnackbar } from "notistack";
 import { useViewMode } from "@/config/viewMode";
@@ -10,9 +10,10 @@ import { useRefreshStudio } from "@/core/api/mutations";
 import { useStudio, useStudioOfAnime } from "@/core/api/queries";
 import { useAppAuth } from "@/core/auth/AuthProvider";
 import { seasonLabels } from "@/core/binge";
-import { formatLabels } from "@/core/ranking";
+import { formatLabels, type AdultFilter } from "@/core/ranking";
 import { homePath, parseStudioId, seasonPath, studioPath } from "@/core/routes";
 import { countFormats, firstYear, formatFetchedAt, formatWorkCount, groupByYear, matchesWorkAdult, matchesWorkFormat } from "@/core/studio";
+import { AdultSelect } from "@/view/components/AdultSelect";
 import { ChoiceChip } from "@/view/components/ChoiceChip";
 import { Mono } from "@/view/components/Mono";
 import { useDocumentTitle } from "@/view/components/useDocumentTitle";
@@ -63,13 +64,13 @@ function Filmography({ studio }: { studio: StudioFilmography }) {
 	const auth = useAppAuth();
 	const [viewMode, setViewMode] = useViewMode("studio");
 	const [format, setFormat] = useState<AnimeFormat | null>(null);
-	const [includeAdult, setIncludeAdult] = useState(false);
+	const [adult, setAdult] = useState<AdultFilter>("hide");
 
 	const hasAdult = useMemo(() => studio.works.some((work) => work.isAdult), [studio.works]);
-	const shown = useMemo(() => studio.works.filter((work) => matchesWorkAdult(work, includeAdult)), [studio.works, includeAdult]);
+	const shown = useMemo(() => studio.works.filter((work) => matchesWorkAdult(work, adult)), [studio.works, adult]);
 	const formats = useMemo(() => countFormats(shown), [shown]);
 
-	// A format that the adult switch just emptied falls back to "All" rather than to an empty page.
+	// A format that the adult filter just emptied falls back to "All" rather than to an empty page.
 	const selected = format !== null && formats.some((entry) => entry.format === format) ? format : null;
 	const groups = useMemo(() => groupByYear(shown.filter((work) => matchesWorkFormat(work, selected))), [shown, selected]);
 
@@ -130,15 +131,9 @@ function Filmography({ studio }: { studio: StudioFilmography }) {
 					)}
 
 					{hasAdult && (
-						<FormControlLabel
-							sx={{ ml: formats.length > 1 ? 1 : 0, mr: 0 }}
-							control={<Switch checked={includeAdult} onChange={(event) => setIncludeAdult(event.target.checked)} sx={{ mr: 1 }} />}
-							label={
-								<Typography variant="body2" sx={{ color: "text.secondary" }}>
-									Adult
-								</Typography>
-							}
-						/>
+						<Box sx={{ ml: formats.length > 1 ? 1 : 0 }}>
+							<AdultSelect value={adult} onChange={setAdult} />
+						</Box>
 					)}
 				</Stack>
 			)}

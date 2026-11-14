@@ -1,4 +1,5 @@
 import { animeFormats, type AnimeFormat, type StudioWork } from "@/core/api/types";
+import { matchesAdultFilter, type AdultFilter } from "@/core/ranking";
 
 /** A year's worth of a filmography. `year` is null for the works nobody has dated yet. */
 export interface WorkGroup {
@@ -41,8 +42,8 @@ export function matchesWorkFormat(work: StudioWork, selected: AnimeFormat | null
 }
 
 /** Adult works are stored like any other and hidden until asked for, as in a season. */
-export function matchesWorkAdult(work: StudioWork, includeAdult: boolean): boolean {
-	return includeAdult || !work.isAdult;
+export function matchesWorkAdult(work: StudioWork, filter: AdultFilter): boolean {
+	return matchesAdultFilter(work.isAdult, filter);
 }
 
 /** The year of the studio's earliest dated work, for "since 2019". Null when nothing is dated. */
