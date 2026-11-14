@@ -159,12 +159,21 @@ describe("matchesTitle", () => {
 });
 
 describe("matchesAdult", () => {
+	const adult = anime("x", 1, 8, { isAdult: true });
+	const general = anime("y", 1, 8, { isAdult: false });
+
 	it("hides adult entries by default", () => {
-		expect(matchesAdult(anime("x", 1, 8, { isAdult: true }), false)).toBe(false);
-		expect(matchesAdult(anime("x", 1, 8, { isAdult: false }), false)).toBe(true);
+		expect(matchesAdult(adult, "hide")).toBe(false);
+		expect(matchesAdult(general, "hide")).toBe(true);
 	});
 
-	it("shows them once asked for", () => {
-		expect(matchesAdult(anime("x", 1, 8, { isAdult: true }), true)).toBe(true);
+	it("shows them beside the rest once asked for", () => {
+		expect(matchesAdult(adult, "include")).toBe(true);
+		expect(matchesAdult(general, "include")).toBe(true);
+	});
+
+	it("shows them alone when only they are asked for", () => {
+		expect(matchesAdult(adult, "only")).toBe(true);
+		expect(matchesAdult(general, "only")).toBe(false);
 	});
 });

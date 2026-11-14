@@ -111,7 +111,26 @@ export function matchesTitle(anime: Anime, query: string): boolean {
 	return [anime.title, ...anime.alternativeTitles].some((title) => normalizeTitle(title).includes(needle));
 }
 
+/** Hidden by default, shown beside everything else, or alone. */
+export type AdultFilter = "hide" | "include" | "only";
+
+export const adultFilters: readonly AdultFilter[] = ["hide", "include", "only"];
+
+export const adultFilterLabels: Record<AdultFilter, string> = {
+	hide: "Hide",
+	include: "Include",
+	only: "Only",
+};
+
+/** Shared by a season and a filmography: both hold adult entries stored like any other. */
+export function matchesAdultFilter(isAdult: boolean, filter: AdultFilter): boolean {
+	if (filter === "only") return isAdult;
+	if (filter === "hide") return !isAdult;
+
+	return true;
+}
+
 /** Adult entries are fetched and stored like any other, and hidden until explicitly asked for. */
-export function matchesAdult(anime: Anime, includeAdult: boolean): boolean {
-	return includeAdult || !anime.isAdult;
+export function matchesAdult(anime: Anime, filter: AdultFilter): boolean {
+	return matchesAdultFilter(anime.isAdult, filter);
 }

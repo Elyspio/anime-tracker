@@ -358,7 +358,25 @@ as `admin` and triggers a refresh — that button is the bootstrap path.
 `deploy/build/build.ps1` builds the single-container image, pushes it to an external registry
 **and deploys it**: it ends by calling the chart's `deploy.ps1` with the new tag as `-Tag`. The chart
 lives in the infrastructure repository, at `infrastructure-elylan/kubernetes/apps/anime-tracker`,
-whose local clone is `P:\own\common\keycloak`. Run it only when explicitly asked to publish.
+whose local clone is `P:\own\common\keycloak`. Run it as the last step of the delivery workflow
+below, or when explicitly asked to publish — never on its own initiative otherwise.
+
+### Delivery workflow
+
+Every change the owner asks for ships the same way, and production is where it gets accepted:
+
+1. A new branch off an up-to-date `main` (`feat/…`, `fix/…`, `docs/…`), never a commit on `main`.
+2. Checks green before anything leaves the machine: `dotnet test --solution back/AnimeTracker.slnx`
+   when the backend moved, `pnpm check` and `pnpm test` in `front/` when the frontend did.
+3. Push, and open the PR against `main` (title and body in French).
+4. **Deploy that branch to production** with `deploy/build/build.ps1`, from the branch's working
+   tree — the image is built from what is checked out, so the branch is what goes live.
+5. **Leave the PR open.** The owner tests in production and merges it themselves; an agent never
+   merges it, nor deletes the branch. Say in the hand-off which image tag went out.
+
+Production can therefore run a branch that `main` does not hold yet. Until that PR is merged, the
+next branch starts from `main` and its deployment would roll the open one back: say so before
+deploying over an unmerged PR.
 
 Run a **single replica**, and roll it with `strategy: Recreate`. The Hangfire server and the
 refresher are singletons, and `AnimeHostedService` proves it in both directions: `StopAsync`
