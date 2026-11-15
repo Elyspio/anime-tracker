@@ -1,3 +1,4 @@
+using Elyspio.Utils.Results.AspNetCore;
 using Elyspio.Utils.Telemetry;
 using AnimeTracker.Abstractions.Interfaces.Services;
 using AnimeTracker.Abstractions.Models.Transports;
@@ -21,11 +22,11 @@ public class StudioController(IStudioService studioService, ILogger<StudioContro
 	[ProducesResponseType<StudioFilmography>(StatusCodes.Status200OK)]
 	[ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
 	[ProducesResponseType<ProblemDetails>(StatusCodes.Status502BadGateway)]
-	public async Task<StudioFilmography> GetStudio(int studioId, CancellationToken cancellationToken)
+	public async Task<ActionResult<StudioFilmography>> GetStudio(int studioId, CancellationToken cancellationToken)
 	{
 		using var trace = logger.Trace($"{Log.F(studioId)}");
 
-		return await studioService.Get(studioId, cancellationToken);
+		return (await studioService.Get(studioId, cancellationToken)).ToActionResult();
 	}
 
 	/// <summary>
@@ -38,11 +39,11 @@ public class StudioController(IStudioService studioService, ILogger<StudioContro
 	[ProducesResponseType<StudioFilmography>(StatusCodes.Status200OK)]
 	[ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
 	[ProducesResponseType<ProblemDetails>(StatusCodes.Status502BadGateway)]
-	public async Task<StudioFilmography> GetStudioOfAnime(int sourceId, CancellationToken cancellationToken)
+	public async Task<ActionResult<StudioFilmography>> GetStudioOfAnime(int sourceId, CancellationToken cancellationToken)
 	{
 		using var trace = logger.Trace($"{Log.F(sourceId)}");
 
-		return await studioService.GetByAnime(sourceId, cancellationToken);
+		return (await studioService.GetByAnime(sourceId, cancellationToken)).ToActionResult();
 	}
 
 	/// <summary>
@@ -54,10 +55,10 @@ public class StudioController(IStudioService studioService, ILogger<StudioContro
 	[ProducesResponseType<StudioFilmography>(StatusCodes.Status200OK)]
 	[ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
 	[ProducesResponseType<ProblemDetails>(StatusCodes.Status502BadGateway)]
-	public async Task<StudioFilmography> RefreshStudio(int studioId, CancellationToken cancellationToken)
+	public async Task<ActionResult<StudioFilmography>> RefreshStudio(int studioId, CancellationToken cancellationToken)
 	{
 		using var trace = logger.Trace($"{Log.F(studioId)}");
 
-		return await studioService.Refresh(studioId, cancellationToken);
+		return (await studioService.Refresh(studioId, cancellationToken)).ToActionResult();
 	}
 }

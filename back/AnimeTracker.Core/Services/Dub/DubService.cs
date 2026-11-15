@@ -1,3 +1,5 @@
+using Elyspio.Utils.Results;
+using AnimeTracker.Abstractions.Errors;
 using Elyspio.Utils.Telemetry;
 using System.Net;
 using AnimeTracker.Abstractions.Exceptions;
@@ -182,26 +184,36 @@ public class DubService(
 		return cases;
 	}
 
-	public async Task<DubOverrideResult> SetOverride(int sourceId, DubPlatform platform, DubOverrideRequest request,
+	public async Task<Result<DubOverrideResult>> SetOverride(int sourceId, DubPlatform platform, DubOverrideRequest request,
 		CancellationToken cancellationToken = default)
 	{
 		using var trace = logger.Trace($"{Log.F(sourceId)} {Log.F(platform)} {Log.F(request.Mode)}");
 
-		var adapter = _platforms.FirstOrDefault(candidate => candidate.Platform == platform)
-			?? throw new HttpException(HttpStatusCode.NotFound, $"{platform} is not a configured platform.");
+		var adapter = _platforms.FirstOrDefault(candidate => candidate.Platform == platform);
+		if (adapter is null) return trace.Fail(new ResourceNotFound($"{platform} is not a configured platform."));
 
-		var anime = await animeRepository.GetBySourceId(sourceId, cancellationToken)
-			?? throw new HttpException(HttpStatusCode.NotFound, $"No anime has the AniList id {sourceId}.");
+		var anime = await animeRepository.GetBySourceId(sourceId, cancellationToken);
+		if (anime is null) return trace.Fail(new ResourceNotFound($"No anime has the AniList id {sourceId}."));
 
-		var @override = request.Mode switch
+		DubOverrideBase? @override;
+		switch (request.Mode)
 		{
-			DubOverrideMode.Auto => null,
-			// Checked against the platform's own domain and series path: a pin is never an arbitrary URL.
-			DubOverrideMode.Pinned => Override(DubOverrideMode.Pinned, (request.Url is { } url ? adapter.ParseSeriesId(url) : null)
-				?? throw new HttpException(HttpStatusCode.BadRequest, $"Not a {platform} series page: {request.Url}")),
-			DubOverrideMode.Blocked => Override(DubOverrideMode.Blocked, null),
-			_ => throw new HttpException(HttpStatusCode.BadRequest, $"Unknown override mode {request.Mode}.")
-		};
+			case DubOverrideMode.Auto:
+				@override = null;
+				break;
+			case DubOverrideMode.Pinned:
+				// Checked against the platform's own domain and series path: a pin is never an arbitrary URL.
+				if ((request.Url is { } url ? adapter.ParseSeriesId(url) : null) is not { } seriesId)
+					return trace.Fail(new RequestInvalid($"Not a {platform} series page: {request.Url}"));
+
+				@override = Override(DubOverrideMode.Pinned, seriesId);
+				break;
+			case DubOverrideMode.Blocked:
+				@override = Override(DubOverrideMode.Blocked, null);
+				break;
+			default:
+				return trace.Fail(new RequestInvalid($"Unknown override mode {request.Mode}."));
+		}
 
 		if (@override is null) await overrideRepository.Delete(sourceId, platform, cancellationToken);
 		else await overrideRepository.Save(@override, cancellationToken);

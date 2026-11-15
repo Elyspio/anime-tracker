@@ -1,7 +1,7 @@
+using Elyspio.Utils.Results;
+using AnimeTracker.Abstractions.Errors;
 using Elyspio.Utils.Telemetry;
 using System.Collections.Concurrent;
-using System.Net;
-using AnimeTracker.Abstractions.Exceptions;
 using AnimeTracker.Abstractions.Interfaces.Adapters;
 using AnimeTracker.Abstractions.Interfaces.Repositories;
 using AnimeTracker.Abstractions.Interfaces.Services;
@@ -26,45 +26,46 @@ public class StudioService(
 	/// </summary>
 	private readonly ConcurrentDictionary<int, SemaphoreSlim> _fetches = new();
 
-	public async Task<StudioFilmography> Get(int studioId, CancellationToken cancellationToken = default)
+	public async Task<Result<StudioFilmography>> Get(int studioId, CancellationToken cancellationToken = default)
 	{
-		using var _ = logger.Trace($"{Log.F(studioId)}");
+		using var trace = logger.Trace($"{Log.F(studioId)}");
 
 		var stored = await studioRepository.Get(studioId, cancellationToken);
+		if (stored is not null) return StudioAssembler.Convert(stored);
 
-		return stored is not null ? StudioAssembler.Convert(stored) : await Fetch(studioId, false, cancellationToken);
+		return trace.Return(await Fetch(studioId, false, cancellationToken));
 	}
 
-	public async Task<StudioFilmography> GetByAnime(int sourceId, CancellationToken cancellationToken = default)
+	public async Task<Result<StudioFilmography>> GetByAnime(int sourceId, CancellationToken cancellationToken = default)
 	{
-		using var _ = logger.Trace($"{Log.F(sourceId)}");
+		using var trace = logger.Trace($"{Log.F(sourceId)}");
 
 		// Only a stored anime: like a studio, an id nobody stored is never asked of the source.
-		var anime = await animeRepository.GetBySourceId(sourceId, cancellationToken)
-			?? throw new HttpException(HttpStatusCode.NotFound, $"No anime is stored with id {sourceId}.");
+		var anime = await animeRepository.GetBySourceId(sourceId, cancellationToken);
+		if (anime is null) return trace.Fail(new ResourceNotFound($"No anime is stored with id {sourceId}."));
 
-		if (anime.StudioId is { } known) return await Get(known, cancellationToken);
+		if (anime.StudioId is { } known) return trace.Return(await Get(known, cancellationToken));
 
-		var studio = await MainStudio(sourceId, cancellationToken)
-			?? throw new HttpException(HttpStatusCode.NotFound, $"AniList credits no main studio for {anime.Title}.");
+		if (!(await MainStudio(sourceId, cancellationToken)).TryGet(out var studio, out var error)) return trace.Fail(error);
+		if (studio is null) return trace.Fail(new ResourceNotFound($"AniList credits no main studio for {anime.Title}."));
 
 		// Kept on the anime: the next click costs the source nothing, and the studio is now one a
 		// stored anime credits, which is what lets its filmography be fetched.
 		await animeRepository.SetStudio(sourceId, studio, cancellationToken);
 
-		return await Get(studio.Id, cancellationToken);
+		return trace.Return(await Get(studio.Id, cancellationToken));
 	}
 
-	public async Task<StudioFilmography> Refresh(int studioId, CancellationToken cancellationToken = default)
+	public async Task<Result<StudioFilmography>> Refresh(int studioId, CancellationToken cancellationToken = default)
 	{
-		using var _ = logger.Trace($"{Log.F(studioId)}");
+		using var trace = logger.Trace($"{Log.F(studioId)}");
 
-		return await Fetch(studioId, true, cancellationToken);
+		return trace.Return(await Fetch(studioId, true, cancellationToken));
 	}
 
-	private async Task<StudioFilmography> Fetch(int studioId, bool replace, CancellationToken cancellationToken)
+	private async Task<Result<StudioFilmography>> Fetch(int studioId, bool replace, CancellationToken cancellationToken)
 	{
-		await EnsureKnown(studioId, cancellationToken);
+		if (!await IsKnown(studioId, cancellationToken)) return NotFound(studioId);
 
 		var gate = _fetches.GetOrAdd(studioId, _ => new SemaphoreSlim(1, 1));
 
@@ -75,7 +76,7 @@ public class StudioService(
 			// Whoever held the gate may have just stored what this call came for.
 			if (!replace && await studioRepository.Get(studioId, cancellationToken) is { } stored) return StudioAssembler.Convert(stored);
 
-			var filmography = await FromSource(studioId, cancellationToken);
+			if (!(await FromSource(studioId, cancellationToken)).TryGet(out var filmography, out var error)) return error;
 
 			var saved = await studioRepository.Save(filmography, timeProvider.GetUtcNow(), cancellationToken);
 
@@ -92,28 +93,25 @@ public class StudioService(
 	///     source. The read is anonymous: without this, walking the ids would spend the source's rate
 	///     limit, which the nightly refresh shares, and fill the store with studios nobody linked to.
 	/// </summary>
-	private async Task EnsureKnown(int studioId, CancellationToken cancellationToken)
+	private async Task<bool> IsKnown(int studioId, CancellationToken cancellationToken)
 	{
-		if (await studioRepository.Get(studioId, cancellationToken) is not null) return;
-		if (await animeRepository.HasStudio(studioId, cancellationToken)) return;
-
-		throw NotFound(studioId);
+		return await studioRepository.Get(studioId, cancellationToken) is not null || await animeRepository.HasStudio(studioId, cancellationToken);
 	}
 
-	private async Task<StudioFilmographyBase> FromSource(int studioId, CancellationToken cancellationToken)
+	private async Task<Result<StudioFilmographyBase>> FromSource(int studioId, CancellationToken cancellationToken)
 	{
 		try
 		{
-			return await sourceAdapter.GetStudio(studioId, cancellationToken) ?? throw NotFound(studioId);
+			return await sourceAdapter.GetStudio(studioId, cancellationToken) is { } filmography ? filmography : NotFound(studioId);
 		}
 		catch (HttpRequestException exception)
 		{
 			// Served anonymously like a refresh run's error: the message, never the stack trace.
-			throw new HttpException(HttpStatusCode.BadGateway, $"The studio could not be fetched from AniList: {exception.Message}", exception);
+			return Unavailable(exception);
 		}
 	}
 
-	private async Task<StudioReference?> MainStudio(int sourceId, CancellationToken cancellationToken)
+	private async Task<Result<StudioReference?>> MainStudio(int sourceId, CancellationToken cancellationToken)
 	{
 		try
 		{
@@ -121,12 +119,19 @@ public class StudioService(
 		}
 		catch (HttpRequestException exception)
 		{
-			throw new HttpException(HttpStatusCode.BadGateway, $"The studio could not be fetched from AniList: {exception.Message}", exception);
+			return Unavailable(exception);
 		}
 	}
 
-	private static HttpException NotFound(int studioId)
+	private SourceUnavailable Unavailable(HttpRequestException exception)
 	{
-		return new HttpException(HttpStatusCode.NotFound, $"No studio is known with id {studioId}.");
+		logger.LogWarning(exception, "The studio could not be fetched from AniList");
+
+		return new SourceUnavailable($"The studio could not be fetched from AniList: {exception.Message}");
+	}
+
+	private static ResourceNotFound NotFound(int studioId)
+	{
+		return new ResourceNotFound($"No studio is known with id {studioId}.");
 	}
 }

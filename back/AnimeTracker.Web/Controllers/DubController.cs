@@ -1,3 +1,4 @@
+using Elyspio.Utils.Results.AspNetCore;
 using Elyspio.Utils.Telemetry;
 using AnimeTracker.Abstractions.Interfaces.Services;
 using AnimeTracker.Abstractions.Models.Base.Anime;
@@ -38,11 +39,11 @@ public class DubController(IDubService dubService, TimeProvider timeProvider, IL
 	[ProducesResponseType<DubOverrideResult>(StatusCodes.Status200OK)]
 	[ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
 	[ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
-	public async Task<DubOverrideResult> SetOverride(int sourceId, DubPlatform platform, [FromBody] DubOverrideRequest request,
+	public async Task<ActionResult<DubOverrideResult>> SetOverride(int sourceId, DubPlatform platform, [FromBody] DubOverrideRequest request,
 		CancellationToken cancellationToken)
 	{
 		using var trace = logger.Trace($"{Log.F(sourceId)} {Log.F(platform)} {Log.F(request.Mode)}");
 
-		return await dubService.SetOverride(sourceId, platform, request, cancellationToken);
+		return (await dubService.SetOverride(sourceId, platform, request, cancellationToken)).ToActionResult();
 	}
 }

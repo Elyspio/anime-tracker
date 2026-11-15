@@ -12,7 +12,6 @@ using AnimeTracker.Adapters.Crunchyroll.Injections;
 using AnimeTracker.Core.Injections;
 using AnimeTracker.Core.Services;
 using AnimeTracker.Web.Auth;
-using AnimeTracker.Web.Filters;
 using AnimeTracker.Web.Hosting;
 using Elyspio.Utils.Telemetry;
 using Elyspio.Utils.Telemetry.MongoDB.Extensions;
@@ -42,7 +41,7 @@ builder.Services.AddCore();
 builder.Services.AddAppAuth(builder.Configuration);
 
 // Enums as names, not integers: the frontend compares against "Summer", "BingeableNow".
-builder.Services.AddControllers(options => options.Filters.Add<HttpExceptionFilter>())
+builder.Services.AddControllers()
 	.AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddEndpointsApiExplorer();

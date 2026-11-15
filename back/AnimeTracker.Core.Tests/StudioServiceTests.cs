@@ -1,5 +1,5 @@
 using System.Net;
-using AnimeTracker.Abstractions.Exceptions;
+using AnimeTracker.Abstractions.Errors;
 using AnimeTracker.Abstractions.Interfaces.Adapters;
 using AnimeTracker.Abstractions.Interfaces.Repositories;
 using AnimeTracker.Abstractions.Models.Base.Anime;
@@ -83,7 +83,7 @@ public class StudioServiceTests
 	{
 		Stored(Work(1, new StudioWorkDate(2024, 4, 8)));
 
-		var studio = await _service.Get(StudioId, TestContext.Current.CancellationToken);
+		var studio = (await _service.Get(StudioId, TestContext.Current.CancellationToken)).ShouldSucceed();
 
 		studio.Name.ShouldBe("Studio Bind");
 		// However old: nothing refreshes a filmography but the admin's button.
@@ -97,7 +97,7 @@ public class StudioServiceTests
 		Credited();
 		_source.GetStudio(StudioId, Arg.Any<CancellationToken>()).Returns(Source(Work(1, new StudioWorkDate(2024, 4, 8))));
 
-		var studio = await _service.Get(StudioId, TestContext.Current.CancellationToken);
+		var studio = (await _service.Get(StudioId, TestContext.Current.CancellationToken)).ShouldSucceed();
 
 		studio.Works.Single().SourceId.ShouldBe(1);
 		studio.FetchedAt.ShouldBe(Now);
@@ -108,9 +108,9 @@ public class StudioServiceTests
 	public async Task Refuses_a_studio_no_stored_anime_credits_without_asking_the_source()
 	{
 		// The read is anonymous: walking the ids must not spend the source's rate limit.
-		var error = await Should.ThrowAsync<HttpException>(() => _service.Get(StudioId, TestContext.Current.CancellationToken));
+		var error = (await _service.Get(StudioId, TestContext.Current.CancellationToken)).ShouldFail();
 
-		error.Code.ShouldBe(HttpStatusCode.NotFound);
+		error.ShouldBeOfType<ResourceNotFound>();
 		await _source.DidNotReceiveWithAnyArgs().GetStudio(default, TestContext.Current.CancellationToken);
 	}
 
@@ -120,9 +120,9 @@ public class StudioServiceTests
 		Credited();
 		_source.GetStudio(StudioId, Arg.Any<CancellationToken>()).Returns((StudioFilmographyBase?)null);
 
-		var error = await Should.ThrowAsync<HttpException>(() => _service.Get(StudioId, TestContext.Current.CancellationToken));
+		var error = (await _service.Get(StudioId, TestContext.Current.CancellationToken)).ShouldFail();
 
-		error.Code.ShouldBe(HttpStatusCode.NotFound);
+		error.ShouldBeOfType<ResourceNotFound>();
 		await _studios.DidNotReceiveWithAnyArgs().Save(default!, default, TestContext.Current.CancellationToken);
 	}
 
@@ -132,9 +132,9 @@ public class StudioServiceTests
 		Credited();
 		_source.GetStudio(StudioId, Arg.Any<CancellationToken>()).ThrowsAsync(new HttpRequestException("AniList rejected the query: Too complex"));
 
-		var error = await Should.ThrowAsync<HttpException>(() => _service.Get(StudioId, TestContext.Current.CancellationToken));
+		var error = (await _service.Get(StudioId, TestContext.Current.CancellationToken)).ShouldFail();
 
-		error.Code.ShouldBe(HttpStatusCode.BadGateway);
+		error.ShouldBeOfType<SourceUnavailable>();
 		error.Message.ShouldContain("Too complex");
 	}
 
@@ -145,7 +145,7 @@ public class StudioServiceTests
 		_source.GetStudio(StudioId, Arg.Any<CancellationToken>())
 			.Returns(Source(Work(1, new StudioWorkDate(2024, 4, 8)), Work(2, new StudioWorkDate(2026, 7, 4))));
 
-		var studio = await _service.Refresh(StudioId, TestContext.Current.CancellationToken);
+		var studio = (await _service.Refresh(StudioId, TestContext.Current.CancellationToken)).ShouldSucceed();
 
 		studio.Works.Select(work => work.SourceId).ShouldBe([2, 1]);
 		studio.FetchedAt.ShouldBe(Now);
@@ -157,7 +157,7 @@ public class StudioServiceTests
 		Stored(Work(1, new StudioWorkDate(2024, 4, 8)));
 		_source.GetStudio(StudioId, Arg.Any<CancellationToken>()).ThrowsAsync(new HttpRequestException("down"));
 
-		await Should.ThrowAsync<HttpException>(() => _service.Refresh(StudioId, TestContext.Current.CancellationToken));
+		(await _service.Refresh(StudioId, TestContext.Current.CancellationToken)).ShouldFail();
 
 		await _studios.DidNotReceiveWithAnyArgs().Save(default!, default, TestContext.Current.CancellationToken);
 	}
@@ -180,8 +180,8 @@ public class StudioServiceTests
 
 		release.SetResult(Source(Work(1, new StudioWorkDate(2024, 4, 8))));
 
-		(await first).Works.Count.ShouldBe(1);
-		(await second).Works.Count.ShouldBe(1);
+		(await first).ShouldSucceed().Works.Count.ShouldBe(1);
+		(await second).ShouldSucceed().Works.Count.ShouldBe(1);
 		await _source.Received(1).GetStudio(StudioId, Arg.Any<CancellationToken>());
 	}
 
@@ -219,7 +219,7 @@ public class StudioServiceTests
 	{
 		Stored(Work(1, new StudioWorkDate(2024, 4, 8)), Work(2, new StudioWorkDate(2025, 1, 1), format: AnimeFormat.Music));
 
-		var studio = await _service.Get(StudioId, TestContext.Current.CancellationToken);
+		var studio = (await _service.Get(StudioId, TestContext.Current.CancellationToken)).ShouldSucceed();
 
 		studio.Works.Select(work => work.SourceId).ShouldBe([1]);
 	}
@@ -256,7 +256,7 @@ public class StudioServiceTests
 		_animes.When(animes => animes.SetStudio(178789, Arg.Any<StudioReference>(), Arg.Any<CancellationToken>())).Do(_ => Credited());
 		_source.GetStudio(StudioId, Arg.Any<CancellationToken>()).Returns(Source(Work(1, new StudioWorkDate(2024, 4, 8))));
 
-		var studio = await _service.GetByAnime(178789, TestContext.Current.CancellationToken);
+		var studio = (await _service.GetByAnime(178789, TestContext.Current.CancellationToken)).ShouldSucceed();
 
 		studio.StudioId.ShouldBe(StudioId);
 		studio.Works.Single().SourceId.ShouldBe(1);
@@ -269,7 +269,7 @@ public class StudioServiceTests
 		_animes.GetBySourceId(178789, Arg.Any<CancellationToken>()).Returns(Anime(178789, StudioId));
 		Stored(Work(1, new StudioWorkDate(2024, 4, 8)));
 
-		var studio = await _service.GetByAnime(178789, TestContext.Current.CancellationToken);
+		var studio = (await _service.GetByAnime(178789, TestContext.Current.CancellationToken)).ShouldSucceed();
 
 		studio.StudioId.ShouldBe(StudioId);
 		await _source.DidNotReceiveWithAnyArgs().GetMainStudio(default, TestContext.Current.CancellationToken);
@@ -279,9 +279,9 @@ public class StudioServiceTests
 	[Fact]
 	public async Task Refuses_an_anime_that_is_not_stored_without_asking_the_source()
 	{
-		var error = await Should.ThrowAsync<HttpException>(() => _service.GetByAnime(42, TestContext.Current.CancellationToken));
+		var error = (await _service.GetByAnime(42, TestContext.Current.CancellationToken)).ShouldFail();
 
-		error.Code.ShouldBe(HttpStatusCode.NotFound);
+		error.ShouldBeOfType<ResourceNotFound>();
 		await _source.DidNotReceiveWithAnyArgs().GetMainStudio(default, TestContext.Current.CancellationToken);
 	}
 
@@ -291,9 +291,9 @@ public class StudioServiceTests
 		_animes.GetBySourceId(178789, Arg.Any<CancellationToken>()).Returns(Anime(178789, null));
 		_source.GetMainStudio(178789, Arg.Any<CancellationToken>()).Returns((StudioReference?)null);
 
-		var error = await Should.ThrowAsync<HttpException>(() => _service.GetByAnime(178789, TestContext.Current.CancellationToken));
+		var error = (await _service.GetByAnime(178789, TestContext.Current.CancellationToken)).ShouldFail();
 
-		error.Code.ShouldBe(HttpStatusCode.NotFound);
+		error.ShouldBeOfType<ResourceNotFound>();
 		error.Message.ShouldContain("Mushoku Tensei III");
 		await _animes.DidNotReceiveWithAnyArgs().SetStudio(default, default!, TestContext.Current.CancellationToken);
 	}
@@ -304,9 +304,9 @@ public class StudioServiceTests
 		_animes.GetBySourceId(178789, Arg.Any<CancellationToken>()).Returns(Anime(178789, null));
 		_source.GetMainStudio(178789, Arg.Any<CancellationToken>()).ThrowsAsync(new HttpRequestException("down"));
 
-		var error = await Should.ThrowAsync<HttpException>(() => _service.GetByAnime(178789, TestContext.Current.CancellationToken));
+		var error = (await _service.GetByAnime(178789, TestContext.Current.CancellationToken)).ShouldFail();
 
-		error.Code.ShouldBe(HttpStatusCode.BadGateway);
+		error.ShouldBeOfType<SourceUnavailable>();
 	}
 
 	private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
