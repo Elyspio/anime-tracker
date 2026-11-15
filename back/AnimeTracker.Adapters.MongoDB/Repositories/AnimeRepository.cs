@@ -1,9 +1,9 @@
+using Elyspio.Utils.Telemetry;
 using AnimeTracker.Abstractions.Interfaces.Repositories;
 using AnimeTracker.Abstractions.Models.Base.Anime;
 using AnimeTracker.Abstractions.Models.Base.Studios;
 using AnimeTracker.Abstractions.Models.Entities;
 using AnimeTracker.Adapters.MongoDB.Repositories.Base;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
 using Mapster;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -22,21 +22,21 @@ internal class AnimeRepository(IMongoDatabase database, ILogger<AnimeRepository>
 
 	public async Task<List<AnimeEntity>> GetBySeason(AnimeDate date, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(date)}");
+		using var trace = logger.Trace($"{Log.F(date)}");
 
 		return await EntityCollection.Find(SeasonFilter(date)).ToListAsync(cancellationToken);
 	}
 
 	public async Task<AnimeEntity?> GetBySourceId(int sourceId, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(sourceId)}");
+		using var trace = logger.Trace($"{Log.F(sourceId)}");
 
 		return await EntityCollection.Find(Filter.Eq(anime => anime.SourceId, sourceId)).FirstOrDefaultAsync(cancellationToken);
 	}
 
 	public async Task SetStudio(int sourceId, StudioReference studio, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(sourceId)} {Log.F(studio.Id)}");
+		using var trace = logger.Trace($"{Log.F(sourceId)} {Log.F(studio.Id)}");
 
 		await EntityCollection.UpdateManyAsync(
 			Filter.Eq(anime => anime.SourceId, sourceId),
@@ -46,14 +46,14 @@ internal class AnimeRepository(IMongoDatabase database, ILogger<AnimeRepository>
 
 	public async Task<bool> HasStudio(int studioId, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(studioId)}");
+		using var trace = logger.Trace($"{Log.F(studioId)}");
 
 		return await EntityCollection.Find(Filter.Eq(anime => anime.StudioId, studioId)).AnyAsync(cancellationToken);
 	}
 
 	public async Task Refresh(AnimeDate date, IReadOnlyCollection<AnimeBase> animes, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(date)} {Log.F(animes.Count)}");
+		using var trace = logger.Trace($"{Log.F(date)} {Log.F(animes.Count)}");
 
 		if (animes.Count == 0) return;
 

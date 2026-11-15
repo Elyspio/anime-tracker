@@ -1,9 +1,8 @@
+using Elyspio.Utils.Telemetry;
 using AnimeTracker.Abstractions.Interfaces.Services;
 using AnimeTracker.Abstractions.Models.Base.Anime;
 using AnimeTracker.Abstractions.Models.Transports;
 using AnimeTracker.Web.Auth;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
-using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,7 +11,7 @@ namespace AnimeTracker.Web.Controllers;
 [Route("api/animes")]
 [ApiController]
 public class AnimeController(IAnimeService animeService, TimeProvider timeProvider, ILogger<AnimeController> logger)
-	: TracingController(logger)
+	: ControllerBase
 {
 	/// <summary>
 	///     Enough to see the last few nights and why they stopped, not an audit log. Every successful refresh
@@ -25,7 +24,7 @@ public class AnimeController(IAnimeService animeService, TimeProvider timeProvid
 	[AllowAnonymous]
 	public async Task<IReadOnlyCollection<Anime>> GetAnimes([FromQuery] int? year, [FromQuery] AnimeSeason? season, CancellationToken cancellationToken)
 	{
-		using var trace = LogController($"{Log.F(year)} {Log.F(season)}");
+		using var trace = logger.Trace($"{Log.F(year)} {Log.F(season)}");
 
 		return await animeService.GetBySeason(Resolve(year, season), cancellationToken);
 	}
@@ -40,7 +39,7 @@ public class AnimeController(IAnimeService animeService, TimeProvider timeProvid
 	[ProducesResponseType<RefreshRun>(StatusCodes.Status409Conflict)]
 	public async Task<IActionResult> RefreshAll([FromQuery] int? year, [FromQuery] AnimeSeason? season, CancellationToken cancellationToken)
 	{
-		using var trace = LogController($"{Log.F(year)} {Log.F(season)}");
+		using var trace = logger.Trace($"{Log.F(year)} {Log.F(season)}");
 
 		// A season already being refreshed is answered with that run rather than refreshed twice.
 		var result = await animeService.QueueRefresh(Resolve(year, season), cancellationToken);
@@ -57,7 +56,7 @@ public class AnimeController(IAnimeService animeService, TimeProvider timeProvid
 	[AllowAnonymous]
 	public async Task<IReadOnlyCollection<RefreshRun>> GetRefreshes(CancellationToken cancellationToken)
 	{
-		using var trace = LogController();
+		using var trace = logger.Trace();
 
 		return await animeService.GetRecentRuns(RecentRunsLimit, cancellationToken);
 	}

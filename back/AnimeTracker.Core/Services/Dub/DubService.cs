@@ -1,3 +1,4 @@
+using Elyspio.Utils.Telemetry;
 using System.Net;
 using AnimeTracker.Abstractions.Exceptions;
 using AnimeTracker.Abstractions.Interfaces.Adapters;
@@ -9,8 +10,6 @@ using AnimeTracker.Abstractions.Models.Base.Refresh;
 using AnimeTracker.Abstractions.Models.Entities;
 using AnimeTracker.Abstractions.Models.Transports;
 using AnimeTracker.Core.Assemblers;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
-using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.Extensions.Logging;
 
 namespace AnimeTracker.Core.Services.Dub;
@@ -24,7 +23,7 @@ public class DubService(
 	IHangfireJobAdapter hangfireJobAdapter,
 	TimeProvider timeProvider,
 	ILogger<DubService> logger
-) : TracingService(logger), IDubService
+) : IDubService
 {
 	/// <summary>Title-search hits opened per query. Each costs a season listing, and the right one is near the top.</summary>
 	private const int MaxCandidatesPerQuery = 3;
@@ -39,11 +38,11 @@ public class DubService(
 
 	public async Task<RefreshRun?> QueueSync(AnimeDate date, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogService($"{Log.F(date)}");
+		using var trace = logger.Trace($"{Log.F(date)}");
 
 		if (_platforms.Length == 0)
 		{
-			_logger.LogInformation("No dub platform is configured, {Date} is not synced", date);
+			logger.LogInformation("No dub platform is configured, {Date} is not synced", date);
 			return null;
 		}
 
@@ -74,7 +73,7 @@ public class DubService(
 
 	public async Task Sync(AnimeDate date, Guid runId, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogService($"{Log.F(date)} {Log.F(runId)}");
+		using var trace = logger.Trace($"{Log.F(date)} {Log.F(runId)}");
 
 		await refreshRunRepository.Begin(runId, date, RefreshKind.Dub, timeProvider.GetUtcNow(), cancellationToken);
 
@@ -121,7 +120,7 @@ public class DubService(
 							// A reply this adapter could not make sense of says nothing about the dub: the
 							// previous measurement stays, and the run says how many were skipped.
 							unreadable++;
-							_logger.LogWarning(exception, "Could not match {SourceId} on {Platform}", anime.SourceId, platform.Platform);
+							logger.LogWarning(exception, "Could not match {SourceId} on {Platform}", anime.SourceId, platform.Platform);
 						}
 
 						await refreshRunRepository.Progress(runId, matched, timeProvider.GetUtcNow(), cancellationToken);
@@ -132,7 +131,7 @@ public class DubService(
 					// Everything after this anime keeps its previous measurement. The other platforms
 					// are still asked: one refusing says nothing about the next.
 					problems.Add($"{platform.Platform}: {exception.Message}");
-					_logger.LogWarning(exception, "{Platform} stopped answering, its remaining matches are left as they were", platform.Platform);
+					logger.LogWarning(exception, "{Platform} stopped answering, its remaining matches are left as they were", platform.Platform);
 				}
 
 				if (unreadable > 0) problems.Add($"{platform.Platform}: {unreadable} anime(s) could not be read");
@@ -161,7 +160,7 @@ public class DubService(
 
 	public async Task<IReadOnlyCollection<DubCase>> GetCases(AnimeDate date, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogService($"{Log.F(date)}");
+		using var trace = logger.Trace($"{Log.F(date)}");
 
 		var animes = await animeRepository.GetBySeason(date, cancellationToken);
 		var matches = (await matchRepository.GetBySeason(date, cancellationToken)).ToDictionary(match => (match.SourceId, match.Platform));
@@ -186,7 +185,7 @@ public class DubService(
 	public async Task<DubOverrideResult> SetOverride(int sourceId, DubPlatform platform, DubOverrideRequest request,
 		CancellationToken cancellationToken = default)
 	{
-		using var trace = LogService($"{Log.F(sourceId)} {Log.F(platform)} {Log.F(request.Mode)}");
+		using var trace = logger.Trace($"{Log.F(sourceId)} {Log.F(platform)} {Log.F(request.Mode)}");
 
 		var adapter = _platforms.FirstOrDefault(candidate => candidate.Platform == platform)
 			?? throw new HttpException(HttpStatusCode.NotFound, $"{platform} is not a configured platform.");

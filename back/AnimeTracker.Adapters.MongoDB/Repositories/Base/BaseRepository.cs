@@ -1,17 +1,15 @@
-using Elyspio.Utils.Telemetry.Tracing.Elements;
-using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 namespace AnimeTracker.Adapters.MongoDB.Repositories.Base;
 
 /// <summary>Manages one entity type's collection.</summary>
 /// <typeparam name="T">Entity implementation.</typeparam>
-public abstract class BaseRepository<T> : TracingRepository
+public abstract class BaseRepository<T>
 {
 	private readonly IMongoDatabase _database;
 	private readonly string _collectionName;
 
-	protected BaseRepository(IMongoDatabase database, ILogger logger) : base(logger)
+	protected BaseRepository(IMongoDatabase database)
 	{
 		_database = database;
 		_collectionName = typeof(T).Name[..^"Entity".Length];

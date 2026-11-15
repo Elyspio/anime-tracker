@@ -1,6 +1,6 @@
+using Elyspio.Utils.Telemetry;
 using AnimeTracker.Abstractions.Interfaces.Business;
 using AnimeTracker.Abstractions.Interfaces.Repositories;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
 using Mapster;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
@@ -9,15 +9,15 @@ using MongoDB.Driver;
 namespace AnimeTracker.Adapters.MongoDB.Repositories.Base;
 
 /// <inheritdoc cref="ICrudRepository{TEntity,TBase}" />
-internal abstract class CrudRepository<TEntity, TBase>(IMongoDatabase database, ILogger logger)
-	: BaseRepository<TEntity>(database, logger), ICrudRepository<TEntity, TBase> where TEntity : IEntity
+internal abstract class CrudRepository<TEntity, TBase>(IMongoDatabase database, ILogger<CrudRepository<TEntity, TBase>> logger)
+	: BaseRepository<TEntity>(database), ICrudRepository<TEntity, TBase> where TEntity : IEntity
 {
 	protected readonly FilterDefinitionBuilder<TEntity> Filter = Builders<TEntity>.Filter;
 	protected readonly UpdateDefinitionBuilder<TEntity> Update = Builders<TEntity>.Update;
 
 	public async Task<TEntity[]> Add(IReadOnlyCollection<TBase> bases, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(bases.Count)}");
+		using var trace = logger.Trace($"{Log.F(bases.Count)}");
 
 		var entities = bases.Adapt<TEntity[]>();
 
@@ -28,7 +28,7 @@ internal abstract class CrudRepository<TEntity, TBase>(IMongoDatabase database, 
 
 	public async Task<TEntity> Replace(ObjectId id, TBase @base, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(id)}");
+		using var trace = logger.Trace($"{Log.F(id)}");
 
 		var entity = @base!.Adapt<TEntity>();
 		entity.Id = id;
@@ -40,21 +40,21 @@ internal abstract class CrudRepository<TEntity, TBase>(IMongoDatabase database, 
 
 	public async Task<List<TEntity>> GetAll(CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository();
+		using var trace = logger.Trace();
 
 		return await EntityCollection.Find(Filter.Empty).ToListAsync(cancellationToken);
 	}
 
 	public async Task Delete(ObjectId id, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(id)}");
+		using var trace = logger.Trace($"{Log.F(id)}");
 
 		await EntityCollection.DeleteOneAsync(Filter.Eq(e => e.Id, id), cancellationToken);
 	}
 
 	public async Task<TEntity?> GetById(ObjectId id, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(id)}");
+		using var trace = logger.Trace($"{Log.F(id)}");
 
 		return await EntityCollection.Find(Filter.Eq(e => e.Id, id)).FirstOrDefaultAsync(cancellationToken);
 	}

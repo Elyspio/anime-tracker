@@ -1,8 +1,7 @@
+using Elyspio.Utils.Telemetry;
 using AnimeTracker.Abstractions.Interfaces.Services;
 using AnimeTracker.Abstractions.Models.Transports;
 using AnimeTracker.Web.Auth;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
-using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,7 +10,7 @@ namespace AnimeTracker.Web.Controllers;
 /// <summary>A studio's filmography: every work it was the main studio of, newest first.</summary>
 [Route("api/studios")]
 [ApiController]
-public class StudioController(IStudioService studioService, ILogger<StudioController> logger) : TracingController(logger)
+public class StudioController(IStudioService studioService, ILogger<StudioController> logger) : ControllerBase
 {
 	/// <summary>
 	///     Anonymous like the season it is reached from: a filmography is a public fact. The first read of
@@ -24,7 +23,7 @@ public class StudioController(IStudioService studioService, ILogger<StudioContro
 	[ProducesResponseType<ProblemDetails>(StatusCodes.Status502BadGateway)]
 	public async Task<StudioFilmography> GetStudio(int studioId, CancellationToken cancellationToken)
 	{
-		using var trace = LogController($"{Log.F(studioId)}");
+		using var trace = logger.Trace($"{Log.F(studioId)}");
 
 		return await studioService.Get(studioId, cancellationToken);
 	}
@@ -41,7 +40,7 @@ public class StudioController(IStudioService studioService, ILogger<StudioContro
 	[ProducesResponseType<ProblemDetails>(StatusCodes.Status502BadGateway)]
 	public async Task<StudioFilmography> GetStudioOfAnime(int sourceId, CancellationToken cancellationToken)
 	{
-		using var trace = LogController($"{Log.F(sourceId)}");
+		using var trace = logger.Trace($"{Log.F(sourceId)}");
 
 		return await studioService.GetByAnime(sourceId, cancellationToken);
 	}
@@ -57,7 +56,7 @@ public class StudioController(IStudioService studioService, ILogger<StudioContro
 	[ProducesResponseType<ProblemDetails>(StatusCodes.Status502BadGateway)]
 	public async Task<StudioFilmography> RefreshStudio(int studioId, CancellationToken cancellationToken)
 	{
-		using var trace = LogController($"{Log.F(studioId)}");
+		using var trace = logger.Trace($"{Log.F(studioId)}");
 
 		return await studioService.Refresh(studioId, cancellationToken);
 	}

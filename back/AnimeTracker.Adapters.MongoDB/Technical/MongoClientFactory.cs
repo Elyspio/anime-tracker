@@ -1,4 +1,5 @@
-﻿using Elyspio.Utils.Telemetry.MongoDB.Business;
+﻿using Elyspio.Utils.Telemetry;
+using Elyspio.Utils.Telemetry.MongoDB.Business;
 using MongoDB.Driver;
 
 namespace AnimeTracker.Adapters.MongoDB.Technical;

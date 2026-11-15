@@ -1,3 +1,4 @@
+using Elyspio.Utils.Telemetry;
 using AnimeTracker.Abstractions.Interfaces.Repositories;
 using AnimeTracker.Adapters.MongoDB.Repositories;
 using AnimeTracker.Adapters.MongoDB.Technical;

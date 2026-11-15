@@ -1,15 +1,15 @@
+using Elyspio.Utils.Telemetry;
 using AnimeTracker.Abstractions.Interfaces.Repositories;
 using AnimeTracker.Abstractions.Models.Base.Studios;
 using AnimeTracker.Abstractions.Models.Entities;
 using AnimeTracker.Adapters.MongoDB.Repositories.Base;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 namespace AnimeTracker.Adapters.MongoDB.Repositories;
 
 internal class StudioFilmographyRepository(IMongoDatabase database, ILogger<StudioFilmographyRepository> logger)
-	: BaseRepository<StudioFilmographyEntity>(database, logger), IStudioFilmographyRepository
+	: BaseRepository<StudioFilmographyEntity>(database), IStudioFilmographyRepository
 {
 	private static readonly FilterDefinitionBuilder<StudioFilmographyEntity> Filter = Builders<StudioFilmographyEntity>.Filter;
 
@@ -22,14 +22,14 @@ internal class StudioFilmographyRepository(IMongoDatabase database, ILogger<Stud
 
 	public async Task<StudioFilmographyEntity?> Get(int studioId, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(studioId)}");
+		using var trace = logger.Trace($"{Log.F(studioId)}");
 
 		return await EntityCollection.Find(Filter.Eq(studio => studio.StudioId, studioId)).FirstOrDefaultAsync(cancellationToken);
 	}
 
 	public async Task<StudioFilmographyEntity> Save(StudioFilmographyBase filmography, DateTimeOffset fetchedAt, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(filmography.StudioId)} {Log.F(filmography.Works.Count)}");
+		using var trace = logger.Trace($"{Log.F(filmography.StudioId)} {Log.F(filmography.Works.Count)}");
 
 		await EnsureIndex(cancellationToken);
 

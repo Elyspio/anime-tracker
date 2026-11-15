@@ -1,7 +1,6 @@
+using Elyspio.Utils.Telemetry;
 using AnimeTracker.Abstractions.Interfaces.Services;
 using AnimeTracker.Abstractions.Models.Base.Anime;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
-using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.Extensions.Logging;
 
 namespace AnimeTracker.Core.Services;
@@ -11,7 +10,6 @@ namespace AnimeTracker.Core.Services;
 ///     of a job from the container, and a hosted service is not a good target.
 /// </summary>
 public class AnimeRefreshJob(IAnimeService animeService, TimeProvider timeProvider, ILogger<AnimeRefreshJob> logger)
-	: TracingService(logger)
 {
 	public const string RecurringJobId = "anime-season-refresh";
 
@@ -22,13 +20,13 @@ public class AnimeRefreshJob(IAnimeService animeService, TimeProvider timeProvid
 	// ReSharper disable once MemberCanBePrivate.Global — called by Hangfire through an expression.
 	public async Task RefreshCurrentSeason()
 	{
-		using var trace = LogService();
+		using var trace = logger.Trace();
 
 		var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
 
 		var result = await animeService.QueueRefresh(AnimeDate.Current(today));
 
-		if (result.AlreadyRunning) _logger.LogInformation("Season {Date} is already refreshing, skipping the daily run", result.Run.Date);
+		if (result.AlreadyRunning) logger.LogInformation("Season {Date} is already refreshing, skipping the daily run", result.Run.Date);
 	}
 
 	/// <summary>
@@ -38,7 +36,7 @@ public class AnimeRefreshJob(IAnimeService animeService, TimeProvider timeProvid
 	// ReSharper disable once MemberCanBePrivate.Global — called by Hangfire through an expression.
 	public async Task RefreshSeason(int year, AnimeSeason season, Guid runId)
 	{
-		using var trace = LogService($"{Log.F(year)} {Log.F(season)} {Log.F(runId)}");
+		using var trace = logger.Trace($"{Log.F(year)} {Log.F(season)} {Log.F(runId)}");
 
 		await animeService.RefreshAll(new AnimeDate(year, season), runId);
 	}

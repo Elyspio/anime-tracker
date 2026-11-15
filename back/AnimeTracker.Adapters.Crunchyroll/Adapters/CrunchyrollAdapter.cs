@@ -1,11 +1,10 @@
+using Elyspio.Utils.Telemetry;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using AnimeTracker.Abstractions.Interfaces.Adapters;
 using AnimeTracker.Abstractions.Models.Base.Dub;
 using AnimeTracker.Adapters.Crunchyroll.Configs;
 using AnimeTracker.Adapters.Crunchyroll.Http;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
-using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -16,7 +15,7 @@ internal partial class CrunchyrollAdapter(
 	CrunchyrollClient client,
 	IOptions<CrunchyrollOptions> options,
 	ILogger<CrunchyrollAdapter> logger
-) : TracingAdapter(logger), IDubPlatformAdapter
+) : IDubPlatformAdapter
 {
 	private const string French = "fr-FR";
 
@@ -48,7 +47,7 @@ internal partial class CrunchyrollAdapter(
 
 	public async Task<IReadOnlyList<PlatformSeriesSummary>> Search(string query, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogAdapter($"{Log.F(query)}");
+		using var trace = logger.Trace($"{Log.F(query)}");
 
 		var reply = await client.Get<ListReply<SearchGroup>>("/content/v2/discover/search", new Dictionary<string, string>
 		{
@@ -68,7 +67,7 @@ internal partial class CrunchyrollAdapter(
 
 	public async Task<PlatformSeries?> GetSeries(string seriesId, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogAdapter($"{Log.F(seriesId)}");
+		using var trace = logger.Trace($"{Log.F(seriesId)}");
 
 		var series = (await client.Get<ListReply<SeriesNode>>($"/content/v2/cms/series/{seriesId}", Locale(), cancellationToken))?.Data?.FirstOrDefault();
 		if (series?.Id is null) return null;
@@ -92,7 +91,7 @@ internal partial class CrunchyrollAdapter(
 
 	public async Task<IReadOnlyList<PlatformEpisode>> GetEpisodes(string seriesId, string seasonId, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogAdapter($"{Log.F(seriesId)} {Log.F(seasonId)}");
+		using var trace = logger.Trace($"{Log.F(seriesId)} {Log.F(seasonId)}");
 
 		var episodes = (await client.Get<ListReply<EpisodeNode>>($"/content/v2/cms/seasons/{seasonId}/episodes", Locale(), cancellationToken))?.Data ?? [];
 

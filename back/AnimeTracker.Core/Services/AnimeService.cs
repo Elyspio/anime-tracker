@@ -1,3 +1,4 @@
+using Elyspio.Utils.Telemetry;
 using AnimeTracker.Abstractions.Interfaces.Adapters;
 using AnimeTracker.Abstractions.Interfaces.Repositories;
 using AnimeTracker.Abstractions.Interfaces.Services;
@@ -5,8 +6,6 @@ using AnimeTracker.Abstractions.Models.Base.Anime;
 using AnimeTracker.Abstractions.Models.Base.Refresh;
 using AnimeTracker.Abstractions.Models.Transports;
 using AnimeTracker.Core.Assemblers;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
-using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.Extensions.Logging;
 
 namespace AnimeTracker.Core.Services;
@@ -20,11 +19,11 @@ public class AnimeService(
 	IHangfireJobAdapter hangfireJobAdapter,
 	TimeProvider timeProvider,
 	ILogger<AnimeService> logger
-) : TracingService(logger), IAnimeService
+) : IAnimeService
 {
 	public async Task<IReadOnlyCollection<Anime>> GetBySeason(AnimeDate date, CancellationToken cancellationToken = default)
 	{
-		using var _ = LogService($"{Log.F(date)}");
+		using var _ = logger.Trace($"{Log.F(date)}");
 
 		var entities = await animeRepository.GetBySeason(date, cancellationToken);
 		var dubs = (await dubMatchRepository.GetBySeason(date, cancellationToken)).ToLookup(match => match.SourceId);
@@ -42,7 +41,7 @@ public class AnimeService(
 
 	public async Task<RefreshQueueResult> QueueRefresh(AnimeDate date, CancellationToken cancellationToken = default)
 	{
-		using var _ = LogService($"{Log.F(date)}");
+		using var _ = logger.Trace($"{Log.F(date)}");
 
 		// A dub sync of the season may still be going. It does not block a refresh, which is what feeds it.
 		var active = await refreshRunRepository.GetActive(date, RefreshKind.Season, cancellationToken);
@@ -62,7 +61,7 @@ public class AnimeService(
 
 	public async Task<IReadOnlyCollection<RefreshRun>> GetRecentRuns(int limit, CancellationToken cancellationToken = default)
 	{
-		using var _ = LogService($"{Log.F(limit)}");
+		using var _ = logger.Trace($"{Log.F(limit)}");
 
 		var runs = await refreshRunRepository.GetRecent(limit, cancellationToken);
 
@@ -71,7 +70,7 @@ public class AnimeService(
 
 	public async Task RefreshAll(AnimeDate date, Guid runId, CancellationToken cancellationToken = default)
 	{
-		using var _ = LogService($"{Log.F(date)} {Log.F(runId)}");
+		using var _ = logger.Trace($"{Log.F(date)} {Log.F(runId)}");
 
 		await refreshRunRepository.Begin(runId, date, RefreshKind.Season, timeProvider.GetUtcNow(), cancellationToken);
 
@@ -111,7 +110,7 @@ public class AnimeService(
 		}
 		catch (Exception exception)
 		{
-			_logger.LogWarning(exception, "The dub sync of {Date} could not be queued", date);
+			logger.LogWarning(exception, "The dub sync of {Date} could not be queued", date);
 		}
 	}
 }

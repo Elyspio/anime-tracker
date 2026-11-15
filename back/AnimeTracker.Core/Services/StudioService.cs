@@ -1,3 +1,4 @@
+using Elyspio.Utils.Telemetry;
 using System.Collections.Concurrent;
 using System.Net;
 using AnimeTracker.Abstractions.Exceptions;
@@ -7,8 +8,6 @@ using AnimeTracker.Abstractions.Interfaces.Services;
 using AnimeTracker.Abstractions.Models.Base.Studios;
 using AnimeTracker.Abstractions.Models.Transports;
 using AnimeTracker.Core.Assemblers;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
-using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.Extensions.Logging;
 
 namespace AnimeTracker.Core.Services;
@@ -19,7 +18,7 @@ public class StudioService(
 	IAnimeSourceAdapter sourceAdapter,
 	TimeProvider timeProvider,
 	ILogger<StudioService> logger
-) : TracingService(logger), IStudioService
+) : IStudioService
 {
 	/// <summary>
 	///     One fetch per studio at a time. The first read of a studio is anonymous and costs the source a
@@ -29,7 +28,7 @@ public class StudioService(
 
 	public async Task<StudioFilmography> Get(int studioId, CancellationToken cancellationToken = default)
 	{
-		using var _ = LogService($"{Log.F(studioId)}");
+		using var _ = logger.Trace($"{Log.F(studioId)}");
 
 		var stored = await studioRepository.Get(studioId, cancellationToken);
 
@@ -38,7 +37,7 @@ public class StudioService(
 
 	public async Task<StudioFilmography> GetByAnime(int sourceId, CancellationToken cancellationToken = default)
 	{
-		using var _ = LogService($"{Log.F(sourceId)}");
+		using var _ = logger.Trace($"{Log.F(sourceId)}");
 
 		// Only a stored anime: like a studio, an id nobody stored is never asked of the source.
 		var anime = await animeRepository.GetBySourceId(sourceId, cancellationToken)
@@ -58,7 +57,7 @@ public class StudioService(
 
 	public async Task<StudioFilmography> Refresh(int studioId, CancellationToken cancellationToken = default)
 	{
-		using var _ = LogService($"{Log.F(studioId)}");
+		using var _ = logger.Trace($"{Log.F(studioId)}");
 
 		return await Fetch(studioId, true, cancellationToken);
 	}

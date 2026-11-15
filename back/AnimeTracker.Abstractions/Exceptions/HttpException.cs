@@ -1,5 +1,5 @@
-﻿using System.Net;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
+﻿using Elyspio.Utils.Telemetry;
+using System.Net;
 
 namespace AnimeTracker.Abstractions.Exceptions;
 

@@ -13,6 +13,8 @@
 	<ItemGroup>
 		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.25"/>
 		<PackageReference Include="Hangfire.Mongo" Version="1.17.1"/>
+		<!-- Hangfire.Core only asks for Newtonsoft.Json >= 11.0.1, which carries GHSA-5crp-9r3c-p9vr (NU1903). -->
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4"/>
 		<PackageReference Include="MongoDB.Driver" Version="3.14.0"/>
 	</ItemGroup>
 

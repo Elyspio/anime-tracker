@@ -225,14 +225,12 @@ These are the properties the design rests on. Changing them is a product decisio
 
 ### Tracing
 
-- Every behavioural class inherits its `Elyspio.Utils.Telemetry` base: controllers →
-  `TracingController`, services → `TracingService`, adapters → `TracingAdapter`, repositories →
-  `TracingRepository`. Static classes (`BingePredictor`, `AnimeAssembler`) and the hosted service
-  are exempt — they hold no behaviour worth a span.
-- Every public method opens `using var trace = LogX($"{Log.F(arg)}")`. Private helpers and pure
-  mappings do not.
-- Telemetry is bootstrapped in `Web/Program.cs` via `AppOpenTelemetryBuilder` +
-  `UseSerilogWithTelemetry`; each product assembly is registered with `AddAssembly<T>`. There is no
+- Every behavioural class (controller, service, adapter, repository) takes its `ILogger<T>` and every
+  public method opens `using var trace = logger.Trace($"{Log.F(arg)}")` (`Elyspio.Utils.Telemetry`).
+  Private helpers and pure mappings do not. Static classes (`BingePredictor`, `AnimeAssembler`) and
+  the hosted service are exempt — they hold no behaviour worth a span.
+- Telemetry is bootstrapped in `Web/Program.cs` by `builder.AddElyspioTelemetry(...)` and configured
+  only by the standard `OTEL_*` variables (Aspire locally, the chart in the cluster). There is no
   ServiceDefaults project; health checks, service discovery and HTTP resilience live in
   `Web/Hosting/HostingModule.cs`.
 
