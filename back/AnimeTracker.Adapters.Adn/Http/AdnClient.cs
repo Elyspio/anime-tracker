@@ -1,11 +1,10 @@
+using Elyspio.Utils.Telemetry;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using AnimeTracker.Abstractions.Exceptions;
 using AnimeTracker.Abstractions.Models.Base.Dub;
 using AnimeTracker.Adapters.Adn.Configs;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
-using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -21,7 +20,7 @@ internal class AdnClient(
 	IOptions<AdnOptions> options,
 	TimeProvider timeProvider,
 	ILogger<AdnClient> logger
-) : TracingAdapter(logger)
+)
 {
 	public const string ClientName = "Adn";
 
@@ -35,7 +34,7 @@ internal class AdnClient(
 	public async Task<T?> Get<T>(string path, IReadOnlyDictionary<string, string> query, CancellationToken cancellationToken = default)
 		where T : class
 	{
-		using var trace = LogAdapter($"{Log.F(path)}");
+		using var trace = logger.Trace($"{Log.F(path)}");
 
 		var builder = new UriBuilder(new Uri(new Uri(options.Value.BaseUrl), path))
 		{

@@ -1,3 +1,4 @@
+using Elyspio.Utils.Telemetry;
 using AnimeTracker.Abstractions.Interfaces.Adapters;
 using System.Net;
 using AnimeTracker.Abstractions.Models.Base.Anime;
@@ -5,8 +6,6 @@ using AnimeTracker.Abstractions.Models.Base.Studios;
 using AnimeTracker.Adapters.AniList.Assemblers;
 using AnimeTracker.Adapters.AniList.Configs;
 using AnimeTracker.Adapters.AniList.GraphQL;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
-using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -18,11 +17,11 @@ internal class AniListAdapter(
 	MediaAssembler assembler,
 	IOptions<AniListOptions> options,
 	ILogger<AniListAdapter> logger
-) : TracingAdapter(logger), IAnimeSourceAdapter
+) : IAnimeSourceAdapter
 {
 	public async Task<AnimeBase[]> GetSeason(AnimeDate date, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogAdapter($"{Log.F(date)}");
+		using var trace = logger.Trace($"{Log.F(date)}");
 
 		var animes = new List<AnimeBase>();
 
@@ -49,14 +48,14 @@ internal class AniListAdapter(
 			if (data.Page?.PageInfo?.HasNextPage != true) return animes.ToArray();
 		}
 
-		_logger.LogWarning("Stopped paging {Date} after {MaxPages} pages", date, options.Value.MaxPages);
+		logger.LogWarning("Stopped paging {Date} after {MaxPages} pages", date, options.Value.MaxPages);
 
 		return animes.ToArray();
 	}
 
 	public async Task<StudioFilmographyBase?> GetStudio(int studioId, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogAdapter($"{Log.F(studioId)}");
+		using var trace = logger.Trace($"{Log.F(studioId)}");
 
 		StudioDetails? studio = null;
 		var works = new List<StudioWork>();
@@ -90,7 +89,7 @@ internal class AniListAdapter(
 
 			if (data.Studio.Media?.PageInfo?.HasNextPage != true) break;
 
-			if (page == options.Value.MaxPages) _logger.LogWarning("Stopped paging studio {StudioId} after {MaxPages} pages", studioId, page);
+			if (page == options.Value.MaxPages) logger.LogWarning("Stopped paging studio {StudioId} after {MaxPages} pages", studioId, page);
 		}
 
 		return new StudioFilmographyBase
@@ -105,7 +104,7 @@ internal class AniListAdapter(
 
 	public async Task<StudioReference?> GetMainStudio(int sourceId, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogAdapter($"{Log.F(sourceId)}");
+		using var trace = logger.Trace($"{Log.F(sourceId)}");
 
 		MediaStudioData data;
 

@@ -1,3 +1,4 @@
+using Elyspio.Utils.Results;
 using AnimeTracker.Abstractions.Models.Base.Anime;
 using AnimeTracker.Abstractions.Models.Base.Dub;
 using AnimeTracker.Abstractions.Models.Transports;
@@ -21,6 +22,6 @@ public interface IDubService
 	Task<IReadOnlyCollection<DubCase>> GetCases(AnimeDate date, CancellationToken cancellationToken = default);
 
 	/// <summary>Saves an admin's correction, then applies it to that one anime straight away.</summary>
-	Task<DubOverrideResult> SetOverride(int sourceId, DubPlatform platform, DubOverrideRequest request,
+	Task<Result<DubOverrideResult>> SetOverride(int sourceId, DubPlatform platform, DubOverrideRequest request,
 		CancellationToken cancellationToken = default);
 }

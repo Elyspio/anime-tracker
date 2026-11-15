@@ -29,7 +29,7 @@ Le calcul est refait à chaque lecture, jamais stocké.
 
 | | |
 |---|---|
-| Backend | .NET 10, ASP.NET Core, MongoDB, Hangfire, Aspire 13 |
+| Backend | .NET 11, ASP.NET Core, MongoDB, Hangfire, Aspire 13 |
 | Frontend | React 19, TypeScript, MUI 9, TanStack Query, Vite+ |
 | Auth | Keycloak (OIDC) — lecture anonyme, rafraîchissement réservé au rôle `anime-tracker-admin` |
 | Source | API GraphQL publique d'AniList, sans authentification |

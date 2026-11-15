@@ -55,7 +55,7 @@ front/
 deploy/build/    Single-container image and deployment script
 ```
 
-Backend: .NET 10 (SDK pinned to 10.0.400 in `global.json`), ASP.NET Core, Aspire 13.5, MongoDB, Hangfire,
+Backend: .NET 11 (SDK pinned to 11.0.100 in `global.json`), ASP.NET Core, Aspire 13.6, MongoDB, Hangfire,
 xUnit v3 on Microsoft.Testing.Platform.
 Frontend: React 19, TypeScript 7, Vite+ (Oxlint, Oxfmt, Vitest via `vite-plus/test`), MUI 9, TanStack Query,
 Axios, `react-oidc-context`, React Router 8 (data router, `createBrowserRouter`). Node 26, pnpm 12. Lint and format settings come from
@@ -225,14 +225,12 @@ These are the properties the design rests on. Changing them is a product decisio
 
 ### Tracing
 
-- Every behavioural class inherits its `Elyspio.Utils.Telemetry` base: controllers →
-  `TracingController`, services → `TracingService`, adapters → `TracingAdapter`, repositories →
-  `TracingRepository`. Static classes (`BingePredictor`, `AnimeAssembler`) and the hosted service
-  are exempt — they hold no behaviour worth a span.
-- Every public method opens `using var trace = LogX($"{Log.F(arg)}")`. Private helpers and pure
-  mappings do not.
-- Telemetry is bootstrapped in `Web/Program.cs` via `AppOpenTelemetryBuilder` +
-  `UseSerilogWithTelemetry`; each product assembly is registered with `AddAssembly<T>`. There is no
+- Every behavioural class (controller, service, adapter, repository) takes its `ILogger<T>` and every
+  public method opens `using var trace = logger.Trace($"{Log.F(arg)}")` (`Elyspio.Utils.Telemetry`).
+  Private helpers and pure mappings do not. Static classes (`BingePredictor`, `AnimeAssembler`) and
+  the hosted service are exempt — they hold no behaviour worth a span.
+- Telemetry is bootstrapped in `Web/Program.cs` by `builder.AddElyspioTelemetry(...)` and configured
+  only by the standard `OTEL_*` variables (Aspire locally, the chart in the cluster). There is no
   ServiceDefaults project; health checks, service discovery and HTTP resilience live in
   `Web/Hosting/HostingModule.cs`.
 

@@ -1,16 +1,15 @@
+using Elyspio.Utils.Telemetry;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using AnimeTracker.Abstractions.Interfaces.Adapters;
 using AnimeTracker.Abstractions.Models.Base.Dub;
 using AnimeTracker.Adapters.Adn.Http;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
-using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.Extensions.Logging;
 
 namespace AnimeTracker.Adapters.Adn.Adapters;
 
 /// <summary>The only project that knows ADN's gateway exists.</summary>
-internal partial class AdnAdapter(AdnClient client, ILogger<AdnAdapter> logger) : TracingAdapter(logger), IDubPlatformAdapter
+internal partial class AdnAdapter(AdnClient client, ILogger<AdnAdapter> logger) : IDubPlatformAdapter
 {
 	private const string French = "vf";
 
@@ -44,7 +43,7 @@ internal partial class AdnAdapter(AdnClient client, ILogger<AdnAdapter> logger) 
 
 	public async Task<IReadOnlyList<PlatformSeriesSummary>> Search(string query, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogAdapter($"{Log.F(query)}");
+		using var trace = logger.Trace($"{Log.F(query)}");
 
 		var reply = await client.Get<CatalogReply>("/show/catalog", new Dictionary<string, string>
 		{
@@ -68,7 +67,7 @@ internal partial class AdnAdapter(AdnClient client, ILogger<AdnAdapter> logger) 
 	/// </summary>
 	public async Task<PlatformSeries?> GetSeries(string seriesId, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogAdapter($"{Log.F(seriesId)}");
+		using var trace = logger.Trace($"{Log.F(seriesId)}");
 
 		var show = (await client.Get<ShowReply>($"/show/{seriesId}", new Dictionary<string, string>(), cancellationToken))?.Show;
 		if (show?.Id is null) return null;
@@ -88,7 +87,7 @@ internal partial class AdnAdapter(AdnClient client, ILogger<AdnAdapter> logger) 
 
 	public async Task<IReadOnlyList<PlatformEpisode>> GetEpisodes(string seriesId, string seasonId, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogAdapter($"{Log.F(seriesId)} {Log.F(seasonId)}");
+		using var trace = logger.Trace($"{Log.F(seriesId)} {Log.F(seasonId)}");
 
 		// Only reached if a caller asks for a season again: GetSeries already hands every one over.
 		var season = seasonId.Split(':').Last();

@@ -8,7 +8,7 @@ function refusal(status: number, data: unknown): AxiosError {
 
 describe("apiErrorMessage", () => {
 	it("prefers what the API said over what axios says", () => {
-		expect(apiErrorMessage(refusal(404, { status: 404, title: "No studio is known with id 3." }))).toBe("No studio is known with id 3.");
+		expect(apiErrorMessage(refusal(404, { status: 404, title: "Not Found", detail: "No studio is known with id 3." }))).toBe("No studio is known with id 3.");
 	});
 
 	it("names a refusal the API left untitled", () => {
@@ -17,7 +17,7 @@ describe("apiErrorMessage", () => {
 	});
 
 	it("falls back to the error's own message", () => {
-		expect(apiErrorMessage(refusal(500, { title: "   " }))).toBe("Request failed with status code 500");
+		expect(apiErrorMessage(refusal(500, { detail: "   " }))).toBe("Request failed with status code 500");
 		expect(apiErrorMessage(new Error("Network Error"))).toBe("Network Error");
 	});
 

@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Net;
+using AnimeTracker.Abstractions.Errors;
 using AnimeTracker.Abstractions.Exceptions;
 using AnimeTracker.Abstractions.Interfaces.Adapters;
 using AnimeTracker.Abstractions.Interfaces.Repositories;
@@ -492,21 +493,21 @@ public class DubServiceTests
 	{
 		_animes.GetBySourceId(1, Arg.Any<CancellationToken>()).Returns(Anime(1));
 
-		var error = await Should.ThrowAsync<HttpException>(() => Service().SetOverride(1, DubPlatform.Crunchyroll,
-			new DubOverrideRequest(DubOverrideMode.Pinned, "https://evil.test/series/G1"), TestContext.Current.CancellationToken));
+		var error = (await Service().SetOverride(1, DubPlatform.Crunchyroll,
+			new DubOverrideRequest(DubOverrideMode.Pinned, "https://evil.test/series/G1"), TestContext.Current.CancellationToken)).ShouldFail();
 
-		error.Code.ShouldBe(HttpStatusCode.BadRequest);
+		error.ShouldBeOfType<RequestInvalid>();
 		await _overrides.DidNotReceive().Save(Arg.Any<DubOverrideBase>(), Arg.Any<CancellationToken>());
 	}
 
 	[Fact]
 	public async Task Refuses_an_override_for_an_unknown_anime_or_platform()
 	{
-		(await Should.ThrowAsync<HttpException>(() => Service().SetOverride(404, DubPlatform.Crunchyroll,
-			new DubOverrideRequest(DubOverrideMode.Blocked, null), TestContext.Current.CancellationToken))).Code.ShouldBe(HttpStatusCode.NotFound);
+		((await Service().SetOverride(404, DubPlatform.Crunchyroll,
+			new DubOverrideRequest(DubOverrideMode.Blocked, null), TestContext.Current.CancellationToken)).ShouldFail()).ShouldBeOfType<ResourceNotFound>();
 
-		(await Should.ThrowAsync<HttpException>(() => Service().SetOverride(1, DubPlatform.Adn,
-			new DubOverrideRequest(DubOverrideMode.Blocked, null), TestContext.Current.CancellationToken))).Code.ShouldBe(HttpStatusCode.NotFound);
+		((await Service().SetOverride(1, DubPlatform.Adn,
+			new DubOverrideRequest(DubOverrideMode.Blocked, null), TestContext.Current.CancellationToken)).ShouldFail()).ShouldBeOfType<ResourceNotFound>();
 	}
 
 	[Fact]
@@ -515,8 +516,8 @@ public class DubServiceTests
 		_animes.GetBySourceId(1, Arg.Any<CancellationToken>()).Returns(Anime(1));
 		Returns(_crunchyroll, Series("G1", "Frieren", Premiere, 1, 2, 3));
 
-		var result = await Service().SetOverride(1, DubPlatform.Crunchyroll,
-			new DubOverrideRequest(DubOverrideMode.Pinned, "https://crunchyroll.test/series/G1"), TestContext.Current.CancellationToken);
+		var result = (await Service().SetOverride(1, DubPlatform.Crunchyroll,
+			new DubOverrideRequest(DubOverrideMode.Pinned, "https://crunchyroll.test/series/G1"), TestContext.Current.CancellationToken)).ShouldSucceed();
 
 		await _overrides.Received(1).Save(Arg.Is<DubOverrideBase>(saved => saved.Mode == DubOverrideMode.Pinned && saved.SeriesId == "G1"),
 			Arg.Any<CancellationToken>());
@@ -534,8 +535,8 @@ public class DubServiceTests
 		_crunchyroll.GetSeries("G1", Arg.Any<CancellationToken>())
 			.ThrowsAsync(new DubPlatformUnavailableException(DubPlatform.Crunchyroll, "Crunchyroll is rate limiting the requests (429)."));
 
-		var result = await Service().SetOverride(1, DubPlatform.Crunchyroll,
-			new DubOverrideRequest(DubOverrideMode.Pinned, "https://crunchyroll.test/series/G1"), TestContext.Current.CancellationToken);
+		var result = (await Service().SetOverride(1, DubPlatform.Crunchyroll,
+			new DubOverrideRequest(DubOverrideMode.Pinned, "https://crunchyroll.test/series/G1"), TestContext.Current.CancellationToken)).ShouldSucceed();
 
 		await _overrides.Received(1).Save(Arg.Any<DubOverrideBase>(), Arg.Any<CancellationToken>());
 		result.Error.ShouldNotBeNull();
@@ -547,8 +548,8 @@ public class DubServiceTests
 	{
 		_animes.GetBySourceId(1, Arg.Any<CancellationToken>()).Returns(Anime(1));
 
-		var result = await Service().SetOverride(1, DubPlatform.Crunchyroll, new DubOverrideRequest(DubOverrideMode.Auto, null),
-			TestContext.Current.CancellationToken);
+		var result = (await Service().SetOverride(1, DubPlatform.Crunchyroll, new DubOverrideRequest(DubOverrideMode.Auto, null),
+			TestContext.Current.CancellationToken)).ShouldSucceed();
 
 		await _overrides.Received(1).Delete(1, DubPlatform.Crunchyroll, Arg.Any<CancellationToken>());
 		result.Case.Override.ShouldBe(DubOverrideMode.Auto);

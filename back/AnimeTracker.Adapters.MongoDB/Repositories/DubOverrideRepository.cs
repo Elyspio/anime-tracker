@@ -1,8 +1,8 @@
+using Elyspio.Utils.Telemetry;
 using AnimeTracker.Abstractions.Interfaces.Repositories;
 using AnimeTracker.Abstractions.Models.Base.Dub;
 using AnimeTracker.Abstractions.Models.Entities;
 using AnimeTracker.Adapters.MongoDB.Repositories.Base;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
 using Mapster;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -10,7 +10,7 @@ using MongoDB.Driver;
 namespace AnimeTracker.Adapters.MongoDB.Repositories;
 
 internal class DubOverrideRepository(IMongoDatabase database, ILogger<DubOverrideRepository> logger)
-	: BaseRepository<DubOverrideEntity>(database, logger), IDubOverrideRepository
+	: BaseRepository<DubOverrideEntity>(database), IDubOverrideRepository
 {
 	private static readonly FilterDefinitionBuilder<DubOverrideEntity> Filter = Builders<DubOverrideEntity>.Filter;
 
@@ -19,14 +19,14 @@ internal class DubOverrideRepository(IMongoDatabase database, ILogger<DubOverrid
 
 	public async Task<List<DubOverrideEntity>> GetBySourceIds(IReadOnlyCollection<int> sourceIds, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(sourceIds.Count)}");
+		using var trace = logger.Trace($"{Log.F(sourceIds.Count)}");
 
 		return await EntityCollection.Find(Filter.In(@override => @override.SourceId, sourceIds)).ToListAsync(cancellationToken);
 	}
 
 	public async Task Save(DubOverrideBase @override, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(@override.SourceId)} {Log.F(@override.Platform)} {Log.F(@override.Mode)}");
+		using var trace = logger.Trace($"{Log.F(@override.SourceId)} {Log.F(@override.Platform)} {Log.F(@override.Mode)}");
 
 		await EnsureIndex(cancellationToken);
 
@@ -39,7 +39,7 @@ internal class DubOverrideRepository(IMongoDatabase database, ILogger<DubOverrid
 
 	public async Task Delete(int sourceId, DubPlatform platform, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(sourceId)} {Log.F(platform)}");
+		using var trace = logger.Trace($"{Log.F(sourceId)} {Log.F(platform)}");
 
 		await EntityCollection.DeleteOneAsync(Key(sourceId, platform), cancellationToken);
 	}

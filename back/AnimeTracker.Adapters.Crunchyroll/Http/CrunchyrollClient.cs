@@ -1,3 +1,4 @@
+using Elyspio.Utils.Telemetry;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -7,8 +8,6 @@ using System.Text.RegularExpressions;
 using AnimeTracker.Abstractions.Exceptions;
 using AnimeTracker.Abstractions.Models.Base.Dub;
 using AnimeTracker.Adapters.Crunchyroll.Configs;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
-using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -36,7 +35,7 @@ internal partial class CrunchyrollClient(
 	IOptions<CrunchyrollOptions> options,
 	TimeProvider timeProvider,
 	ILogger<CrunchyrollClient> logger
-) : TracingAdapter(logger)
+)
 {
 	public const string ClientName = "Crunchyroll";
 
@@ -59,7 +58,7 @@ internal partial class CrunchyrollClient(
 	public async Task<T?> Get<T>(string path, IReadOnlyDictionary<string, string> query, CancellationToken cancellationToken = default)
 		where T : class
 	{
-		using var trace = LogAdapter($"{Log.F(path)}");
+		using var trace = logger.Trace($"{Log.F(path)}");
 
 		var url = Url(path, query);
 

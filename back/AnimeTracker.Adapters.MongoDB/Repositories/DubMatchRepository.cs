@@ -1,9 +1,9 @@
+using Elyspio.Utils.Telemetry;
 using AnimeTracker.Abstractions.Interfaces.Repositories;
 using AnimeTracker.Abstractions.Models.Base.Anime;
 using AnimeTracker.Abstractions.Models.Base.Dub;
 using AnimeTracker.Abstractions.Models.Entities;
 using AnimeTracker.Adapters.MongoDB.Repositories.Base;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
 using Mapster;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -11,7 +11,7 @@ using MongoDB.Driver;
 namespace AnimeTracker.Adapters.MongoDB.Repositories;
 
 internal class DubMatchRepository(IMongoDatabase database, ILogger<DubMatchRepository> logger)
-	: BaseRepository<DubMatchEntity>(database, logger), IDubMatchRepository
+	: BaseRepository<DubMatchEntity>(database), IDubMatchRepository
 {
 	private static readonly FilterDefinitionBuilder<DubMatchEntity> Filter = Builders<DubMatchEntity>.Filter;
 
@@ -24,7 +24,7 @@ internal class DubMatchRepository(IMongoDatabase database, ILogger<DubMatchRepos
 
 	public async Task<List<DubMatchEntity>> GetBySeason(AnimeDate date, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(date)}");
+		using var trace = logger.Trace($"{Log.F(date)}");
 
 		return await EntityCollection
 			.Find(Filter.Where(match => match.Date.Year == date.Year && match.Date.Season == date.Season))
@@ -33,7 +33,7 @@ internal class DubMatchRepository(IMongoDatabase database, ILogger<DubMatchRepos
 
 	public async Task Save(DubMatchBase match, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(match.SourceId)} {Log.F(match.Platform)} {Log.F(match.Status)}");
+		using var trace = logger.Trace($"{Log.F(match.SourceId)} {Log.F(match.Platform)} {Log.F(match.Status)}");
 
 		await EnsureIndex(cancellationToken);
 
@@ -46,14 +46,14 @@ internal class DubMatchRepository(IMongoDatabase database, ILogger<DubMatchRepos
 
 	public async Task Delete(int sourceId, DubPlatform platform, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(sourceId)} {Log.F(platform)}");
+		using var trace = logger.Trace($"{Log.F(sourceId)} {Log.F(platform)}");
 
 		await EntityCollection.DeleteOneAsync(Key(sourceId, platform), cancellationToken);
 	}
 
 	public async Task<long> DeleteAllBut(AnimeDate date, IReadOnlyCollection<int> sourceIds, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(date)} {Log.F(sourceIds.Count)}");
+		using var trace = logger.Trace($"{Log.F(date)} {Log.F(sourceIds.Count)}");
 
 		var result = await EntityCollection.DeleteManyAsync(Filter.And(
 			Filter.Eq(match => match.Date.Year, date.Year),

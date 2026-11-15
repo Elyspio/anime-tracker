@@ -1,16 +1,16 @@
+using Elyspio.Utils.Telemetry;
 using AnimeTracker.Abstractions.Interfaces.Repositories;
 using AnimeTracker.Abstractions.Models.Base.Anime;
 using AnimeTracker.Abstractions.Models.Base.Refresh;
 using AnimeTracker.Abstractions.Models.Entities;
 using AnimeTracker.Adapters.MongoDB.Repositories.Base;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 namespace AnimeTracker.Adapters.MongoDB.Repositories;
 
 internal class RefreshRunRepository(IMongoDatabase database, ILogger<RefreshRunRepository> logger)
-	: BaseRepository<RefreshRunEntity>(database, logger), IRefreshRunRepository
+	: BaseRepository<RefreshRunEntity>(database), IRefreshRunRepository
 {
 	private static readonly FilterDefinitionBuilder<RefreshRunEntity> Filter = Builders<RefreshRunEntity>.Filter;
 
@@ -18,7 +18,7 @@ internal class RefreshRunRepository(IMongoDatabase database, ILogger<RefreshRunR
 
 	public async Task<RefreshRunEntity> Queue(Guid runId, AnimeDate date, RefreshKind kind, DateTimeOffset now, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(runId)} {Log.F(date)} {Log.F(kind)}");
+		using var trace = logger.Trace($"{Log.F(runId)} {Log.F(date)} {Log.F(kind)}");
 
 		var entity = new RefreshRunEntity
 		{
@@ -40,7 +40,7 @@ internal class RefreshRunRepository(IMongoDatabase database, ILogger<RefreshRunR
 
 	public async Task Begin(Guid runId, AnimeDate date, RefreshKind kind, DateTimeOffset now, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(runId)} {Log.F(kind)}");
+		using var trace = logger.Trace($"{Log.F(runId)} {Log.F(kind)}");
 
 		var update = Update
 			.Set(run => run.Status, RefreshStatus.Running)
@@ -62,7 +62,7 @@ internal class RefreshRunRepository(IMongoDatabase database, ILogger<RefreshRunR
 
 	public async Task Progress(Guid runId, int total, DateTimeOffset now, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(runId)} {Log.F(total)}");
+		using var trace = logger.Trace($"{Log.F(runId)} {Log.F(total)}");
 
 		await EntityCollection.UpdateOneAsync(
 			Filter.Eq(run => run.RunId, runId),
@@ -73,7 +73,7 @@ internal class RefreshRunRepository(IMongoDatabase database, ILogger<RefreshRunR
 	public async Task Finish(Guid runId, RefreshStatus status, int total, string? error, DateTimeOffset now,
 		CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(runId)} {Log.F(status)}");
+		using var trace = logger.Trace($"{Log.F(runId)} {Log.F(status)}");
 
 		await EntityCollection.UpdateOneAsync(
 			Filter.Eq(run => run.RunId, runId),
@@ -88,7 +88,7 @@ internal class RefreshRunRepository(IMongoDatabase database, ILogger<RefreshRunR
 
 	public async Task<RefreshRunEntity?> GetActive(AnimeDate date, RefreshKind kind, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(date)} {Log.F(kind)}");
+		using var trace = logger.Trace($"{Log.F(date)} {Log.F(kind)}");
 
 		var filter = Filter.And(
 			Filter.In(run => run.Status, new[] { RefreshStatus.Queued, RefreshStatus.Running }),
@@ -101,7 +101,7 @@ internal class RefreshRunRepository(IMongoDatabase database, ILogger<RefreshRunR
 
 	public async Task<List<RefreshRunEntity>> GetRecent(int limit, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository($"{Log.F(limit)}");
+		using var trace = logger.Trace($"{Log.F(limit)}");
 
 		return await EntityCollection
 			.Find(Filter.Empty)
@@ -112,7 +112,7 @@ internal class RefreshRunRepository(IMongoDatabase database, ILogger<RefreshRunR
 
 	public async Task<long> MarkRunningAsInterrupted(DateTimeOffset now, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogRepository();
+		using var trace = logger.Trace();
 
 		// Running only: a queued job is still sitting in Hangfire's own storage and will be picked up
 		// after the restart, so closing it here would contradict what is about to happen.

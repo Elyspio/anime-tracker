@@ -1,10 +1,10 @@
+using Elyspio.Utils.Results.AspNetCore;
+using Elyspio.Utils.Telemetry;
 using AnimeTracker.Abstractions.Interfaces.Services;
 using AnimeTracker.Abstractions.Models.Base.Anime;
 using AnimeTracker.Abstractions.Models.Base.Dub;
 using AnimeTracker.Abstractions.Models.Transports;
 using AnimeTracker.Web.Auth;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
-using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,7 +13,7 @@ namespace AnimeTracker.Web.Controllers;
 /// <summary>The French dub matches: what an admin looks at, and how they correct it.</summary>
 [Route("api/dubs")]
 [ApiController]
-public class DubController(IDubService dubService, TimeProvider timeProvider, ILogger<DubController> logger) : TracingController(logger)
+public class DubController(IDubService dubService, TimeProvider timeProvider, ILogger<DubController> logger) : ControllerBase
 {
 	/// <summary>
 	///     The season's matches worth a look. Anonymous like the season itself: which platform series an
@@ -23,7 +23,7 @@ public class DubController(IDubService dubService, TimeProvider timeProvider, IL
 	[AllowAnonymous]
 	public async Task<IReadOnlyCollection<DubCase>> GetCases([FromQuery] int? year, [FromQuery] AnimeSeason? season, CancellationToken cancellationToken)
 	{
-		using var trace = LogController($"{Log.F(year)} {Log.F(season)}");
+		using var trace = logger.Trace($"{Log.F(year)} {Log.F(season)}");
 
 		var current = AnimeDate.Current(DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime));
 
@@ -39,11 +39,11 @@ public class DubController(IDubService dubService, TimeProvider timeProvider, IL
 	[ProducesResponseType<DubOverrideResult>(StatusCodes.Status200OK)]
 	[ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
 	[ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
-	public async Task<DubOverrideResult> SetOverride(int sourceId, DubPlatform platform, [FromBody] DubOverrideRequest request,
+	public async Task<ActionResult<DubOverrideResult>> SetOverride(int sourceId, DubPlatform platform, [FromBody] DubOverrideRequest request,
 		CancellationToken cancellationToken)
 	{
-		using var trace = LogController($"{Log.F(sourceId)} {Log.F(platform)} {Log.F(request.Mode)}");
+		using var trace = logger.Trace($"{Log.F(sourceId)} {Log.F(platform)} {Log.F(request.Mode)}");
 
-		return await dubService.SetOverride(sourceId, platform, request, cancellationToken);
+		return (await dubService.SetOverride(sourceId, platform, request, cancellationToken)).ToActionResult();
 	}
 }

@@ -12,10 +12,9 @@ using AnimeTracker.Adapters.Crunchyroll.Injections;
 using AnimeTracker.Core.Injections;
 using AnimeTracker.Core.Services;
 using AnimeTracker.Web.Auth;
-using AnimeTracker.Web.Filters;
 using AnimeTracker.Web.Hosting;
-using Elyspio.Utils.Telemetry.Technical.Extensions;
-using Elyspio.Utils.Telemetry.Tracing.Builder;
+using Elyspio.Utils.Telemetry;
+using Elyspio.Utils.Telemetry.MongoDB.Extensions;
 using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,23 +23,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.docker.json", true, true);
 builder.Configuration.AddJsonFile("appsettings.Local.json", true, true);
 
-builder.Host.UseSerilogWithTelemetry();
-
-// Telemetry is owned by Elyspio.Utils.Telemetry: it registers every TracingX activity source found
-// in the product assemblies. Under Aspire, OTEL_EXPORTER_OTLP_ENDPOINT takes precedence over
-// OpenTelemetry:CollectorUri, so the same build works locally and in the cluster.
-if (builder.Configuration.IsTelemetryEnabled(out var telemetryOptions))
-{
-	var telemetry = new AppOpenTelemetryBuilder<Program>(telemetryOptions!, builder.Configuration);
-	telemetry.AddAssembly<AnimeService>();
-	telemetry.AddAssembly<AniListOptions>();
-	telemetry.AddAssembly<CrunchyrollOptions>();
-	telemetry.AddAssembly<AdnOptions>();
-	telemetry.AddAssembly<EnumAsStringSerializationProvider>();
-	telemetry.AddAssembly<HangfireJobAdapter>();
-	telemetry.Build(builder.Services);
-	builder.Services.AddOpenTelemetryJsonConfiguration(builder.Configuration);
-}
+// Telemetry is owned by Elyspio.Utils.Telemetry: Serilog on the console, plus traces, metrics and logs over OTLP
+// when OTEL_EXPORTER_OTLP_ENDPOINT is set (Aspire locally, the chart in the cluster), so the same build works in both.
+builder.AddElyspioTelemetry(options => options.Tracing = tracing => tracing.AddAppMongoInstrumentation());
 
 builder.AddHostingDefaults();
 
@@ -56,7 +41,7 @@ builder.Services.AddCore();
 builder.Services.AddAppAuth(builder.Configuration);
 
 // Enums as names, not integers: the frontend compares against "Summer", "BingeableNow".
-builder.Services.AddControllers(options => options.Filters.Add<HttpExceptionFilter>())
+builder.Services.AddControllers()
 	.AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddEndpointsApiExplorer();
@@ -71,7 +56,6 @@ builder.Services.AddCors(options => options.AddPolicy(corsPolicy, policy =>
 
 var app = builder.Build();
 
-app.UseOpenTelemetryJsonConfiguration();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

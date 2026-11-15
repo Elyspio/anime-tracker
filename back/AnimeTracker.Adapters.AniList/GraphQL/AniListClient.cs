@@ -1,9 +1,8 @@
+using Elyspio.Utils.Telemetry;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using AnimeTracker.Adapters.AniList.Configs;
-using Elyspio.Utils.Telemetry.Technical.Helpers;
-using Elyspio.Utils.Telemetry.Tracing.Elements;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -18,7 +17,6 @@ namespace AnimeTracker.Adapters.AniList.GraphQL;
 ///     </para>
 /// </summary>
 internal class AniListClient(IHttpClientFactory httpClientFactory, IOptions<AniListOptions> options, ILogger<AniListClient> logger)
-	: TracingAdapter(logger)
 {
 	public const string ClientName = "AniList";
 
@@ -30,7 +28,7 @@ internal class AniListClient(IHttpClientFactory httpClientFactory, IOptions<AniL
 
 	public async Task<T> Query<T>(string document, object variables, CancellationToken cancellationToken = default)
 	{
-		using var trace = LogAdapter();
+		using var trace = logger.Trace();
 
 		for (var attempt = 1; ; attempt++)
 		{
@@ -45,7 +43,7 @@ internal class AniListClient(IHttpClientFactory httpClientFactory, IOptions<AniL
 					?? (response.Headers.RetryAfter?.Date - DateTimeOffset.UtcNow)
 					?? DefaultBackoff;
 
-				_logger.LogWarning("AniList rate limited the request, retrying in {Backoff}", wait);
+				logger.LogWarning("AniList rate limited the request, retrying in {Backoff}", wait);
 				await Task.Delay(wait > TimeSpan.Zero ? wait : DefaultBackoff, cancellationToken);
 				continue;
 			}
